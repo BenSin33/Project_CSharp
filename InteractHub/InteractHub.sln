@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36301.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Social_media_platform", "Social_media_platform\Social_media_platform.csproj", "{92270DFF-1697-B44B-6EFC-2517E799D98E}"
+EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "frontend", "frontend\frontend.esproj", "{462EE049-9FE1-B47D-1B3E-22BACA5D9185}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{92270DFF-1697-B44B-6EFC-2517E799D98E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92270DFF-1697-B44B-6EFC-2517E799D98E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92270DFF-1697-B44B-6EFC-2517E799D98E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92270DFF-1697-B44B-6EFC-2517E799D98E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{462EE049-9FE1-B47D-1B3E-22BACA5D9185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{462EE049-9FE1-B47D-1B3E-22BACA5D9185}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{462EE049-9FE1-B47D-1B3E-22BACA5D9185}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{462EE049-9FE1-B47D-1B3E-22BACA5D9185}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{462EE049-9FE1-B47D-1B3E-22BACA5D9185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{462EE049-9FE1-B47D-1B3E-22BACA5D9185}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B41877D9-B1FF-4A82-9488-A3B477C4A2A8}
+	EndGlobalSection
+EndGlobal
