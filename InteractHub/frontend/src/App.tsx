@@ -16,10 +16,9 @@ function App() {
           <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+          <h1 className="text-3xl font-bold text-blue-600 underline">
+            InteractHub v4 đã hoạt động!
+          </h1>
         </div>
         <button
           className="counter"
