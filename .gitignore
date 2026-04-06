@@ -2,3 +2,45 @@
 [Bb]in/
 [Oo]bj/
 *.user
+
+# Build outputs
+[Dd]ebug/
+[Rr]elease/
+**/publish/
+**/out/
+
+# Logs
+*.log
+logs/
+
+# Visual Studio/VS Code
+.vscode/
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# Node/Vite
+node_modules/
+dist/
+build/
+.cache/
+.npm/
+.vite/
+.turbo/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Docker
+**/docker-compose.override.yml
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

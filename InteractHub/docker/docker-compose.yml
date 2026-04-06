@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=InteractHubDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=InteractHubDb;User Id=sa;TrustServerCertificate=True
       - Jwt__Key=YOUR_LONG_SECRET_KEY
       - Jwt__Issuer=InteractHub
       - Jwt__Audience=InteractHubClient
