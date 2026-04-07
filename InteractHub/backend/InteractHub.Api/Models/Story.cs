@@ -1,7 +1,10 @@
+namespace InteractHub.Api.Models;
+
 public class Story : BaseEntity
 {
-    public string MediaUrl {get;set;}
-    public DateTime ExpiredAt {get; set;} = DateTime.UtcNow.AddHours(24); // Stories expire after 24 hours
-    public string UserId {get;set;}
-    public virtual User user {get;set;}
+    public string? StoryContent {get;set;}
+    public string MediaUrl {get;set;} = null!;
+    public DateTime ExpireAt {get;set;} = DateTime.UtcNow.AddHours(24);
+    public Guid UserId {get;set;} // Foreign key to User
+    public virtual User? User {get;set;} // Navigation property to User
 }

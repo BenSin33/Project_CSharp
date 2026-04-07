@@ -1,133 +1,92 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using InteractHub.Api.Models;
+namespace InteractHub.Api.Data;
 
-public class ApplicationDbContext : IdentityDbContext<User, Microsoft.AspNetCore.Identity.IdentityRole<int>, int>
+public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 {
-	public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-	{
-	}
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+    }
 
-	public DbSet<User> UsersTable => Set<User>();
-	public DbSet<Post> Posts => Set<Post>();
-	public DbSet<Comment> Comments => Set<Comment>();
-	public DbSet<Like> Likes => Set<Like>();
-	public DbSet<Share> Shares => Set<Share>();
-	public DbSet<Story> Stories => Set<Story>();
-	public DbSet<HashTag> HashTags => Set<HashTag>();
-	public DbSet<Notification> Notifications => Set<Notification>();
-	public DbSet<FriendShip> FriendShips => Set<FriendShip>();
-	public DbSet<Message> Messages => Set<Message>();
-	public DbSet<PostReport> PostReports => Set<PostReport>();
+    // Đăng ký các bảng dữ liệu (Requirement B1)
+    public DbSet<Post> Posts { get; set; }
+    public DbSet<PostMedia> PostMedias { get; set; }
+    public DbSet<HashTag> HashTags { get; set; }
+    public DbSet<Comment> Comments { get; set; }
+    public DbSet<Like> Likes { get; set; }
+    public DbSet<Share> Shares { get; set; }
+    public DbSet<FriendShip> FriendShips { get; set; }
+    public DbSet<Message> Messages { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<PostReport> PostReports { get; set; }
+    public DbSet<Story> Stories { get; set; }
 
-	protected override void OnModelCreating(ModelBuilder builder)
-	{
-		base.OnModelCreating(builder);
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        // Phải gọi base để cấu hình các bảng Identity mặc định
+        base.OnModelCreating(builder);
 
-		builder.Entity<User>(entity =>
-		{
-			entity.HasMany(u => u.Posts)
-				.WithOne(p => p.user)
-				.HasForeignKey(p => p.UserId)
-				.OnDelete(DeleteBehavior.Cascade);
-		});
+        // 1. Cấu hình FriendShip (Quan hệ giữa User - User)
+        builder.Entity<FriendShip>()
+            .HasOne(f => f.Requester)
+            .WithMany() 
+            .HasForeignKey(f => f.RequesterId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-		builder.Entity<Post>(entity =>
-		{
-			entity.HasMany(p => p.Comments)
-				.WithOne(c => c.Post)
-				.HasForeignKey(c => c.PostId)
-				.OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<FriendShip>()
+            .HasOne(f => f.Receiver)
+            .WithMany(u => u.Friendships)
+            .HasForeignKey(f => f.ReceiverId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-			entity.HasMany(p => p.Likes)
-				.WithOne(l => l.Post)
-				.HasForeignKey(l => l.PostId)
-				.OnDelete(DeleteBehavior.Cascade);
+        // 2. Cấu hình Message (Gửi và Nhận)
+        builder.Entity<Message>()
+            .HasOne(m => m.Sender)
+            .WithMany(u => u.SentMessages)
+            .HasForeignKey(m => m.SenderId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-			entity.HasMany(p => p.Shares)
-				.WithOne(s => s.Post)
-				.HasForeignKey(s => s.PostId)
-				.OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<Message>()
+            .HasOne(m => m.Receiver)
+            .WithMany(u => u.ReceivedMessages)
+            .HasForeignKey(m => m.ReceiverId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-			entity.HasMany(p => p.HashTags)
-				.WithMany(h => h.Posts)
-				.UsingEntity<Dictionary<string, object>>(
-					"PostHashTags",
-					j => j.HasOne<HashTag>().WithMany().HasForeignKey("HashTagId").OnDelete(DeleteBehavior.Cascade),
-					j => j.HasOne<Post>().WithMany().HasForeignKey("PostId").OnDelete(DeleteBehavior.Cascade));
-		});
+        // 3. Chặn xóa dây chuyền (Cascade) từ User để tránh lỗi SQL Server
+        // Áp dụng cho các bảng có khóa ngoại trực tiếp tới User
+        builder.Entity<Comment>().HasOne(c => c.User).WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<Like>().HasOne(l => l.User).WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<Share>().HasOne(s => s.User).WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<PostReport>().HasOne(pr => pr.User).WithMany().HasForeignKey(pr => pr.UserId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<Story>().HasOne(s => s.User).WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Restrict);
 
-		builder.Entity<Comment>(entity =>
-		{
-			entity.HasOne(c => c.user)
-				.WithMany()
-				.HasForeignKey(c => c.UserId)
-				.OnDelete(DeleteBehavior.Restrict);
-		});
+        // 4. Cấu hình quan hệ Nhiều-Nhiều giữa Post và HashTag (Requirement B1)
+        builder.Entity<Post>()
+            .HasMany(p => p.HashTags)
+            .WithMany();
 
-		builder.Entity<Like>(entity =>
-		{
-			entity.HasOne(l => l.user)
-				.WithMany()
-				.HasForeignKey(l => l.UserId)
-				.OnDelete(DeleteBehavior.Restrict);
-		});
+        // 5. Khởi tạo dữ liệu Role mẫu (Role Seeding - Requirement B3)
+        // Đổi từ Guid.NewGuid() sang Guid.Parse() với các giá trị cố định
+        Guid adminRoleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        Guid userRoleId = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
-		builder.Entity<Share>(entity =>
-		{
-			entity.HasOne(s => s.user)
-				.WithMany()
-				.HasForeignKey(s => s.UserId)
-				.OnDelete(DeleteBehavior.Restrict);
-		});
-
-		builder.Entity<Story>(entity =>
-		{
-			entity.HasOne(s => s.user)
-				.WithMany()
-				.HasForeignKey(s => s.UserId)
-				.OnDelete(DeleteBehavior.Cascade);
-		});
-
-		builder.Entity<Notification>(entity =>
-		{
-			entity.HasOne(n => n.user)
-				.WithMany()
-				.HasForeignKey(n => n.UserId)
-				.OnDelete(DeleteBehavior.Cascade);
-		});
-
-		builder.Entity<FriendShip>(entity =>
-		{
-			entity.HasOne(f => f.Requester)
-				.WithMany(u => u.SentFriendRequests)
-				.HasForeignKey(f => f.RequesterId)
-				.OnDelete(DeleteBehavior.Restrict);
-
-			entity.HasOne(f => f.Receiver)
-				.WithMany(u => u.ReceivedFriendRquests)
-				.HasForeignKey(f => f.ReceiverId)
-				.OnDelete(DeleteBehavior.Restrict);
-		});
-
-		builder.Entity<Message>(entity =>
-		{
-			entity.HasOne(m => m.Sender)
-				.WithMany()
-				.HasForeignKey(m => m.SenderId)
-				.OnDelete(DeleteBehavior.Restrict);
-
-			entity.HasOne(m => m.Receiver)
-				.WithMany()
-				.HasForeignKey(m => m.ReceiverId)
-				.OnDelete(DeleteBehavior.Restrict);
-		});
-
-		builder.Entity<PostReport>(entity =>
-		{
-			entity.HasOne(pr => pr.Post)
-				.WithMany()
-				.HasForeignKey(pr => pr.PostId)
-				.OnDelete(DeleteBehavior.Cascade);
-		});
-	}
+        builder.Entity<IdentityRole<Guid>>().HasData(
+            new IdentityRole<Guid>
+            {
+                Id = adminRoleId,
+                Name = "Admin",
+                NormalizedName = "ADMIN",
+                ConcurrencyStamp = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
+            },
+            new IdentityRole<Guid>
+            {
+                Id = userRoleId,
+                Name = "User",
+                NormalizedName = "USER",
+                ConcurrencyStamp = "b1c2d3e4-f5a6-4b7c-8d9e-1f2a3b4c5d6e"
+            }
+        );
+    }
 }

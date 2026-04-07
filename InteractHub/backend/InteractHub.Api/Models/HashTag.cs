@@ -1,5 +1,6 @@
+namespace InteractHub.Api.Models;
+
 public class HashTag : BaseEntity
 {
-    public string Name {get;set;}
-    public virtual ICollection<Post> Posts {get;set;}
+    public string? HashTagName {get;set;}
 }

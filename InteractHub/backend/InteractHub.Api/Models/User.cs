@@ -1,15 +1,22 @@
 using Microsoft.AspNetCore.Identity;
 
-public class User : IdentityUser<int>
+namespace InteractHub.Api.Models;
+
+public class User : IdentityUser<Guid>
 {
-    public string GivenName {get;set;}
-    public string Surname {get;set;}
-    public string? Country {get;set;}
-    public DateTime DateOfBirth {get;set;}
+    public string FullName {get;set;} = null!; // Full name of the user
+    public string? Location {get;set;}
     public string? AvatarUrl {get;set;}
+    public string? Bio {get;set;}
+    public DateTime DateOfBirth {get;set;}
+    public Gender Gender {get;set;}
+    public virtual ICollection<Post> Posts{get; set;} = new List<Post>(); // Navigation property to Posts
+    public virtual ICollection<FriendShip> Friendships {get;set;} = new List<FriendShip>(); // Navigation property to Friendships
+    public virtual ICollection<Message> SentMessages {get;set;} = new List<Message>(); // Navigation property to sent Messages
+    public virtual ICollection<Message> ReceivedMessages {get;set;} = new List<Message>(); // Navigation property to received Messages
+}
 
-    public virtual ICollection<FriendShip> SentFriendRequests {get;set;}
-    public virtual ICollection<FriendShip> ReceivedFriendRquests {get; set;}
-    public virtual ICollection<Post> Posts {get;set;}
-
+public enum Gender
+{
+    male, female, other
 }

@@ -1,9 +1,13 @@
+
+namespace InteractHub.Api.Models;
+
 public class Message : BaseEntity
 {
-    public string MessageContent {get;set;}
-    public bool IsRead {get;set;}
-    public string SenderId {get;set;}
-    public virtual User Sender {get;set;}
-    public string ReceiverId {get;set;}
-    public virtual User Receiver {get;set;}
+    public string? MessageContent {get;set;}
+    public DateTime SentAt {get;set;} = DateTime.UtcNow;
+    public bool IsRead {get;set;} = false;
+    public Guid SenderId {get;set;} // Foreign key to User
+    public Guid ReceiverId {get;set;} // Foreign key to User
+    public virtual User? Sender {get;set;} // Navigation property to User
+    public virtual User? Receiver {get;set;} // Navigation property to User
 }

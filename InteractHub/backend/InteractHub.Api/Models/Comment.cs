@@ -1,8 +1,11 @@
-public class Comment: BaseEntity
+
+namespace InteractHub.Api.Models;
+
+public class Comment : BaseEntity
 {
-    public string CommentContent {get;set;}
-    public string UserId {get;set;}
-    public virtual User user {get;set;}
-    public int PostId {get;set;}
-    public virtual Post Post {get;set;}
+    public string? Content {get;set;}
+    public Guid UserId {get;set;} // Foreign key to User
+    public Guid PostId {get;set;} // Foreign key to Post
+    public virtual User? User {get;set;} // Navigation property to User
+    public virtual Post? Post {get;set;} // Navigation property to Post
 }
