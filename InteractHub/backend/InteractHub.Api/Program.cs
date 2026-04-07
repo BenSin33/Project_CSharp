@@ -1,26 +1,48 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using InteractHub.Api.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using InteractHub.Api.Data;
+using InteractHub.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers(); // Bắt buộc phải thêm dòng này để xài API Controllers
+// 1. Đăng ký Controllers & Swagger
+builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// 1. Đăng ký ApplicationDbContext kết nối với SQL Server trong Docker
+// 2. Đăng ký EF Core & Dapper
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<DataContextDapper>();
 
-// 2. Đăng ký ASP.NET Core Identity (Quản lý User, Role và mã hóa mật khẩu)
+// 3. Đăng ký Identity (Quản lý User)
 builder.Services.AddIdentity<User, IdentityRole<Guid>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+// 4. Cấu hình xác thực JWT
+builder.Services.AddAuthentication(options => {
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options => {
+    options.TokenValidationParameters = new TokenValidationParameters {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 5. Cấu hình HTTP Request Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -28,32 +50,24 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// 3. Kích hoạt định tuyến cho các Controller của bạn
+// 6. Kích hoạt Middleware Xác thực & Phân quyền
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 
-// --- Code mẫu API WeatherForecast của bạn được giữ lại nguyên vẹn bên dưới ---
-var summaries = new[]
+// 7. Chạy Seeder để tự động tạo Data mẫu khi ứng dụng khởi động
+using (var scope = app.Services.CreateScope())
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var services = scope.ServiceProvider;
+    try
+    {
+        await DataSeeder.SeedUserAsync(services);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Có lỗi khi seed data: {ex.Message}");
+    }
+}
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
