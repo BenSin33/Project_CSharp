@@ -3,18 +3,34 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
-
+import Navbar from './components/Navbar'
+import StoryBar from './components/StoryBar'
+import { PostCardDemo } from './components/PostCard'
+import Sidebar from './components/Sidebar'
+import TrendingHashtags from './components/TrendingHashtags'
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
       <section id="center">
+         <Navbar
+        notificationCount={3}
+        onSearch={(q) => navigate(`/search?q=${q}`)}
+        onCreatePost={() => setShowPostModal(true)}
+      />
+           <StoryBar
+        onAddStory={() => navigate("/stories/create")}
+        onViewStory={(s) => navigate(`/stories/${s.id}`)}
+      />
+       <PostCardDemo/>
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />
           <img src={reactLogo} className="framework" alt="React logo" />
           <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
+         <Sidebar/>
+         <TrendingHashtags/>
         <div>
           <h1 className="text-3xl font-bold text-blue-600 underline">
             InteractHub v4 đã hoạt động!
