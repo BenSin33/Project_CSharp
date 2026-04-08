@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using InteractHub.Api.Data;
 using InteractHub.Api.Models;
+using InteractHub.Api.Services;
+using InteractHub.Api.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +41,10 @@ builder.Services.AddAuthentication(options => {
     };
 });
 builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+// Đăng ký Generic Repository
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();
 
