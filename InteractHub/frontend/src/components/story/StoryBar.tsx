@@ -293,7 +293,7 @@ const StoryBar = ({
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
       <div
-        className="relative w-full"
+        className="relative w-full pl-3"
         style={{
           background: "#ffffff",
           borderRadius: "16px",
