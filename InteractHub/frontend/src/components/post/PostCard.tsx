@@ -302,8 +302,12 @@ export default function PostCard({
 }
 
 // ─── Usage example ────────────────────────────────────────────────────────────
+type DemoProps = {
+  isLiked?: boolean;
+  isSaved?: boolean;
+};
 
-export function PostCardDemo() {
+export function PostCardDemo({ isLiked = false, isSaved = false }: DemoProps) {
   const samplePost: PostData = {
     id: "1",
     author: {
@@ -319,8 +323,8 @@ export function PostCardDemo() {
     shares: 50,
     commentsCount: 2,
     createdAt: "5 days ago",
-    isLiked: false,
-    isSaved: false,
+    isLiked,
+    isSaved,
   };
 
   return (

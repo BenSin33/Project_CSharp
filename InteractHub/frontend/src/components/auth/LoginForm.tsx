@@ -18,8 +18,8 @@ import { useForm } from "react-hook-form";
 import TabSwitcher from "../common/TabSwitcher";
 import TextInput from "../common/TextInput";
 import GradientButton from "../common/GradientButton";
-import DemoAccountButton from "../common/DemoAccountButton";
-import DemoInfoBanner from "../common/DemoInfoBanner";
+import DemoAccountButton from "./DemoAccountButton";
+import DemoInfoBanner from "../DemoInfoBanner";
 import Divider from "../common/Divider";
 
 // ── Icons (local, no extra deps) ─────────────────────────────────────────────
