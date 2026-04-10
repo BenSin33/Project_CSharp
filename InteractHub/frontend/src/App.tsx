@@ -9,10 +9,11 @@ import BookMarkPage from "./pages/BookmarkPage";
 import { LoginFormPreview } from "./components/auth/LoginForm";
 import { Settings } from "lucide-react";
 import SettingsPage from "./pages/Settings";
+import AuthPage from "./pages/AuthPage";
 function App() {
   return (
     <Routes>
-      <Route path="login" element={<LoginFormPreview />} />
+      <Route path="login" element={<AuthPage />} />
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="profile" element={<ProfilePage />} />
