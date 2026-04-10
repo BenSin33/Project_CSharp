@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 namespace InteractHub.Api.Models;
 
 public class PostReport : BaseEntity
 {
+    [Required(ErrorMessage = " Reason is required")]
     public string? Reason {get;set;}
     public ReportType ReportType {get;set;}
     public ReportStatus ReportStatus {get;set;} = ReportStatus.Pending;  // default value

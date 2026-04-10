@@ -1,8 +1,10 @@
 
+using System.ComponentModel.DataAnnotations;
 namespace InteractHub.Api.Models;
 
 public class Message : BaseEntity
 {
+    [Required(ErrorMessage = "Message content is required.")]
     public string? MessageContent {get;set;}
     public DateTime SentAt {get;set;} = DateTime.UtcNow;
     public bool IsRead {get;set;} = false;
