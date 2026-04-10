@@ -1,12 +1,16 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
 namespace InteractHub.Api.Models;
 
 public class User : IdentityUser<Guid>
 {
+    [Required]
+    [StringLength(200)]
     public string FullName {get;set;} = null!; // Full name of the user
     public string? Location {get;set;}
     public string? AvatarUrl {get;set;}
+    [StringLength(1000)]
     public string? Bio {get;set;}
     public DateTime DateOfBirth {get;set;}
     public Gender Gender {get;set;}

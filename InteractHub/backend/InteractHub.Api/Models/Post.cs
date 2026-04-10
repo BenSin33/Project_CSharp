@@ -1,9 +1,12 @@
+using System.ComponentModel.DataAnnotations;
 namespace InteractHub.Api.Models;
 
 public class Post : BaseEntity
 {
+    [StringLength(2000, ErrorMessage = "Content cannot exceed 2000 characters.")]
     public string? Content {get;set;}
-    public string? MediaUrl {get;set;} 
+
+    [StringLength(500, ErrorMessage = "Media URL cannot exceed 500 characters.")]
     public Visibility Visibility {get;set;}
     public Guid UserId {get;set;} // Foreign key to User
     public Status Status {get;set;}  // Active, Deleted, Hidden

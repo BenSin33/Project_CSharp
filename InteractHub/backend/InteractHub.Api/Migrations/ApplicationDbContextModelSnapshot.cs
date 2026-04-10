@@ -116,7 +116,9 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("HashTagName")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -172,6 +174,7 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("MessageContent")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("ReceiverId")
@@ -203,7 +206,8 @@ namespace InteractHub.Api.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -237,16 +241,14 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("MediaUrl")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -258,6 +260,7 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Visibility")
+                        .HasMaxLength(500)
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -315,6 +318,7 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Reason")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ReportStatus")
@@ -385,10 +389,12 @@ namespace InteractHub.Api.Migrations
 
                     b.Property<string>("MediaUrl")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("StoryContent")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -416,7 +422,8 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Bio")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -434,7 +441,8 @@ namespace InteractHub.Api.Migrations
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Gender")
                         .HasColumnType("int");
