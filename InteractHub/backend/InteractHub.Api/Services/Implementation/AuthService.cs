@@ -5,6 +5,8 @@ using System.Security.Claims;
 using System.Text;
 using InteractHub.Api.DTOs;
 using InteractHub.Api.Models;
+using InteractHub.Api.Services.Interface;
+
 
 namespace InteractHub.Api.Services;
 public class AuthService : IAuthService

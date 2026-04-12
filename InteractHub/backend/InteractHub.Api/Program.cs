@@ -8,6 +8,8 @@ using InteractHub.Api.Data;
 using InteractHub.Api.Models;
 using InteractHub.Api.Services;
 using InteractHub.Api.Repositories;
+using InteractHub.Api.Services.Interface;
+using InteractHub.Api.Services.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +93,17 @@ builder.Services.AddAuthorization();
 // 7. Đăng ký Services & Generic Repository
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPostService, PostService>(); // BỔ SUNG DÒNG NÀY
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IFileUploadService, FileUploadService>(); 
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+
+// Đăng ký FileUploadService để sau này có thể inject vào Controller hoặc Service khác khi cần thiết.
+
+// Lưu ý: Sau này bạn làm thêm các Service khác như FriendsService, StoriesService... 
+// theo Requirement B4 thì cũng nhớ đăng ký tiếp vào ngay bên dưới nhé.
 
 var app = builder.Build();
 

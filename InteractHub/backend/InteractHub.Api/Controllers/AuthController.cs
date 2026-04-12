@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using InteractHub.Api.DTOs;
-using InteractHub.Api.Services;
+using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Models;
 using Microsoft.Extensions.Validation;
 using System.Security;

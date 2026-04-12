@@ -1,71 +1,82 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using InteractHub.Api.DTOs;
-using InteractHub.Api.Services;
+using InteractHub.Api.DTOs.Post;
+using InteractHub.Api.Services.Interface;
+using InteractHub.Api.Models;
+using System.Runtime.ExceptionServices;
 
 namespace InteractHub.Api.Controllers;
 
-[Authorize]
-[ApiController]
 [Route("api/[controller]")]
-public class PostsController : ControllerBase
+[ApiController]
+public class PostController : ControllerBase
 {
-    private readonly IPostsService _postsService;
+    private readonly IPostService _postService;
 
-    public PostsController(IPostsService postsService)
+    public PostController(IPostService postService)
     {
-        _postsService = postsService;
+        _postService = postService;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetNewsFeed()
+    public async Task<IActionResult> GetAllPosts()
     {
-        var posts = await _postsService.GetNewsFeedAsync();
-        return Ok(posts);
+        var posts = await _postService.GetAllActivePostsAsync();
+        return Ok(ApiResponse<IEnumerable<PostResponseDto>>.Ok(posts, "Posts retrieved successfully."));   
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetPost(Guid id)
+    public async Task<IActionResult> GetPostById(Guid id)
     {
-        var post = await _postsService.GetPostByIdAsync(id);
-        if (post == null) return NotFound(new { message = "Không tìm thấy bài viết" });
-        return Ok(post);
+        var post = await _postService.GetPostByIdAsync(id);
+        if (post == null)
+        {
+            return NotFound(ApiResponse<PostResponseDto>.Fail($"Post with ID {id} not found"));
+        }
+        return Ok(ApiResponse<PostResponseDto>.Ok(post, "Post retrieved successfully."));
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreatePost(PostCreateDTO dto)
+    public async Task<IActionResult> CreatePost([FromBody] CreatePostDto request)
     {
-        var userId = GetCurrentUserId();
-        if (userId == Guid.Empty) return Unauthorized();
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            return BadRequest(ApiResponse<PostResponseDto>.Fail("Validation failed", errors));
+        }
+        var createdPost = await _postService.CreatePostAsync(request);
 
-        var createdPost = await _postsService.CreatePostAsync(userId, dto);
-        return CreatedAtAction(nameof(GetPost), new { id = createdPost.Id }, createdPost); 
+        return CreatedAtAction(nameof(GetPostById), new {id = createdPost.Id},
+                ApiResponse<PostResponseDto>.Ok(createdPost, "Post created successfully."));
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdatePost(Guid id, PostUpdateDTO dto)
+    public async Task<IActionResult> UpdatePost(Guid id, [FromBody] UpdatePostDto request)
     {
-        var userId = GetCurrentUserId();
-        var success = await _postsService.UpdatePostAsync(id, userId, dto);
-        
-        if (!success) return BadRequest(new { message = "Bạn không có quyền sửa hoặc bài viết không tồn tại" });
-        return NoContent(); 
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            return BadRequest(ApiResponse<PostResponseDto>.Fail("Validation failed", errors));
+        }
+
+        var updatePost = await _postService.UpdatePostAsync(id,request);
+        if(updatePost == null)
+        {
+            return NotFound(ApiResponse<PostResponseDto>.Fail($"Post with ID {id} not found or deleted."));
+        }
+
+        return Ok(ApiResponse<PostResponseDto>.Ok(updatePost, "Post updated successfully."));
+
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePost(Guid id)
     {
-        var userId = GetCurrentUserId();
-        var success = await _postsService.DeletePostAsync(id, userId);
-        
-        if (!success) return BadRequest(new { message = "Bạn không có quyền xóa hoặc bài viết không tồn tại" });
-        return NoContent();
+        var  isDeleted = await _postService.DeletePostAsync(id);
+        if (!isDeleted)
+        {
+            return NotFound(ApiResponse<bool>.Fail($"Post with ID {id} not found."));
+        }
+        return Ok(ApiResponse<bool>.Ok(true, "Post deleted successfully."));
     }
 
-    private Guid GetCurrentUserId()
-    {
-        var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(idClaim, out Guid userId) ? userId : Guid.Empty;
-    }
 }
