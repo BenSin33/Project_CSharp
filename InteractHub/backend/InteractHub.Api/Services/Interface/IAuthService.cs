@@ -1,7 +1,7 @@
 using InteractHub.Api.DTOs;
 using InteractHub.Api.Models;
 
-namespace InteractHub.Api.Services;
+namespace InteractHub.Api.Services.Interface;
 
 public interface IAuthService
 {

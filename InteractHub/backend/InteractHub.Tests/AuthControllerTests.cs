@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using InteractHub.Api.Controllers;
 using InteractHub.Api.Models;
 using InteractHub.Api.DTOs;
-using InteractHub.Api.Services;
+using InteractHub.Api.Services.Interface;
 
 namespace InteractHub.Tests;
 
