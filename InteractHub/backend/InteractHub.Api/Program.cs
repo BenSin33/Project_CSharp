@@ -98,6 +98,9 @@ builder.Services.AddScoped<IPostService, PostService>(); // BỔ SUNG DÒNG NÀY
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IFileUploadService, FileUploadService>(); 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IShareService, ShareService>();
 
 
 // Đăng ký FileUploadService để sau này có thể inject vào Controller hoặc Service khác khi cần thiết.
