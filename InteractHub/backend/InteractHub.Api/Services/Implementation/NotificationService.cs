@@ -27,11 +27,11 @@ public class NotificationService : INotificationService
             .Select(n => MapToDTO(n));
     }
 
-    public async Task<NotificationResponseDTO?> GetNotificationByIdAsync(Guid notificationId)
+    public async Task<NotificationResponseDTO?> GetNotificationByIdAsync(Guid notificationId, Guid userId)
     {
         var notification = await _notificationRepo.GetByIdAsync(notificationId);
         
-        if (notification == null || notification.DeletedAt != null)
+        if (notification == null || notification.DeletedAt != null || notification.UserId != userId)
             return null;
 
         return MapToDTO(notification);
@@ -60,10 +60,10 @@ public class NotificationService : INotificationService
         return MapToDTO(notification);
     }
 
-    public async Task<bool> MarkAsReadAsync(Guid notificationId)
+    public async Task<bool> MarkAsReadAsync(Guid notificationId, Guid userId)
     {
         var notification = await _notificationRepo.GetByIdAsync(notificationId);
-        if (notification == null || notification.DeletedAt != null)
+        if (notification == null || notification.DeletedAt != null || notification.UserId != userId)
             return false;
 
         notification.IsRead = true;
@@ -97,10 +97,10 @@ public class NotificationService : INotificationService
         return true;
     }
 
-    public async Task<bool> DeleteNotificationAsync(Guid notificationId)
+    public async Task<bool> DeleteNotificationAsync(Guid notificationId, Guid userId)
     {
         var notification = await _notificationRepo.GetByIdAsync(notificationId);
-        if (notification == null)
+        if (notification == null || notification.DeletedAt != null || notification.UserId != userId)
             return false;
 
         notification.DeletedAt = DateTime.UtcNow;
