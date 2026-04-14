@@ -13,7 +13,7 @@ public interface INotificationService
     /// <summary>
     /// Get a specific notification by ID
     /// </summary>
-    Task<NotificationResponseDTO?> GetNotificationByIdAsync(Guid notificationId);
+    Task<NotificationResponseDTO?> GetNotificationByIdAsync(Guid notificationId, Guid userId);
 
     /// <summary>
     /// Create a new notification
@@ -23,7 +23,7 @@ public interface INotificationService
     /// <summary>
     /// Mark a notification as read
     /// </summary>
-    Task<bool> MarkAsReadAsync(Guid notificationId);
+    Task<bool> MarkAsReadAsync(Guid notificationId, Guid userId);
 
     /// <summary>
     /// Mark all notifications as read for a user
@@ -33,7 +33,7 @@ public interface INotificationService
     /// <summary>
     /// Delete a notification
     /// </summary>
-    Task<bool> DeleteNotificationAsync(Guid notificationId);
+    Task<bool> DeleteNotificationAsync(Guid notificationId, Guid userId);
 
     /// <summary>
     /// Get unread notification count for a user

@@ -221,4 +221,54 @@ public static class DataSeeder
         context.Notifications.AddRange(notifications);
         await context.SaveChangesAsync();
     }
+
+    public static async Task SeedStoriesAsync(IServiceProvider serviceProvider)
+    {
+        var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+
+        var adminUser = await userManager.FindByEmailAsync("admin@interacthub.com");
+        var normalUser = await userManager.FindByEmailAsync("user@interacthub.com");
+
+        if (adminUser == null || normalUser == null) return;
+
+        if (context.Stories.Any()) return;
+
+        var stories = new List<Story>
+        {
+            new Story
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                StoryContent = "Morning coffee and planning the sprint.",
+                MediaUrl = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085",
+                CreatedAt = DateTime.UtcNow.AddHours(-3),
+                UpdatedAt = DateTime.UtcNow.AddHours(-3),
+                ExpireAt = DateTime.UtcNow.AddHours(21)
+            },
+            new Story
+            {
+                Id = Guid.NewGuid(),
+                UserId = normalUser.Id,
+                StoryContent = "Working on Story API integration.",
+                MediaUrl = "https://images.unsplash.com/photo-1518773553398-650c184e0bb3",
+                CreatedAt = DateTime.UtcNow.AddHours(-2),
+                UpdatedAt = DateTime.UtcNow.AddHours(-2),
+                ExpireAt = DateTime.UtcNow.AddHours(22)
+            },
+            new Story
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                StoryContent = "Deploy checklist completed.",
+                MediaUrl = "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
+                CreatedAt = DateTime.UtcNow.AddMinutes(-45),
+                UpdatedAt = DateTime.UtcNow.AddMinutes(-45),
+                ExpireAt = DateTime.UtcNow.AddHours(23).AddMinutes(15)
+            }
+        };
+
+        context.Stories.AddRange(stories);
+        await context.SaveChangesAsync();
+    }
 }
