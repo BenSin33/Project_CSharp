@@ -101,7 +101,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IShareService, ShareService>();
-
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Đăng ký FileUploadService để sau này có thể inject vào Controller hoặc Service khác khi cần thiết.
 

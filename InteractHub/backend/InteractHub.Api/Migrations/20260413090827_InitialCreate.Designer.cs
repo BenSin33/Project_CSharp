@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InteractHub.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260410044101_RenameLikeToReaction")]
-    partial class RenameLikeToReaction
+    [Migration("20260413090827_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -131,6 +131,39 @@ namespace InteractHub.Api.Migrations
                     b.ToTable("HashTags");
                 });
 
+            modelBuilder.Entity("InteractHub.Api.Models.Like", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Likes");
+                });
+
             modelBuilder.Entity("InteractHub.Api.Models.Message", b =>
                 {
                     b.Property<Guid>("Id")
@@ -233,7 +266,6 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Visibility")
-                        .HasMaxLength(500)
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -313,39 +345,6 @@ namespace InteractHub.Api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PostReports");
-                });
-
-            modelBuilder.Entity("InteractHub.Api.Models.Reaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Reactions");
                 });
 
             modelBuilder.Entity("InteractHub.Api.Models.Share", b =>
@@ -702,6 +701,25 @@ namespace InteractHub.Api.Migrations
                     b.Navigation("Requester");
                 });
 
+            modelBuilder.Entity("InteractHub.Api.Models.Like", b =>
+                {
+                    b.HasOne("InteractHub.Api.Models.Post", "Post")
+                        .WithMany("Likes")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InteractHub.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("InteractHub.Api.Models.Message", b =>
                 {
                     b.HasOne("InteractHub.Api.Models.User", "Receiver")
@@ -758,25 +776,6 @@ namespace InteractHub.Api.Migrations
                 {
                     b.HasOne("InteractHub.Api.Models.Post", "Post")
                         .WithMany()
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("InteractHub.Api.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("InteractHub.Api.Models.Reaction", b =>
-                {
-                    b.HasOne("InteractHub.Api.Models.Post", "Post")
-                        .WithMany("Reactions")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -877,9 +876,9 @@ namespace InteractHub.Api.Migrations
                 {
                     b.Navigation("Comments");
 
-                    b.Navigation("PostMedias");
+                    b.Navigation("Likes");
 
-                    b.Navigation("Reactions");
+                    b.Navigation("PostMedias");
 
                     b.Navigation("Shares");
                 });
