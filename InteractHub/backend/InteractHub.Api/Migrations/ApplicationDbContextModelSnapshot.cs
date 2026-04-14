@@ -143,6 +143,9 @@ namespace InteractHub.Api.Migrations
                     b.Property<Guid>("PostId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -260,7 +263,6 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Visibility")
-                        .HasMaxLength(500)
                         .HasColumnType("int");
 
                     b.HasKey("Id");

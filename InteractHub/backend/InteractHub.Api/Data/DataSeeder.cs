@@ -47,4 +47,178 @@ public static class DataSeeder
         }
 
     }
+
+    public static async Task SeedPostsAsync(IServiceProvider serviceProvider)
+    {
+        var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+
+        // Get users for seeding
+        var adminUser = await userManager.FindByEmailAsync("admin@interacthub.com");
+        var normalUser = await userManager.FindByEmailAsync("user@interacthub.com");
+
+        if (adminUser == null || normalUser == null) return;
+
+        // Check if posts already exist
+        if (context.Posts.Any()) return;
+
+        var posts = new List<Post>
+        {
+            new Post
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                Content = "Xin chào mọi người! Đây là bài post đầu tiên của tôi trên InteractHub. Rất vui được kết nối với các bạn! 🎉",
+                Visibility = Visibility.Public,
+                Status = Status.active,
+                CreatedAt = DateTime.UtcNow.AddDays(-5),
+                UpdatedAt = DateTime.UtcNow.AddDays(-5)
+            },
+            new Post
+            {
+                Id = Guid.NewGuid(),
+                UserId = normalUser.Id,
+                Content = "Hôm nay mình có một ngày làm việc rất hiệu quả. Hoàn thành tất cả các dự án khó khăn. Cảm thấy tuyệt vời! 💪",
+                Visibility = Visibility.Public,
+                Status = Status.active,
+                CreatedAt = DateTime.UtcNow.AddDays(-3),
+                UpdatedAt = DateTime.UtcNow.AddDays(-3)
+            },
+            new Post
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                Content = "Chia sẻ một số tips về lập trình web. Học lập trình không chỉ là viết code, mà còn là hiểu rõ các nguyên tắc cơ bản.",
+                Visibility = Visibility.Public,
+                Status = Status.active,
+                CreatedAt = DateTime.UtcNow.AddDays(-2),
+                UpdatedAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new Post
+            {
+                Id = Guid.NewGuid(),
+                UserId = normalUser.Id,
+                Content = "Vừa hoàn thành khóa học C# Advanced. Hình như mình đã sẵn sàng cho những project lớn hơn.",
+                Visibility = Visibility.Public,
+                Status = Status.active,
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new Post
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                Content = "Thứ 7 này có plan gì không? Ai muốn open hành trình khám phá những quán cà phê mới? 👥",
+                Visibility = Visibility.Public,
+                Status = Status.active,
+                CreatedAt = DateTime.UtcNow.AddHours(-12),
+                UpdatedAt = DateTime.UtcNow.AddHours(-12)
+            },
+            new Post
+            {
+                Id = Guid.NewGuid(),
+                UserId = normalUser.Id,
+                Content = "Mẹo nhanh: Sử dụng LINQ trong C# để xử lý dữ liệu collection một cách ef fectively. Rất tiện!",
+                Visibility = Visibility.Public,
+                Status = Status.active,
+                CreatedAt = DateTime.UtcNow.AddHours(-6),
+                UpdatedAt = DateTime.UtcNow.AddHours(-6)
+            },
+            new Post
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                Content = "Lần đầu tiên sử dụng Entity Framework Core với .NET 10. Performance rất tuyệt! 🚀",
+                Visibility = Visibility.Public,
+                Status = Status.active,
+                CreatedAt = DateTime.UtcNow.AddHours(-2),
+                UpdatedAt = DateTime.UtcNow.AddHours(-2)
+            },
+            new Post
+            {
+                Id = Guid.NewGuid(),
+                UserId = normalUser.Id,
+                Content = "Mới phát hành feature mới cho team. Khá hứng khởi với feedback từ các member! ✨",
+                Visibility = Visibility.Public,
+                Status = Status.active,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-30),
+                UpdatedAt = DateTime.UtcNow.AddMinutes(-30)
+            }
+        };
+
+        context.Posts.AddRange(posts);
+        await context.SaveChangesAsync();
+    }
+
+    public static async Task SeedNotificationsAsync(IServiceProvider serviceProvider)
+    {
+        var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+
+        // Get users for seeding
+        var adminUser = await userManager.FindByEmailAsync("admin@interacthub.com");
+        var normalUser = await userManager.FindByEmailAsync("user@interacthub.com");
+
+        if (adminUser == null || normalUser == null) return;
+
+        // Check if notifications already exist
+        if (context.Notifications.Any()) return;
+
+        var notifications = new List<Notification>
+        {
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                Content = "John Gaylord đã like bài post của bạn",
+                Type = NotificationType.Like,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow.AddHours(-2),
+                UpdatedAt = DateTime.UtcNow.AddHours(-2)
+            },
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                Content = "John Gaylord đã comment trên bài post của bạn",
+                Type = NotificationType.Comment,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow.AddHours(-1),
+                UpdatedAt = DateTime.UtcNow.AddHours(-1)
+            },
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = normalUser.Id,
+                Content = "Ben Star đã like bài post của bạn",
+                Type = NotificationType.Like,
+                IsRead = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = normalUser.Id,
+                Content = "Ben Star đã comment: 'Bài viết rất hay!'",
+                Type = NotificationType.Comment,
+                IsRead = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-1).AddHours(-2),
+                UpdatedAt = DateTime.UtcNow.AddDays(-1).AddHours(-2)
+            },
+            new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminUser.Id,
+                Content = "John Gaylord share bài post của bạn",
+                Type = NotificationType.Share,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-30),
+                UpdatedAt = DateTime.UtcNow.AddMinutes(-30)
+            }
+        };
+
+        context.Notifications.AddRange(notifications);
+        await context.SaveChangesAsync();
+    }
 }
