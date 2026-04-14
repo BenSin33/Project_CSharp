@@ -101,6 +101,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IShareService, ShareService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 // Đăng ký FileUploadService để sau này có thể inject vào Controller hoặc Service khác khi cần thiết.
@@ -136,6 +137,8 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await DataSeeder.SeedUserAsync(services);
+        await DataSeeder.SeedPostsAsync(services);
+        await DataSeeder.SeedNotificationsAsync(services);
     }
     catch (Exception ex)
     {
