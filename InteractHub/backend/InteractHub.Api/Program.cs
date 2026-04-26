@@ -93,17 +93,14 @@ builder.Services.AddAuthorization();
 // 7. Đăng ký Services & Generic Repository
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPostService, PostService>(); // BỔ SUNG DÒNG NÀY
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IFileUploadService, FileUploadService>(); 
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IShareService, ShareService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
-
 
 // Đăng ký FileUploadService để sau này có thể inject vào Controller hoặc Service khác khi cần thiết.
 

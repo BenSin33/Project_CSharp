@@ -1,0 +1,580 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[vietnamese]{babel}
+\usepackage[margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{colortbl}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{tikz}
+
+% Setup pages
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{InteractHub Project}
+\lhead{Báo cáo tiến độ}
+\cfoot{\thepage}
+
+% Define colors
+\definecolor{lightblue}{rgb}{0.93, 0.96, 1}
+\definecolor{darkblue}{rgb}{0.0, 0.2, 0.6}
+\definecolor{lightgreen}{rgb}{0.90, 0.98, 0.90}
+\definecolor{lightred}{rgb}{1, 0.90, 0.90}
+
+% Title setup
+\title{\textbf{\Huge InteractHub Project} \\ \Large Báo cáo tiến độ phát triển \\ \normalsize Ngày: 13/04/2026}
+\author{Dự án: Social Media Platform \\ Giảng viên: Phiêu Tú Lăng}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+% ==================== CHƯƠNG 1 ====================
+\chapter{Tổng quan dự án}
+
+\section{Mô tả dự án}
+InteractHub là một nền tảng mạng xã hội được xây dựng với công nghệ hiện đại, cho phép người dùng:
+\begin{itemize}
+    \item Tạo, sửa, xóa các bài viết (Post)
+    \item Tương tác với bài viết (Like, Comment, Share)
+    \item Quản lý bạn bè (Friendship)
+    \item Chia sẻ story
+    \item Gửi thông báo (Notification)
+    \item Xem và quản lý các hashtag
+    \item Báo cáo bài viết không phù hợp
+\end{itemize}
+
+\section{Công nghệ sử dụng}
+
+\subsection{Backend}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|}
+        \hline
+        \rowcolor{lightblue}
+        \textbf{Công nghệ} & \textbf{Phiên bản} \\
+        \hline
+        ASP.NET Core & 10.0 \\
+        Entity Framework Core & 10.0+ \\
+        SQL Server & 2019+ \\
+        JWT (Authentication) & - \\
+        SignalR & - \\
+        Swagger/OpenAPI & - \\
+        Dapper & ORM \\
+        xUnit & Testing Framework \\
+        \hline
+    \end{tabular}
+    \caption{Công nghệ Backend}
+\end{table}
+
+\subsection{Frontend}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|}
+        \hline
+        \rowcolor{lightblue}
+        \textbf{Công nghệ} & \textbf{Chi tiết} \\
+        \hline
+        React & 18+ \\
+        TypeScript & Strict Mode \\
+        Tailwind CSS & Styling \\
+        Vite & Build Tool \\
+        React Router & v6+ \\
+        Axios & HTTP Client \\
+        React Hook Form & Form Management \\
+        \hline
+    \end{tabular}
+    \caption{Công nghệ Frontend}
+\end{table}
+
+\subsection{DevOps \& Cloud}
+\begin{itemize}
+    \item \textbf{Container}: Docker (Backend, Frontend, SQL Server)
+    \item \textbf{Cloud}: Azure Blob Storage (Media)
+    \item \textbf{CI/CD}: GitHub Actions / Azure DevOps
+    \item \textbf{Database}: SQL Server
+\end{itemize}
+
+\newpage
+
+% ==================== CHƯƠNG 2 ====================
+\chapter{Tiến độ hiện tại}
+
+\section{Tóm tắt tiến độ}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \rowcolor{lightblue}
+        \textbf{Requirement} & \textbf{Trạng thái} & \textbf{Hoàn thành (\%)} \\
+        \hline
+        B1: Database Design \& EF & \cellcolor{lightgreen}✓ Hoàn thành & 85-90\% \\
+        B2: RESTful API Controllers & \cellcolor{lightred}✗ Không đủ & 30-40\% \\
+        B3: Service Layer & \cellcolor{lightred}✗ Không đủ & 20-30\% \\
+        B4: Authentication/Authorization & \cellcolor{lightgreen}✓ Hoàn thành & 80\% \\
+        B5: Unit Testing & \cellcolor{lightgreen}✓ Hoàn thành & 85-90\% \\
+        B6: Docker \& Deployment & \cellcolor{lightblue}~ Bắt đầu & 30\% \\
+        B7: Frontend (React) & \cellcolor{lightblue}~ Bắt đầu & 25\% \\
+        \hline
+    \end{tabular}
+    \caption{Tóm tắt tiến độ dự án}
+\end{table}
+
+\section{Chi tiết từng requirement}
+
+\subsection{Requirement B1: Database Design \& Entity Framework}
+\textbf{Trạng thái: } \textcolor{darkblue}{\textbf{85-90\% Hoàn thành}}
+
+\subsubsection{Đã hoàn thành}
+\begin{itemize}
+    \item[$\checkmark$] Thiết kế 9 Entity:
+    \begin{itemize}
+        \item User, Post, Comment, Like, Share
+        \item FriendShip, Story, Notification, HashTag, PostReport
+    \end{itemize}
+    \item[$\checkmark$] Lớp BaseEntity với Guid, CreatedAt, UpdatedAt, DeletedAt
+    \item[$\checkmark$] ApplicationDbContext được cấu hình đúng
+    \item[$\checkmark$] Quan hệ One-to-Many, One-to-One, Many-to-Many
+    \item[$\checkmark$] Fluent API Configuration
+    \item[$\checkmark$] Cascade delete rules
+    \item[$\checkmark$] Seeding dữ liệu test
+    \item[$\checkmark$] Migration file (20260413090827\_InitialCreate.cs)
+\end{itemize}
+
+\subsubsection{Vấn đề và khuyến nghị}
+\begin{enumerate}
+    \item \textbf{Cần thêm 2-3 migration files} (yêu cầu: ít nhất 3)
+    \begin{itemize}
+        \item Hiện có: 1 migration chính
+        \item Đề xuất: Thêm migration cho schema refinements, constraints, new columns
+    \end{itemize}
+    
+    \item \textbf{Thiếu Data Annotations}
+    \begin{itemize}
+        \item Cần thêm: [Required], [StringLength], [EmailAddress], etc.
+        \item Ví dụ: User.FullName cần [Required]
+    \end{itemize}
+    
+    \item \textbf{Thiếu Unique Constraints}
+    \begin{itemize}
+        \item Like entity: (UserId, PostId) nên là unique
+        \item FriendShip: (RequesterId, ReceiverId) nên là unique
+    \end{itemize}
+\end{enumerate}
+
+\newpage
+
+\subsection{Requirement B2: RESTful API Controllers \& DTOs}
+\textbf{Trạng thái: } \textcolor{red}{\textbf{30-40\% Hoàn thành}} ⚠️
+
+\subsubsection{Đã hoàn thành}
+\begin{itemize}
+    \item[$\checkmark$] \textbf{AuthController}:
+    \begin{itemize}
+        \item POST /api/auth/register
+        \item POST /api/auth/login
+        \item POST /api/auth/refresh-token (Authorize)
+        \item GET /api/auth/profile (Authorize)
+    \end{itemize}
+    \item[$\checkmark$] DTOs: RegisterDTO, LoginDTO, AuthResponseDTO, TokenRefreshDTO
+    \item[$\checkmark$] HTTP Status Codes: Ok, BadRequest, Unauthorized, NotFound
+\end{itemize}
+
+\subsubsection{Còn thiếu (CRITICAL)}
+\begin{enumerate}
+    \item \textbf{PostsController} - Missing
+    \begin{itemize}
+        \item GET /api/posts - Lấy tất cả bài viết
+        \item GET /api/posts/{id} - Lấy chi tiết bài viết
+        \item POST /api/posts - Tạo bài viết mới
+        \item PUT /api/posts/{id} - Cập nhật bài viết
+        \item DELETE /api/posts/{id} - Xóa bài viết
+    \end{itemize}
+    
+    \item \textbf{CommentsController} - Missing
+    \begin{itemize}
+        \item CRUD operations
+        \item Lấy comments theo Post ID
+    \end{itemize}
+    
+    \item \textbf{LikesController} - Missing
+    \item \textbf{SharesController} - Missing
+    \item \textbf{FriendsController} - Missing
+    \item \textbf{UsersController} - Missing
+    \item \textbf{StoriesController} - Missing
+    
+    \item Tương ứng DTOs cho các controller trên
+\end{enumerate}
+
+\newpage
+
+\subsection{Requirement B3: Service Layer}
+\textbf{Trạng thái: } \textcolor{red}{\textbf{20-30\% Hoàn thành}} ⚠️
+
+\subsubsection{Cấu trúc hiện tại}
+\begin{itemize}
+    \item Services/Interface/ - Thư mục chứa interfaces
+    \item Services/Implementation/ - Thư mục chứa implementations
+\end{itemize}
+
+\subsubsection{Cần phát triển}
+\begin{enumerate}
+    \item \textbf{PostService}
+    \begin{itemize}
+        \item GetAllPostsAsync()
+        \item GetPostByIdAsync(Guid id)
+        \item CreatePostAsync(CreatePostDTO dto)
+        \item UpdatePostAsync(Guid id, UpdatePostDTO dto)
+        \item DeletePostAsync(Guid id)
+    \end{itemize}
+    
+    \item \textbf{CommentService}
+    \begin{itemize}
+        \item CRUD operations
+        \item GetCommentsByPostIdAsync()
+    \end{itemize}
+    
+    \item \textbf{LikeService}
+    \item \textbf{ShareService}
+    \item \textbf{UserService}
+    \item \textbf{FriendshipService}
+    \item Theo Repository Pattern + Dependency Injection
+\end{enumerate}
+
+\subsection{Requirement B4: Authentication \& Authorization}
+\textbf{Trạng thái: } \textcolor{darkblue}{\textbf{80\% Hoàn thành}}
+
+\subsubsection{Đã hoàn thành}
+\begin{itemize}
+    \item[$\checkmark$] JWT Token Authentication
+    \item[$\checkmark$] ASP.NET Core Identity integration
+    \item[$\checkmark$] Role-based Authorization (Admin, User)
+    \item[$\checkmark$] Login/Register endpoints
+    \item[$\checkmark$] Token Refresh endpoint
+    \item[$\checkmark$] [Authorize] attributes trên endpoints
+\end{itemize}
+
+\subsubsection{Còn cần hoàn thiện}
+\begin{itemize}
+    \item Policy-based authorization details
+    \item Refresh token rotation
+    \item Token expiration settings
+\end{itemize}
+
+\newpage
+
+\subsection{Requirement B5: Unit Testing}
+\textbf{Trạng thái: } \textcolor{darkblue}{\textbf{85-90\% Hoàn thành}}
+
+\subsubsection{Thống kê}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \rowcolor{lightblue}
+        \textbf{Test Suite} & \textbf{Số test} & \textbf{Status} & \textbf{Coverage} \\
+        \hline
+        PostServiceTests & 21 & \cellcolor{lightgreen}✓ Pass & ~85\% \\
+        AuthServiceTests & 20 & \cellcolor{lightgreen}✓ Ready & ~80\% \\
+        AuthControllerTests & 4 & \cellcolor{lightgreen}✓ Pass & ~75\% \\
+        CommentServiceTests & - & \cellcolor{lightblue}~ Pending & - \\
+        LikeServiceTests & - & \cellcolor{lightblue}~ Pending & - \\
+        ShareServiceTests & - & \cellcolor{lightblue}~ Pending & - \\
+        \hline
+        \textbf{Tổng cộng} & \textbf{42+} & \textbf{100\% Pass} & \textbf{~70\%} \\
+        \hline
+    \end{tabular}
+    \caption{Kết quả Unit Tests}
+\end{table}
+
+\subsubsection{Framework \& Tools}
+\begin{itemize}
+    \item xUnit v2.9.3
+    \item Moq v4.20.72
+    \item Coverlet v6.0.4
+    \item Target Framework: .NET 10.0
+\end{itemize}
+
+\subsection{Requirement B6: Docker \& Deployment}
+\textbf{Trạng thái: } \textcolor{orange}{\textbf{30\% Hoàn thành}} ⚠️
+
+\subsubsection{Đã hoàn thành}
+\begin{itemize}
+    \item[$\checkmark$] Dockerfile cho Backend (InteractHub.Api)
+    \item[$\checkmark$] Dockerfile cho Frontend
+    \item[$\checkmark$] docker-compose.yml cơ bản
+\end{itemize}
+
+\subsubsection{Còn cần}
+\begin{itemize}
+    \item Cấu hình chi tiết docker-compose
+    \item Environment variables
+    \item Volume mappings
+    \item Network configuration
+    \item CI/CD pipeline (GitHub Actions / Azure DevOps)
+    \item Azure Blob Storage integration
+\end{itemize}
+
+\subsection{Requirement B7: Frontend (React + TypeScript)}
+\textbf{Trạng thái: } \textcolor{orange}{\textbf{25\% Hoàn thành}} ⚠️
+
+\subsubsection{Hiện tại}
+\begin{itemize}
+    \item Cấu trúc React + TypeScript + Vite
+    \item Tailwind CSS setup
+    \item React Router, Axios, React Hook Form
+    \item Cơ bản layout
+\end{itemize}
+
+\subsubsection{Cần phát triển}
+\begin{itemize}
+    \item Pages: Home, Profile, Login, Register, Posts, Friends
+    \item Components: PostCard, CommentList, UserCard
+    \item Services: API Integration
+    \item State Management
+    \item Form validation
+    \item Error handling
+\end{itemize}
+
+\newpage
+
+% ==================== CHƯƠNG 3 ====================
+\chapter{Cấu trúc dự án}
+
+\section{Backend Structure}
+\begin{verbatim}
+InteractHub.Api/
+├── Controllers/
+│   ├── AuthController.cs          [✓ Hoàn thành]
+│   ├── CommentController.cs       [✗ TODO]
+│   ├── LikeController.cs          [✗ TODO]
+│   ├── PostController.cs          [✓ Partial]
+│   └── ShareController.cs         [✗ TODO]
+├── Models/
+│   ├── User.cs
+│   ├── Post.cs
+│   ├── Comment.cs
+│   ├── Like.cs
+│   ├── Share.cs
+│   ├── Story.cs
+│   ├── Notification.cs
+│   ├── FriendShip.cs
+│   ├── HashTag.cs
+│   ├── PostReport.cs
+│   ├── BaseEntity.cs
+│   └── ApiResponses.cs
+├── DTOs/
+│   ├── AuthDTOs.cs               [✓]
+│   ├── Post/                     [~ Partial]
+│   └── Post_Interactions/        [~ Partial]
+├── Data/
+│   ├── ApplicationDbContext.cs   [✓]
+│   ├── DataContextDapper.cs      [✓]
+│   └── DataSeeder.cs             [✓]
+├── Services/
+│   ├── Interface/                [~ Pending]
+│   └── Implementation/           [~ Pending]
+├── Repositories/
+│   ├── GenericRepository.cs      [✓]
+│   └── IGenericRepository.cs     [✓]
+├── Migrations/
+│   ├── 20260413090827_InitialCreate.cs
+│   ├── 20260413090827_InitialCreate.Designer.cs
+│   └── ApplicationDbContextModelSnapshot.cs
+├── Dockerfile                    [✓]
+├── appsettings.json             [✓]
+└── Program.cs                   [✓]
+\end{verbatim}
+
+\section{Frontend Structure}
+\begin{verbatim}
+frontend/
+├── public/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── hooks/
+│   ├── assets/
+│   ├── layouts/
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── Dockerfile
+├── vite.config.ts
+├── tsconfig.json
+├── package.json
+└── tailwind.config.js
+\end{verbatim}
+
+\newpage
+
+% ==================== CHƯƠNG 4 ====================
+\chapter{Kế hoạch tiếp theo}
+
+\section{Ưu tiên cao (Critical)}
+
+\subsection{Phase 1: Hoàn thiện Backend API (Tuần 1-2)}
+\begin{enumerate}
+    \item Phát triển PostsController (CRUD full)
+    \item Phát triển CommentsController
+    \item Phát triển LikesController
+    \item Phát triển SharesController
+    \item Tương ứng Service layer cho từng controller
+\end{enumerate}
+
+\subsection{Phase 2: Hoàn thiện Service Layer (Tuần 2-3)}
+\begin{enumerate}
+    \item Implement PostService (21 tests passed)
+    \item Implement CommentService
+    \item Implement LikeService
+    \item Implement ShareService
+    \item Implement UserService
+    \item Implement FriendshipService
+    \item Unit tests cho từng service
+\end{enumerate}
+
+\subsection{Phase 3: Frontend Development (Tuần 3-4)}
+\begin{enumerate}
+    \item Pages setup (Home, Profile, Login, Register)
+    \item API Service integration
+    \item Form components với React Hook Form
+    \item State management
+    \item Authentication flow
+\end{enumerate}
+
+\section{Ưu tiên trung bình (Important)}
+
+\begin{enumerate}
+    \item Thêm validation (Data Annotations)
+    \item Thêm 2-3 migration files theo requirement
+    \item Error handling \& logging
+    \item Pagination cho list endpoints
+    \item Filtering \& searching functionality
+\end{enumerate}
+
+\section{Ưu tiên thấp (Nice to have)}
+
+\begin{enumerate}
+    \item SignalR real-time notifications
+    \item Azure Blob Storage integration
+    \item CI/CD pipeline setup
+    \item Advanced testing (Integration tests)
+    \item Performance optimization
+\end{enumerate}
+
+\newpage
+
+% ==================== CHƯƠNG 5 ====================
+\chapter{Database Diagram}
+
+\section{Entities \& Relationships}
+
+\subsection{Entity Relationships}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l|}
+        \hline
+        \rowcolor{lightblue}
+        \textbf{Relationship} & \textbf{Type} \\
+        \hline
+        User → Posts & 1 : Many \\
+        User → Comments & 1 : Many \\
+        User → Likes & 1 : Many \\
+        User → FriendShips & 1 : Many (Requester) \\
+        User → FriendShips & 1 : Many (Receiver) \\
+        User → Messages & 1 : Many (Sent) \\
+        User → Messages & 1 : Many (Received) \\
+        Post → Comments & 1 : Many \\
+        Post → Likes & 1 : Many \\
+        Post → Shares & 1 : Many \\
+        Post → PostMedia & 1 : Many \\
+        Post ↔ HashTag & Many : Many \\
+        \hline
+    \end{tabular}
+    \caption{Entity Relationships}
+\end{table}
+
+\subsection{9 Core Entities}
+\begin{enumerate}
+    \item \textbf{User} - Người dùng hệ thống
+    \item \textbf{Post} - Bài viết
+    \item \textbf{Comment} - Bình luận
+    \item \textbf{Like} - Yêu thích
+    \item \textbf{Share} - Chia sẻ
+    \item \textbf{Story} - Câu chuyện
+    \item \textbf{Notification} - Thông báo
+    \item \textbf{FriendShip} - Mối quan hệ bạn bè
+    \item \textbf{HashTag} - Thẻ
+\end{enumerate}
+
+\newpage
+
+% ==================== CHƯƠNG 6 ====================
+\chapter{Kết luận}
+
+\section{Tóm tắt tiến độ}
+\begin{itemize}
+    \item Backend cơ bản: 60\% hoàn thành
+    \item Frontend: 25\% hoàn thành
+    \item Testing: 85\% hoàn thành
+    \item DevOps/Docker: 30\% hoàn thành
+    \item \textbf{Tổng thể: 50-55\% hoàn thành}
+\end{itemize}
+
+\section{Điểm mạnh}
+\begin{itemize}
+    \item[$+$] Database schema thiết kế tốt
+    \item[$+$] Entity Framework setup đúng
+    \item[$+$] Authentication/Authorization cơ bản hoàn thành
+    \item[$+$] Unit tests coverage tốt (70\%)
+    \item[$+$] Có Generic Repository pattern
+\end{itemize}
+
+\section{Điểm yếu}
+\begin{itemize}
+    \item[$-$] Controllers chưa đầy đủ
+    \item[$-$] Service layer chưa hoàn thiện
+    \item[$-$] Frontend còn nhiều việc cần làm
+    \item[$-$] Thiếu validation/constraints
+    \item[$-$] CI/CD chưa setup
+\end{itemize}
+
+\section{Khuyến nghị}
+\begin{enumerate}
+    \item \textbf{Ngắn hạn (1-2 tuần)}:
+    \begin{itemize}
+        \item Hoàn thiện tất cả Controllers
+        \item Hoàn thiện Service Layer
+        \item Thêm Data Annotations
+    \end{itemize}
+    
+    \item \textbf{Trung hạn (2-3 tuần)}:
+    \begin{itemize}
+        \item Frontend development
+        \item Error handling/logging
+        \item More unit tests
+    \end{itemize}
+    
+    \item \textbf{Dài hạn (3+ tuần)}:
+    \begin{itemize}
+        \item Docker/CI-CD
+        \item Azure deployment
+        \item Performance optimization
+        \item SignalR real-time
+    \end{itemize}
+\end{enumerate}
+
+\section{Ngày cập nhật}
+\textit{Báo cáo này được tạo lập vào ngày 13/04/2026}
+
+\end{document}
