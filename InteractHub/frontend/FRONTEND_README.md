@@ -1,6 +1,6 @@
-# FRONTEND Notes (Tiếng Việt)
+# FRONTEND Notes 
 
-Tệp này tóm tắt những thay đổi đã thực hiện cho phần frontend để tương thích với refactor và API backend.
+
 
 ## Tổng quan thay đổi
 1. Thêm HTTP client chung `src/services/api.ts`:
