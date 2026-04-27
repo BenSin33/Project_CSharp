@@ -75,6 +75,6 @@ Chi tiết file đã chỉnh sửa:
   - revert thay đổi và hiển thị lỗi nếu API trả lỗi
 - Cập nhật `src/pages/HomePage.tsx` để gọi `getAllPosts`, `toggleLike` và `addComment` từ các service mới.
 
-Ghi chú ngắn (VN): Các mapping dữ liệu (author, counts) hiện là sơ bộ — cần hoàn thiện khi backend trả thêm thông tin (author, likes/shares/comments counts, media URLs).
+Ghi chú ngắn : Các mapping dữ liệu (author, counts) hiện là sơ bộ — cần hoàn thiện khi backend trả thêm thông tin (author, likes/shares/comments counts, media URLs).
 
 
