@@ -23,8 +23,9 @@ export interface PostData {
 
 interface PostCardProps {
   post: PostData;
-  onLike?: (postId: string) => void;
+  onLike?: (postId: string) => Promise<any> | void;
   onComment?: (postId: string) => void;
+  onAddComment?: (postId: string, content: string) => Promise<any> | void;
   onShare?: (postId: string) => void;
   onSave?: (postId: string) => void;
   onMoreOptions?: (postId: string) => void;
@@ -170,6 +171,7 @@ export default function PostCard({
   post,
   onLike,
   onComment,
+  onAddComment,
   onShare,
   onSave,
   onMoreOptions,
@@ -177,12 +179,39 @@ export default function PostCard({
   const [liked, setLiked] = useState(post.isLiked ?? false);
   const [saved, setSaved] = useState(post.isSaved ?? false);
   const [likeCount, setLikeCount] = useState(post.likes);
+  const [commentsCount, setCommentsCount] = useState(post.commentsCount);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLike = () => {
+  // clear error after a while
+  const showError = (msg: string) => {
+    setErrorMessage(msg);
+    setTimeout(() => setErrorMessage(null), 4000);
+  };
+
+  // NOTE (2026-04-27):
+  // - Component này được chỉnh sửa để thêm UX cho like/comment (optimistic update, loading, error)
+  // - Nếu muốn thay đổi hành vi rollback hoặc hiển thị lỗi toàn cục, điều chỉnh logic showError / revert.
+
+  const handleLike = async () => {
+    // optimistic update
     const next = !liked;
     setLiked(next);
     setLikeCount((c) => (next ? c + 1 : c - 1));
-    onLike?.(post.id);
+    if (!onLike) return;
+    setLikeLoading(true);
+    try {
+      await onLike(post.id);
+    } catch (err: any) {
+      // revert optimistic
+      setLiked(!next);
+      setLikeCount((c) => (next ? c - 1 : c + 1));
+      showError(err?.message ?? "Failed to update like");
+    } finally {
+      setLikeLoading(false);
+    }
   };
 
   const handleSave = () => {
@@ -227,7 +256,13 @@ export default function PostCard({
       <div className="flex items-center justify-between px-3 pt-2 pb-1">
         <div className="flex items-center gap-0.5">
           <ActionButton
-            icon={<HeartIcon filled={liked} />}
+            icon={
+              likeLoading ? (
+                <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" opacity="0.25"/></svg>
+              ) : (
+                <HeartIcon filled={liked} />
+              )
+            }
             active={liked}
             onClick={handleLike}
             ariaLabel="Like post"
@@ -272,30 +307,69 @@ export default function PostCard({
       </div>
 
       {/* ── View comments ── */}
-      {post.commentsCount > 0 && (
+      {commentsCount > 0 && (
         <div className="px-4 pb-2">
           <button
             onClick={() => onComment?.(post.id)}
             className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
           >
-            View all {post.commentsCount} comments
+            View all {commentsCount} comments
           </button>
         </div>
       )}
 
       {/* ── Add comment ── */}
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100">
-        <input
-          type="text"
-          placeholder="Add a comment..."
-          className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") onComment?.(post.id);
-          }}
-        />
-        <button className="text-sm font-semibold text-blue-500 hover:text-blue-700 transition-colors">
-          Post
-        </button>
+      <div className="flex flex-col gap-2 px-4 py-3 border-t border-gray-100">
+        <div className="flex items-center gap-2">
+          <input
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            type="text"
+            placeholder="Add a comment..."
+            className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+            onKeyDown={async (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (!commentText.trim() || commentLoading) return;
+                // optimistic
+                setCommentsCount((c) => c + 1);
+                setCommentLoading(true);
+                try {
+                  await onAddComment?.(post.id, commentText.trim());
+                  setCommentText("");
+                } catch (err: any) {
+                  setCommentsCount((c) => Math.max(0, c - 1));
+                  showError(err?.message ?? "Failed to post comment");
+                } finally {
+                  setCommentLoading(false);
+                }
+              }
+            }}
+          />
+          <button
+            onClick={async () => {
+              if (!commentText.trim() || commentLoading) return;
+              setCommentsCount((c) => c + 1);
+              setCommentLoading(true);
+              try {
+                await onAddComment?.(post.id, commentText.trim());
+                setCommentText("");
+              } catch (err: any) {
+                setCommentsCount((c) => Math.max(0, c - 1));
+                showError(err?.message ?? "Failed to post comment");
+              } finally {
+                setCommentLoading(false);
+              }
+            }}
+            disabled={!commentText.trim() || commentLoading}
+            className="text-sm font-semibold text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {commentLoading ? "Posting..." : "Post"}
+          </button>
+        </div>
+        {errorMessage && (
+          <div className="text-sm text-red-600">{errorMessage}</div>
+        )}
       </div>
     </article>
   );

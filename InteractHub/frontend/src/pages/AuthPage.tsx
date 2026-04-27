@@ -36,9 +36,19 @@ export default function AuthPage() {
     setIsLoading(true);
     setServerError(undefined);
     try {
-      await new Promise(r => setTimeout(r, 800)); // TODO: gọi API
-      console.log("login:", data);
-      navigate("/");
+        // NOTE (2026-04-27):
+        // - Phần này được cập nhật để gọi API backend (Auth).
+        // - Gọi POST /api/auth/login và lưu token trả về vào localStorage nếu có.
+      const api = (await import("../services/api")).default;
+      const resp = await api.post(`/api/auth/login`, { email: data.email, password: data.password });
+      if (resp?.data?.token ?? resp?.data?.data?.token) {
+        const token = resp.data.token ?? resp.data.data.token;
+        localStorage.setItem("token", token);
+        navigate("/");
+      } else {
+        // hiển thị message từ backend nếu có
+        setServerError(resp?.data?.message ?? resp?.data?.Message ?? "Login failed");
+      }
     } catch {
       setServerError("Invalid email or password. Please try again.");
     } finally {
@@ -50,9 +60,26 @@ export default function AuthPage() {
     setIsLoading(true);
     setServerError(undefined);
     try {
-      await new Promise(r => setTimeout(r, 800)); // TODO: gọi API
-      console.log("register:", data);
-      navigate("/");
+      const api = (await import("../services/api")).default;
+      // NOTE (2026-04-27):
+      // - Gọi POST /api/auth/register. Nếu backend trả token, lưu token và redirect.
+      // - Mapping dữ liệu frontend -> DTO backend được thực hiện ở payload dưới.
+      const payload = {
+        FullName: data.fullName,
+        Email: data.email,
+        Password: data.password,
+        DateOfBirth: new Date().toISOString(),
+        Gender: "other",
+      };
+      const resp = await api.post(`/api/auth/register`, payload);
+      if (resp?.data?.success ?? resp?.data?.Success) {
+          // auto-login và xử lý response (nếu trả token thì lưu
+        const token = resp.data.token ?? resp.data.data?.token;
+        if (token) localStorage.setItem("token", token);
+        navigate("/");
+      } else {
+        setServerError(resp?.data?.message ?? resp?.data?.Message ?? "Registration failed");
+      }
     } catch {
       setServerError("Registration failed. Please try again.");
     } finally {
