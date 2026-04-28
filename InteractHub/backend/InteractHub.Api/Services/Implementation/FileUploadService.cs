@@ -16,7 +16,7 @@ public class FileUploadService : IFileUploadService
         _blobServiceClient = new BlobServiceClient(connectionString);
     }
 
-    public async Task<string> UploadFileAsync(IFormFile file, string containerName = "InteractHub")
+    public async Task<string> UploadFileAsync(IFormFile file, string containerName = "interacthub-media")
     {
         if(file == null || file.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));
@@ -46,10 +46,14 @@ public class FileUploadService : IFileUploadService
         try
         {
             var uri = new Uri(fileUrl);
-            var blobClient = new BlobClient(uri);
-            var response = await blobClient.DeleteIfExistsAsync();
+            var containerName = uri.Segments[1].Trim('/');
+            var blobName = string.Join("", uri.Segments.Skip(2));
+            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            var blobClient = containerClient.GetBlobClient(blobName);
 
-            return response.Value; // true if deleted, false if not exist
+            var response = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
+
+            return response.Value; // returns true if deleted successfully, false if file not found or deletion failed
         } 
         catch 
         {

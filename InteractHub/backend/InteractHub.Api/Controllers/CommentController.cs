@@ -20,7 +20,7 @@ public class CommentController : ControllerBase
         _commentService = commentService;
     }
 
-    [HttpGet("pót/{postId}")]
+    [HttpGet("post/{postId}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetComments(Guid postId)
     {
