@@ -1,54 +1,67 @@
-import api, { unwrap } from "./api";
+import api, { unwrap } from "./api"
+import { MOCK_POSTS } from "../constants/mock"
+export interface PostAuthor {
+  id: string
+  name: string
+  avatarUrl?: string
+}
 
-// gọi các endpoint liên quan đến Post (CRUD).
-// - Sử dụng `unwrap(resp)` để lấy payload theo chuẩn ApiResponse<T> từ backend.
-// - Trả về dữ liệu đã unwrap để component dễ dùng.
-
-export interface PostResponseDto {
-  id: string;
-  userId: string;
-  content?: string;
-  visibility?: string;
-  status?: string;
-  createdAt: string;
-  updatedAt: string;
+export interface PostDto {
+  id: string
+  author: PostAuthor
+  content: string
+  imageUrl?: string
+  likes: number
+  shares: number
+  commentsCount: number
+  createdAt: string
+  isLiked?: boolean
+  isSaved?: boolean
+  visibility?: string
 }
 
 export interface CreatePostDto {
-  userId: string;
-  content?: string;
-  visibility?: string;
+  content: string
+  imageUrl?: string
+  visibility?: string
 }
 
 export interface UpdatePostDto {
-  content?: string;
-  visibility?: string;
+  content?: string
+  visibility?: string
 }
 
-// NOTE (2026-04-27):
-// - Thêm ngày 27/04/2026: các hàm CRUD cho Post được tạo để kết nối với backend.
-// - getAllPosts gọi GET /api/post và trả về danh sách PostResponseDto đã unwrap.
-export async function getAllPosts() {
-  const resp = await api.get("/api/post");
-  return unwrap<any[]>(resp) ?? [];
+
+export async function getFeed(): Promise<PostDto[]> {
+  return getAllPosts()
 }
 
-export async function getPostById(id: string) {
-  const resp = await api.get(`/api/post/${id}`);
-  return unwrap(resp);
+export async function getAllPosts(): Promise<PostDto[]> {
+  try {
+    const resp = await api.get("/api/post")
+    return unwrap<PostDto[]>(resp) ?? []
+  } catch (err: any) {
+    if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) return MOCK_POSTS
+    throw err
+  }
 }
 
-export async function createPost(payload: CreatePostDto) {
-  const resp = await api.post(`/api/post`, payload);
-  return unwrap(resp);
+export async function getPostById(id: string): Promise<PostDto | undefined> {
+  const resp = await api.get(`/api/post/${id}`)
+  return unwrap<PostDto>(resp)
 }
 
-export async function updatePost(id: string, payload: UpdatePostDto) {
-  const resp = await api.put(`/api/post/${id}`, payload);
-  return unwrap(resp);
+export async function createPost(payload: CreatePostDto): Promise<PostDto> {
+  const resp = await api.post("/api/post", payload)
+  return unwrap<PostDto>(resp)!
 }
 
-export async function deletePost(id: string) {
-  const resp = await api.delete(`/api/post/${id}`);
-  return unwrap(resp);
+export async function updatePost(id: string, payload: UpdatePostDto): Promise<PostDto> {
+  const resp = await api.put(`/api/post/${id}`, payload)
+  return unwrap<PostDto>(resp)!
 }
+
+export async function deletePost(id: string): Promise<void> {
+  await api.delete(`/api/post/${id}`)
+}
+
