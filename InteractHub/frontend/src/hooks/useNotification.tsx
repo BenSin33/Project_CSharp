@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Notification } from "../components/notifications/NotificationPanel";
+import type { Notification } from "../types";
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);

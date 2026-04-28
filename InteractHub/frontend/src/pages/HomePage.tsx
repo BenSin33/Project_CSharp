@@ -1,22 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import Navbar from "../components/layout/Navbar";
 import StoryBar from "../components/story/StoryBar";
-import { PostCardDemo } from "../components/post/PostCard";
-import Sidebar from "../components/layout/Sidebar";
-import TrendingHashtags from "../components/hashtag/TrendingHashtags";
-import SuggestionPanel from "../components/suggestion/SuggestionPanel";
-import PostCard, { PostData } from "../components/post/PostCard";
-import { getAllPosts } from "../services/postService";
 
-import heroImg from "../assets/hero.png";
-import reactLogo from "../assets/react.svg";
-import viteLogo from "../assets/vite.svg";
+import PostCard from "../components/post/PostCard";
+import { type Post } from "../types";
+import { getAllPosts } from "../services/postService";
 
 function Home() {
     const navigate = useNavigate();
-    const [posts, setPosts] = useState<PostData[]>([]);
+    const [posts, setPosts] = useState<Post[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -31,7 +23,7 @@ function Home() {
                     shares: 0,
                     commentsCount: 0,
                     createdAt: new Date(p.createdAt).toLocaleString(),
-                } as PostData));
+                } as Post));
                 setPosts(mapped);
             } catch (err) {
                 console.warn("load posts", err);

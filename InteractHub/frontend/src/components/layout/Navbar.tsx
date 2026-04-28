@@ -2,13 +2,16 @@ import { useState, useCallback, useRef } from "react";
 import UserMenu from "./userMenu";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface NavbarUser {
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 interface NavbarProps {
   notificationCount?: number;
-  user?: {
-    name: string;
-    email: string;
-    avatarUrl?: string;
-  };
+  user?: NavbarUser;
   onSearch?: (query: string) => void;
   onCreatePost?: () => void;
   onNotificationsClick?: () => void;
@@ -16,6 +19,7 @@ interface NavbarProps {
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
+
 const SearchIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -46,7 +50,7 @@ const XIcon = () => (
   </svg>
 );
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Logo ─────────────────────────────────────────────────────────────────────
 
 const Logo = () => (
   <div className="flex items-center gap-3 select-none">
@@ -57,19 +61,34 @@ const Logo = () => (
         boxShadow: "0 4px 14px rgba(99,102,241,0.4)",
       }}
     >
-      <span style={{ color: "#fff", fontWeight: 700, fontSize: "17px",
-        fontFamily: "'DM Sans', sans-serif", letterSpacing: "-0.5px" }}>
+      <span style={{
+        color: "#fff", fontWeight: 700, fontSize: "17px",
+        fontFamily: "'DM Sans', sans-serif", letterSpacing: "-0.5px",
+      }}>
         I
       </span>
     </div>
-    <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-      fontSize: "18px", color: "#111827", letterSpacing: "-0.3px" }}>
+    <span style={{
+      fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+      fontSize: "18px", color: "#111827", letterSpacing: "-0.3px",
+    }}>
       InteractHub
     </span>
   </div>
 );
 
-const SearchBar = ({ onSearch }: { onSearch?: (query: string) => void }) => {
+// ─── SearchBar ────────────────────────────────────────────────────────────────
+// From V1: full self-contained logic (debounce, clear button, focus expand)
+// From V2: clean prop interface
+
+interface SearchBarProps {
+  onSearch?: (query: string) => void;
+  /** "expand" = widens on focus (default), "static" = fixed width */
+  variant?: "expand" | "static";
+  className?: string;
+}
+
+export const SearchBar = ({ onSearch, variant = "expand", className = "" }: SearchBarProps) => {
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,13 +100,24 @@ const SearchBar = ({ onSearch }: { onSearch?: (query: string) => void }) => {
     debounceRef.current = setTimeout(() => onSearch?.(q), 400);
   }, [onSearch]);
 
-  const handleClear = () => { setValue(""); onSearch?.(""); };
+  const handleClear = () => {
+    setValue("");
+    onSearch?.("");
+  };
+
+  const width = variant === "expand"
+    ? (focused ? "420px" : "340px")
+    : "100%";
 
   return (
-    <div className="relative flex items-center transition-all duration-200"
-      style={{ width: focused ? "420px" : "340px" }}>
-      <span className="absolute left-3.5 pointer-events-none transition-colors duration-150"
-        style={{ color: focused ? "#6366f1" : "#9ca3af" }}>
+    <div
+      className={`relative flex items-center transition-all duration-200 ${className}`}
+      style={{ width }}
+    >
+      <span
+        className="absolute left-3.5 pointer-events-none transition-colors duration-150"
+        style={{ color: focused ? "#6366f1" : "#9ca3af" }}
+      >
         <SearchIcon />
       </span>
       <input
@@ -110,9 +140,12 @@ const SearchBar = ({ onSearch }: { onSearch?: (query: string) => void }) => {
         }}
       />
       {value && (
-        <button onClick={handleClear}
+        <button
+          onClick={handleClear}
           className="absolute right-3 flex items-center justify-center w-5 h-5 rounded-full hover:scale-110 transition-all duration-150"
-          style={{ background: "#d1d5db", color: "#6b7280" }} aria-label="Clear search">
+          style={{ background: "#d1d5db", color: "#6b7280" }}
+          aria-label="Clear search"
+        >
           <XIcon />
         </button>
       )}
@@ -120,8 +153,15 @@ const SearchBar = ({ onSearch }: { onSearch?: (query: string) => void }) => {
   );
 };
 
-const CreatePostButton = ({ onClick }: { onClick?: () => void }) => (
-  <button onClick={onClick}
+// ─── CreatePostButton ─────────────────────────────────────────────────────────
+
+interface CreatePostButtonProps {
+  onClick?: () => void;
+}
+
+export const CreatePostButton = ({ onClick }: CreatePostButtonProps) => (
+  <button
+    onClick={onClick}
     className="flex items-center gap-2 font-semibold transition-all duration-150 active:scale-95 hover:brightness-110"
     style={{
       background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
@@ -130,61 +170,118 @@ const CreatePostButton = ({ onClick }: { onClick?: () => void }) => (
       fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
       cursor: "pointer", boxShadow: "0 4px 14px rgba(99,102,241,0.35)",
     }}
-    aria-label="Create a post">
-    <span className="flex items-center justify-center rounded-md"
-      style={{ background: "rgba(255,255,255,0.25)", padding: "2px", borderRadius: "6px" }}>
+    aria-label="Create a post"
+  >
+    <span
+      className="flex items-center justify-center rounded-md"
+      style={{ background: "rgba(255,255,255,0.25)", padding: "2px", borderRadius: "6px" }}
+    >
       <PlusIcon />
     </span>
     Post
   </button>
 );
 
-const NotificationBell = ({ count = 0, onClick }: { count?: number; onClick?: () => void }) => (
-  <button onClick={onClick}
+// ─── NotificationBell ─────────────────────────────────────────────────────────
+
+interface NotificationBellProps {
+  count?: number;
+  onClick?: () => void;
+}
+
+export const NotificationBell = ({ count = 0, onClick }: NotificationBellProps) => (
+  <button
+    onClick={onClick}
     className="relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-150 hover:bg-gray-100 active:scale-95"
     style={{ color: "#374151", border: "none", background: "transparent", cursor: "pointer" }}
-    aria-label={`Notifications${count > 0 ? `, ${count} unread` : ""}`}>
+    aria-label={`Notifications${count > 0 ? `, ${count} unread` : ""}`}
+  >
     <BellIcon />
     {count > 0 && (
-      <span className="absolute flex items-center justify-center font-bold"
+      <span
+        className="absolute flex items-center justify-center font-bold"
         style={{
-          top: "2px", right: "2px", minWidth: "18px", height: "18px",
-          padding: "0 4px", borderRadius: "999px", background: "#ef4444",
-          color: "#fff", fontSize: "10px", fontFamily: "'DM Sans', sans-serif",
+          top: "2px", right: "2px",
+          minWidth: "18px", height: "18px",
+          padding: "0 4px", borderRadius: "999px",
+          background: "#ef4444", color: "#fff",
+          fontSize: "10px", fontFamily: "'DM Sans', sans-serif",
           fontWeight: 700, border: "2px solid #fff", lineHeight: 1,
-        }}>
+        }}
+      >
         {count > 99 ? "99+" : count}
       </span>
     )}
   </button>
 );
 
-const Avatar = ({ user, onClick }: { user?: NavbarProps["user"]; onClick?: () => void }) => {
-  const initials = user?.name
-    ? user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
-    : "U";
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+// From V1: self-contained initials derivation
+// From V2: `as` prop pattern for semantic flexibility, `size` prop
+
+interface AvatarProps {
+  name?: string;
+  avatarUrl?: string;
+  size?: number;
+  /** Render as "button" (interactive) or "div" (display-only) */
+  as?: "button" | "div";
+  className?: string;
+  onClick?: () => void;
+}
+
+export const Avatar = ({
+  name = "User",
+  avatarUrl,
+  size = 38,
+  as: Tag = "button",
+  className = "",
+  onClick,
+}: AvatarProps) => {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const sharedStyle: React.CSSProperties = {
+    width: size, height: size, borderRadius: "50%",
+    border: "none", padding: 0,
+    cursor: Tag === "button" ? "pointer" : "default",
+    overflow: "hidden", display: "flex",
+    alignItems: "center", justifyContent: "center",
+    background: avatarUrl
+      ? "transparent"
+      : "linear-gradient(135deg, #818cf8, #6366f1)",
+    flexShrink: 0,
+  };
 
   return (
-    <button onClick={onClick}
-      className="transition-all duration-150 hover:ring-2 hover:ring-indigo-400 active:scale-95"
-      style={{
-        width: "38px", height: "38px", borderRadius: "50%",
-        border: "none", padding: 0, cursor: "pointer", overflow: "hidden",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: user?.avatarUrl ? "transparent" : "linear-gradient(135deg,#818cf8,#6366f1)",
-      }}
-      aria-label="Profile menu">
-      {user?.avatarUrl
-        ? <img src={user.avatarUrl} alt={user.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        : <span style={{ color: "#fff", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>
-            {initials}
-          </span>
-      }
-    </button>
+    <Tag
+      onClick={Tag === "button" ? onClick : undefined}
+      className={`transition-all duration-150 ${Tag === "button" ? "hover:ring-2 hover:ring-indigo-400 active:scale-95" : ""} ${className}`}
+      style={sharedStyle}
+      aria-label={Tag === "button" ? "Profile menu" : undefined}
+    >
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={name}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      ) : (
+        <span style={{
+          color: "#fff", fontSize: `${Math.round(size * 0.34)}px`,
+          fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+        }}>
+          {initials}
+        </span>
+      )}
+    </Tag>
   );
 };
 
-// ─── Main Navbar ──────────────────────────────────────────────────────────────
+// ─── Navbar (Main) ────────────────────────────────────────────────────────────
 
 const Navbar = ({
   notificationCount = 0,
@@ -192,7 +289,7 @@ const Navbar = ({
   onSearch,
   onCreatePost,
   onNotificationsClick,
-  onLogout = () => console.log("logout"),
+  onLogout = () => {},
 }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -200,35 +297,42 @@ const Navbar = ({
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
 
-      <header className="w-full sticky top-0 z-50"
+      <header
+        className="w-full sticky top-0 z-50"
         style={{
           background: "rgba(255,255,255,0.92)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           borderBottom: "1px solid #e5e7eb",
           boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-        }}>
-        <nav className="mx-auto flex items-center justify-between"
-          style={{ maxWidth: "1280px", padding: "10px 24px", gap: "16px" }}>
-
+        }}
+      >
+        <nav
+          className="mx-auto flex items-center justify-between"
+          style={{ maxWidth: "1280px", padding: "10px 24px", gap: "16px" }}
+        >
           {/* Left: Logo */}
           <Logo />
 
           {/* Center: Search */}
           <div className="flex-1 flex justify-center" style={{ maxWidth: "520px" }}>
-            <SearchBar onSearch={onSearch} />
+            <SearchBar onSearch={onSearch} variant="expand" className="w-full" />
           </div>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
             <CreatePostButton onClick={onCreatePost} />
+
             <NotificationBell count={notificationCount} onClick={onNotificationsClick} />
 
-            {/* ✅ Avatar + UserMenu trong cùng relative wrapper */}
+            {/* Avatar + UserMenu inside relative wrapper */}
             <div className="relative">
               <Avatar
-                user={user}
-                onClick={() => setMenuOpen(v => !v)}
+                name={user?.name ?? "User"}
+                avatarUrl={user?.avatarUrl}
+                size={38}
+                as="button"
+                onClick={() => setMenuOpen((v) => !v)}
               />
               {user && (
                 <UserMenu
@@ -240,7 +344,6 @@ const Navbar = ({
               )}
             </div>
           </div>
-
         </nav>
       </header>
     </>
@@ -250,6 +353,7 @@ const Navbar = ({
 export default Navbar;
 
 // ─── Preview ──────────────────────────────────────────────────────────────────
+
 export const NavbarPreview = () => (
   <div style={{ background: "#f9fafb", minHeight: "100vh" }}>
     <Navbar
@@ -258,6 +362,7 @@ export const NavbarPreview = () => (
       onSearch={(q) => console.log("search:", q)}
       onCreatePost={() => console.log("create post")}
       onNotificationsClick={() => console.log("notifications")}
+      onLogout={() => console.log("logout")}
     />
     <div style={{ padding: "40px 24px", color: "#6b7280", fontFamily: "DM Sans, sans-serif" }}>
       Page content goes here...

@@ -1,33 +1,39 @@
-/*
-  NOTE (2026-04-27):
-  - File này được thêm / chỉnh sửa ngày 27/04/2026 để cung cấp HTTP client chung
-    cho frontend.
-  - Chức năng: axios instance, gắn token từ localStorage, và helper `unwrap` để
-    tương thích với `ApiResponse<T>` của backend.
-*/
-import axios from "axios";
-const DEFAULT_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5073";
+import axios from "axios"
+
+const DEFAULT_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5073"
 
 const api = axios.create({
   baseURL: DEFAULT_BASE,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
   withCredentials: true,
-});
+  timeout: 10_000,
+})
 
-// Interceptor gắn token JWT từ localStorage vào header Authorization nếu có.
+// Gắn JWT từ localStorage
 api.interceptors.request.use((config) => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
   if (token && config.headers) {
-    (config.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+    (config.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`
   }
-  return config;
-});
+  return config
+})
 
-export default api;
+// Tự logout khi 401
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err?.response?.status === 401) {
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+      window.location.href = "/login"
+    }
+    return Promise.reject(err)
+  }
+)
 
-// unwrap nhận response axios và trả về payload thực (hỗ trợ ApiResponse<T> của backend)
+export default api
+
+/** Lấy payload thực từ ApiResponse<T> của backend */
 export function unwrap<T>(resp: any): T | undefined {
-  return resp?.data?.data ?? resp?.data;
+  return resp?.data?.data ?? resp?.data
 }
