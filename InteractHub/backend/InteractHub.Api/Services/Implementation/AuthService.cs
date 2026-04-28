@@ -35,7 +35,11 @@ public class AuthService : IAuthService
         };
 
         var result = await _userManager.CreateAsync(User, model.Password);
-        if (!result.Succeeded) return new AuthResponseDTO (false, "User registration failed");
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("|", result.Errors.Select( e => e.Description));
+            return new AuthResponseDTO(false, $"User registration failed: {errors}");
+        }
 
         await _userManager.AddToRoleAsync(User, "User");
         return new AuthResponseDTO (true, "User registered successfully");

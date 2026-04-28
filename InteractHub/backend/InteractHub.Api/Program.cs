@@ -101,6 +101,7 @@ builder.Services.AddScoped<IShareService, ShareService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
+builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 
 // Đăng ký FileUploadService để sau này có thể inject vào Controller hoặc Service khác khi cần thiết.
 
