@@ -7,7 +7,7 @@ services:
       dockerfile: InteractHub.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: "http://+:5000"
+      ASPNETCORE_URLS: "http://+:5073"
       # SỬA Ở ĐÂY: Dùng host.docker.internal để kết nối với container DB đang chạy bên ngoài
       ConnectionStrings__DefaultConnection: "Server=host.docker.internal,1433;Database=InteractHubDb;User Id=sa;Password=Kh1227102005@*;TrustServerCertificate=True"
       Jwt__Key: "YOUR_LONG_SECRET_KEY_MIN_32_CHARACTERS_REQUIRED"
@@ -15,7 +15,7 @@ services:
       Jwt__Audience: "InteractHubClient"
       Jwt__ExpireMinutes: "60"
     ports:
-      - "5000:5000"
+      - "5073:5073"
     container_name: interacthub-api
     networks:
       - interacthub-network
@@ -25,15 +25,15 @@ services:
     build:
       context: ../frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://api:5073
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - api
     container_name: interacthub-web
     networks:
       - interacthub-network
-    environment:
-      - VITE_API_URL=http://api:5000
     restart: unless-stopped
 
 networks:
