@@ -13,5 +13,8 @@ public class CreatePostDto
 
     public Visibility Visibility {get;set;}
 
+    public List<PostMediaDto> MediaItems {get;set;} = new List<PostMediaDto>();
+    
+
 }
 

@@ -8,5 +8,7 @@ public class UpdatePostDto
     [StringLength(2000, ErrorMessage = "Content cannot exceed 2000 characters")]
     public string? Content {get;set;}
     public Visibility Visibility {get;set;}
+    public List<PostMediaDto> MediaItems {get;set;} = new List<PostMediaDto>();
+    
 }
 

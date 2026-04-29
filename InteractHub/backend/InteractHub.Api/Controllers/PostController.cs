@@ -40,13 +40,32 @@ public class PostController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+                
+            // Sử dụng hàm Fail() của ApiResponse 
             return BadRequest(ApiResponse<PostResponseDto>.Fail("Validation failed", errors));
         }
-        var createdPost = await _postService.CreatePostAsync(request);
 
-        return CreatedAtAction(nameof(GetPostById), new {id = createdPost.Id},
-                ApiResponse<PostResponseDto>.Ok(createdPost, "Post created successfully."));
+        try
+        {
+            // 1. Service xử lý lưu Post và PostMedia vào Database
+            var createdPost = await _postService.CreatePostAsync(request);
+
+            // 2. Sử dụng hàm Ok() của ApiResponse
+            return CreatedAtAction(
+                nameof(GetPostById), 
+                new { id = createdPost.Id },
+                ApiResponse<PostResponseDto>.Ok(createdPost, "Bài viết đã được đăng thành công!")
+            );
+        }
+        catch (Exception ex)
+        {
+            // Xử lý lỗi hệ thống (ví dụ: mất kết nối DB)
+            return StatusCode(500, ApiResponse<PostResponseDto>.Fail("Lỗi server: " + ex.Message));
+        }
     }
 
     [HttpPut("{id}")]

@@ -9,4 +9,5 @@ public class PostResponseDto
     public string? Status {get;set;} // Active, Deleted, etc.
     public DateTime CreatedAt {get;set;}
     public DateTime UpdatedAt {get;set;}
+    public List<PostMediaDto> MediaItems {get;set;} = new List<PostMediaDto>();
 }
