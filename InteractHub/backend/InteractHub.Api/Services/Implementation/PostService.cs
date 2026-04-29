@@ -83,7 +83,14 @@ public class PostService : IPostService
             Visibility = post.Visibility.ToString(),
             Status = post.Status.ToString(),
             CreatedAt = post.CreatedAt,
-            UpdatedAt = post.UpdatedAt
+            UpdatedAt = post.UpdatedAt,
+
+            MediaItems = post.PostMedias?.Select(m => new PostMediaDto
+            {
+                Url = m.Url,
+                MediaType = m.MediaType
+            }).ToList() ?? new List<PostMediaDto>()
+
         };
     }
 

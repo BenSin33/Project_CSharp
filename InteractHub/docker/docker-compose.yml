@@ -1,35 +1,41 @@
 version: "3.9"
-services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=Your_password123
-    ports:
-      - "1433:1433"
-    container_name: interacthub-sql
 
+services:
   api:
     build:
-      context: ../backend/InteractHub.Api
-      dockerfile: Dockerfile
+      context: ../backend
+      dockerfile: InteractHub.Api/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=InteractHubDb;User Id=sa;TrustServerCertificate=True
-      - Jwt__Key=YOUR_LONG_SECRET_KEY
-      - Jwt__Issuer=InteractHub
-      - Jwt__Audience=InteractHubClient
-      - Jwt__ExpireMinutes=60
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:5000"
+      # SỬA Ở ĐÂY: Dùng host.docker.internal để kết nối với container DB đang chạy bên ngoài
+      ConnectionStrings__DefaultConnection: "Server=host.docker.internal,1433;Database=InteractHubDb;User Id=sa;Password=Kh1227102005@*;TrustServerCertificate=True"
+      Jwt__Key: "YOUR_LONG_SECRET_KEY_MIN_32_CHARACTERS_REQUIRED"
+      Jwt__Issuer: "InteractHub"
+      Jwt__Audience: "InteractHubClient"
+      Jwt__ExpireMinutes: "60"
     ports:
       - "5000:5000"
-    depends_on:
-      - sqlserver
+    container_name: interacthub-api
+    networks:
+      - interacthub-network
+    restart: unless-stopped
 
   web:
     build:
       context: ../frontend
       dockerfile: Dockerfile
     ports:
-      - "5173:80"
+      - "80:80"
     depends_on:
       - api
+    container_name: interacthub-web
+    networks:
+      - interacthub-network
+    environment:
+      - VITE_API_URL=http://api:5000
+    restart: unless-stopped
+
+networks:
+  interacthub-network:
+    driver: bridge

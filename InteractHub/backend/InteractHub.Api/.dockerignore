@@ -1,0 +1,15 @@
+**/bin
+**/obj
+**/dist
+.git
+.gitignore
+.dockerignore
+.vscode
+.vs
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+node_modules
+.env.local
