@@ -117,7 +117,8 @@ public class AuthServiceTests
 
         // Assert
         Assert.False(result.Success);
-        Assert.Equal("User registration failed", result.Message);
+        Assert.StartsWith("User registration failed:", result.Message);
+        Assert.Contains("Username already exists", result.Message);
     }
 
     [Fact]
