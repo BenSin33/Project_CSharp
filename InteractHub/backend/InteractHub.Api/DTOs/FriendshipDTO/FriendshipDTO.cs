@@ -19,8 +19,8 @@ namespace InteractHub.Api.DTOs.FriendshipDTO
     public class FriendshipResponseDTO
     {
         public Guid Id {get;set;}
-        public UserFriendDTO Requester {get;set;}
-        public UserFriendDTO Receiver {get;set;}
+        public UserFriendDTO? Requester {get;set;}
+        public UserFriendDTO? Receiver {get;set;}
         public string Status {get;set;} = string.Empty;
         public DateTime CreatedAt {get;set;}
     }

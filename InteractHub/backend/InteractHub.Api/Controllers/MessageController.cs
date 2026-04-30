@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using InteractHub.Api.DTOs;
+using InteractHub.Api.Models;
 using InteractHub.Api.Services.Interface;
 
 namespace InteractHub.Api.Controllers;
@@ -29,19 +30,19 @@ public class MessageController : ControllerBase
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var senderId))
             {
-                return Unauthorized(new { success = false, message = "Invalid token" });
+                return Unauthorized(ApiResponse<string>.Fail("Invalid token"));
             }
 
             var message = await _messageService.SendMessageAsync(createMessageDto, senderId);
-            return Ok(new { success = true, message = "Message sent successfully", data = message });
+            return Ok(ApiResponse<MessageResponseDTO>.Ok(message, "Message sent successfully"));
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { success = false, message = ex.Message });
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
+            return StatusCode(500, ApiResponse<string>.Fail("An error occurred", new List<string> { ex.Message }));
         }
     }
 
@@ -56,15 +57,15 @@ public class MessageController : ControllerBase
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
-                return Unauthorized(new { success = false, message = "Invalid token" });
+                return Unauthorized(ApiResponse<string>.Fail("Invalid token"));
             }
 
             var conversation = await _messageService.GetConversationAsync(userId, otherUserId);
-            return Ok(new { success = true, data = conversation });
+            return Ok(ApiResponse<List<MessageResponseDTO>>.Ok(conversation, "Conversation retrieved successfully"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
+            return StatusCode(500, ApiResponse<string>.Fail("An error occurred", new List<string> { ex.Message }));
         }
     }
 
@@ -79,15 +80,15 @@ public class MessageController : ControllerBase
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
-                return Unauthorized(new { success = false, message = "Invalid token" });
+                return Unauthorized(ApiResponse<string>.Fail("Invalid token"));
             }
 
             var conversations = await _messageService.GetConversationsAsync(userId);
-            return Ok(new { success = true, data = conversations });
+            return Ok(ApiResponse<List<ConversationDTO>>.Ok(conversations, "Conversations retrieved successfully"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
+            return StatusCode(500, ApiResponse<string>.Fail("An error occurred", new List<string> { ex.Message }));
         }
     }
 
@@ -102,14 +103,14 @@ public class MessageController : ControllerBase
             var message = await _messageService.GetMessageByIdAsync(messageId);
             if (message == null)
             {
-                return NotFound(new { success = false, message = "Message not found" });
+                return NotFound(ApiResponse<string>.Fail("Message not found"));
             }
 
-            return Ok(new { success = true, data = message });
+            return Ok(ApiResponse<MessageResponseDTO>.Ok(message, "Message retrieved successfully"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
+            return StatusCode(500, ApiResponse<string>.Fail("An error occurred", new List<string> { ex.Message }));
         }
     }
 
@@ -124,14 +125,14 @@ public class MessageController : ControllerBase
             var result = await _messageService.MarkAsReadAsync(messageId);
             if (!result)
             {
-                return NotFound(new { success = false, message = "Message not found" });
+                return NotFound(ApiResponse<string>.Fail("Message not found"));
             }
 
-            return Ok(new { success = true, message = "Message marked as read" });
+            return Ok(ApiResponse<bool>.Ok(true, "Message marked as read"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
+            return StatusCode(500, ApiResponse<string>.Fail("An error occurred", new List<string> { ex.Message }));
         }
     }
 
@@ -146,20 +147,20 @@ public class MessageController : ControllerBase
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
-                return Unauthorized(new { success = false, message = "Invalid token" });
+                return Unauthorized(ApiResponse<string>.Fail("Invalid token"));
             }
 
             var result = await _messageService.DeleteMessageAsync(messageId, userId);
             if (!result)
             {
-                return BadRequest(new { success = false, message = "Failed to delete message or unauthorized" });
+                return BadRequest(ApiResponse<string>.Fail("Failed to delete message or unauthorized"));
             }
 
-            return Ok(new { success = true, message = "Message deleted successfully" });
+            return Ok(ApiResponse<bool>.Ok(true, "Message deleted successfully"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
+            return StatusCode(500, ApiResponse<string>.Fail("An error occurred", new List<string> { ex.Message }));
         }
     }
 
@@ -174,15 +175,15 @@ public class MessageController : ControllerBase
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
-                return Unauthorized(new { success = false, message = "Invalid token" });
+                return Unauthorized(ApiResponse<string>.Fail("Invalid token"));
             }
 
             var count = await _messageService.GetUnreadMessageCountAsync(userId);
-            return Ok(new { success = true, unreadCount = count });
+            return Ok(ApiResponse<int>.Ok(count, "Unread count retrieved successfully"));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { success = false, message = "An error occurred", error = ex.Message });
+            return StatusCode(500, ApiResponse<string>.Fail("An error occurred", new List<string> { ex.Message }));
         }
     }
 }
