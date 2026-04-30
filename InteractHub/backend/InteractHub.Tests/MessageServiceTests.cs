@@ -1,248 +1,270 @@
-using Moq;
-using Xunit;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 using InteractHub.Api.Data;
-using InteractHub.Api.Models;
 using InteractHub.Api.DTOs;
+using InteractHub.Api.Models;
 using InteractHub.Api.Services.Implementation;
 
 namespace InteractHub.Tests;
 
 public class MessageServiceTests
 {
-    private readonly ApplicationDbContext _context;
-    private readonly MessageService _messageService;
-    private readonly Guid _userId = Guid.NewGuid();
-    private readonly Guid _otherUserId = Guid.NewGuid();
-
-    public MessageServiceTests()
+    private static ApplicationDbContext CreateDbContext(string dbName)
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(dbName)
             .Options;
 
-        _context = new ApplicationDbContext(options);
-        _messageService = new MessageService(_context);
-
-        // Seed test data
-        SeedTestData();
+        return new ApplicationDbContext(options);
     }
 
-    private void SeedTestData()
+    private static User CreateUser(Guid id, string name)
     {
-        var user1 = new User
+        return new User
         {
-            Id = _userId,
-            UserName = "user1@test.com",
-            Email = "user1@test.com",
-            FullName = "User One",
-            AvatarUrl = "https://example.com/avatar1.jpg"
+            Id = id,
+            Email = $"{name}@example.com",
+            UserName = $"{name}@example.com",
+            FullName = name
         };
-
-        var user2 = new User
-        {
-            Id = _otherUserId,
-            UserName = "user2@test.com",
-            Email = "user2@test.com",
-            FullName = "User Two",
-            AvatarUrl = "https://example.com/avatar2.jpg"
-        };
-
-        _context.Users.AddRange(user1, user2);
-        _context.SaveChanges();
     }
 
     [Fact]
-    public async Task SendMessageAsync_ValidData_ReturnMessageResponseDTO()
+    public async Task SendMessageAsync_ReceiverMissing_ThrowsArgumentException()
     {
-        // Arrange
-        var createMessageDto = new CreateMessageDTO("Hello World", _otherUserId);
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
 
-        // Act
-        var result = await _messageService.SendMessageAsync(createMessageDto, _userId);
+        var senderId = Guid.NewGuid();
+        var dto = new CreateMessageDTO("Hi", Guid.NewGuid());
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("Hello World", result.MessageContent);
-        Assert.Equal(_userId, result.SenderId);
-        Assert.Equal(_otherUserId, result.ReceiverId);
+        await Assert.ThrowsAsync<ArgumentException>(() => service.SendMessageAsync(dto, senderId));
+    }
+
+    [Fact]
+    public async Task SendMessageAsync_SenderMissing_ThrowsArgumentException()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
+
+        var receiver = CreateUser(Guid.NewGuid(), "receiver");
+        context.Users.Add(receiver);
+        await context.SaveChangesAsync();
+
+        var dto = new CreateMessageDTO("Hi", receiver.Id);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.SendMessageAsync(dto, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task SendMessageAsync_ValidRequest_PersistsAndReturnsResponse()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
+
+        var sender = CreateUser(Guid.NewGuid(), "sender");
+        var receiver = CreateUser(Guid.NewGuid(), "receiver");
+        context.Users.AddRange(sender, receiver);
+        await context.SaveChangesAsync();
+
+        var dto = new CreateMessageDTO("Hello", receiver.Id);
+
+        var result = await service.SendMessageAsync(dto, sender.Id);
+
+        Assert.Equal("Hello", result.MessageContent);
+        Assert.Equal(sender.Id, result.SenderId);
+        Assert.Equal(receiver.Id, result.ReceiverId);
         Assert.False(result.IsRead);
+        Assert.Single(context.Messages);
     }
 
     [Fact]
-    public async Task SendMessageAsync_InvalidReceiver_ThrowsException()
+    public async Task GetConversationAsync_ReturnsOrderedMessages()
     {
-        // Arrange
-        var invalidUserId = Guid.NewGuid();
-        var createMessageDto = new CreateMessageDTO("Hello", invalidUserId);
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
 
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            _messageService.SendMessageAsync(createMessageDto, _userId)
-        );
+        var userA = CreateUser(Guid.NewGuid(), "userA");
+        var userB = CreateUser(Guid.NewGuid(), "userB");
+        context.Users.AddRange(userA, userB);
+
+        var msg1 = new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "1", SentAt = DateTime.UtcNow.AddMinutes(-5) };
+        var msg2 = new Message { SenderId = userB.Id, ReceiverId = userA.Id, MessageContent = "2", SentAt = DateTime.UtcNow.AddMinutes(-1) };
+        context.Messages.AddRange(msg1, msg2);
+        await context.SaveChangesAsync();
+
+        var result = await service.GetConversationAsync(userA.Id, userB.Id);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal("1", result[0].MessageContent);
+        Assert.Equal("2", result[1].MessageContent);
     }
 
     [Fact]
-    public async Task GetConversationAsync_ExistingConversation_ReturnListOfMessages()
+    public async Task GetConversationsAsync_ReturnsLatestPerUserWithUnreadCount()
     {
-        // Arrange - Gửi 2 tin nhắn
-        var message1Dto = new CreateMessageDTO("First message", _otherUserId);
-        var message2Dto = new CreateMessageDTO("Second message", _otherUserId);
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
 
-        await _messageService.SendMessageAsync(message1Dto, _userId);
-        await _messageService.SendMessageAsync(message2Dto, _userId);
+        var userA = CreateUser(Guid.NewGuid(), "userA");
+        var userB = CreateUser(Guid.NewGuid(), "userB");
+        var userC = CreateUser(Guid.NewGuid(), "userC");
+        context.Users.AddRange(userA, userB, userC);
 
-        // Act
-        var conversation = await _messageService.GetConversationAsync(_userId, _otherUserId);
-
-        // Assert
-        Assert.NotEmpty(conversation);
-        Assert.Equal(2, conversation.Count);
-        Assert.Equal("First message", conversation[0].MessageContent);
-        Assert.Equal("Second message", conversation[1].MessageContent);
-    }
-
-    [Fact]
-    public async Task GetConversationsAsync_MultipleConversations_ReturnConversationList()
-    {
-        // Arrange
-        var userId3 = Guid.NewGuid();
-        var user3 = new User
+        var messages = new List<Message>
         {
-            Id = userId3,
-            UserName = "user3@test.com",
-            Email = "user3@test.com",
-            FullName = "User Three",
-            AvatarUrl = "https://example.com/avatar3.jpg"
+            new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "hi", SentAt = DateTime.UtcNow.AddMinutes(-10), IsRead = false },
+            new Message { SenderId = userB.Id, ReceiverId = userA.Id, MessageContent = "reply", SentAt = DateTime.UtcNow.AddMinutes(-5), IsRead = true },
+            new Message { SenderId = userC.Id, ReceiverId = userA.Id, MessageContent = "yo", SentAt = DateTime.UtcNow.AddMinutes(-2), IsRead = false }
         };
-        _context.Users.Add(user3);
-        _context.SaveChanges();
 
-        await _messageService.SendMessageAsync(
-            new CreateMessageDTO("Message to User 2", _otherUserId),
-            _userId
-        );
+        context.Messages.AddRange(messages);
+        await context.SaveChangesAsync();
 
-        await _messageService.SendMessageAsync(
-            new CreateMessageDTO("Message to User 3", userId3),
-            _userId
-        );
+        var result = await service.GetConversationsAsync(userA.Id);
 
-        // Act
-        var conversations = await _messageService.GetConversationsAsync(_userId);
-
-        // Assert
-        Assert.NotEmpty(conversations);
-        Assert.Equal(2, conversations.Count);
+        Assert.Equal(2, result.Count);
+        var convWithC = result.First(c => c.UserId == userC.Id);
+        Assert.Equal(1, convWithC.UnreadCount);
     }
 
     [Fact]
-    public async Task MarkAsReadAsync_ValidMessageId_ReturnsTrue()
+    public async Task GetMessageByIdAsync_NotFound_ReturnsNull()
     {
-        // Arrange
-        var messageDto = new CreateMessageDTO("Test message", _otherUserId);
-        var message = await _messageService.SendMessageAsync(messageDto, _userId);
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
 
-        // Act
-        var result = await _messageService.MarkAsReadAsync(message.Id);
+        var result = await service.GetMessageByIdAsync(Guid.NewGuid());
 
-        // Assert
-        Assert.True(result);
-
-        var updatedMessage = await _messageService.GetMessageByIdAsync(message.Id);
-        Assert.True(updatedMessage?.IsRead);
-    }
-
-    [Fact]
-    public async Task MarkAsReadAsync_InvalidMessageId_ReturnsFalse()
-    {
-        // Act
-        var result = await _messageService.MarkAsReadAsync(Guid.NewGuid());
-
-        // Assert
-        Assert.False(result);
-    }
-
-    [Fact]
-    public async Task DeleteMessageAsync_MessageOwner_ReturnsTrue()
-    {
-        // Arrange
-        var messageDto = new CreateMessageDTO("Test message", _otherUserId);
-        var message = await _messageService.SendMessageAsync(messageDto, _userId);
-
-        // Act
-        var result = await _messageService.DeleteMessageAsync(message.Id, _userId);
-
-        // Assert
-        Assert.True(result);
-
-        var deletedMessage = await _messageService.GetMessageByIdAsync(message.Id);
-        Assert.Null(deletedMessage);
-    }
-
-    [Fact]
-    public async Task DeleteMessageAsync_NotMessageOwner_ReturnsFalse()
-    {
-        // Arrange
-        var messageDto = new CreateMessageDTO("Test message", _otherUserId);
-        var message = await _messageService.SendMessageAsync(messageDto, _userId);
-
-        // Act - cố gắng xóa tin nhắn của user khác
-        var result = await _messageService.DeleteMessageAsync(message.Id, _otherUserId);
-
-        // Assert
-        Assert.False(result);
-    }
-
-    [Fact]
-    public async Task GetUnreadMessageCountAsync_MultipleUnreadMessages_ReturnCorrectCount()
-    {
-        // Arrange
-        await _messageService.SendMessageAsync(
-            new CreateMessageDTO("Unread 1", _otherUserId),
-            _userId
-        );
-
-        await _messageService.SendMessageAsync(
-            new CreateMessageDTO("Unread 2", _otherUserId),
-            _userId
-        );
-
-        // Act
-        var count = await _messageService.GetUnreadMessageCountAsync(_otherUserId);
-
-        // Assert
-        Assert.Equal(2, count);
-    }
-
-    [Fact]
-    public async Task GetMessageByIdAsync_ValidMessageId_ReturnMessageResponseDTO()
-    {
-        // Arrange
-        var messageDto = new CreateMessageDTO("Test message", _otherUserId);
-        var createdMessage = await _messageService.SendMessageAsync(messageDto, _userId);
-
-        // Act
-        var result = await _messageService.GetMessageByIdAsync(createdMessage.Id);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("Test message", result.MessageContent);
-        Assert.Equal(_userId, result.SenderId);
-    }
-
-    [Fact]
-    public async Task GetMessageByIdAsync_InvalidMessageId_ReturnNull()
-    {
-        // Act
-        var result = await _messageService.GetMessageByIdAsync(Guid.NewGuid());
-
-        // Assert
         Assert.Null(result);
     }
 
-    public void Dispose()
+    [Fact]
+    public async Task GetMessageByIdAsync_Found_ReturnsDto()
     {
-        _context?.Dispose();
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
+
+        var userA = CreateUser(Guid.NewGuid(), "userA");
+        var userB = CreateUser(Guid.NewGuid(), "userB");
+        context.Users.AddRange(userA, userB);
+
+        var message = new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "hello" };
+        context.Messages.Add(message);
+        await context.SaveChangesAsync();
+
+        var result = await service.GetMessageByIdAsync(message.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal("hello", result?.MessageContent);
+    }
+
+    [Fact]
+    public async Task MarkAsReadAsync_MessageMissing_ReturnsFalse()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
+
+        var result = await service.MarkAsReadAsync(Guid.NewGuid());
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task MarkAsReadAsync_ValidMessage_SetsIsRead()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
+
+        var userA = CreateUser(Guid.NewGuid(), "userA");
+        var userB = CreateUser(Guid.NewGuid(), "userB");
+        context.Users.AddRange(userA, userB);
+
+        var message = new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "m" };
+        context.Messages.Add(message);
+        await context.SaveChangesAsync();
+
+        var result = await service.MarkAsReadAsync(message.Id);
+
+        Assert.True(result);
+        var updated = await context.Messages.FindAsync(message.Id);
+        Assert.True(updated?.IsRead);
+    }
+
+    [Fact]
+    public async Task DeleteMessageAsync_NotSender_ReturnsFalse()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
+
+        var userA = CreateUser(Guid.NewGuid(), "userA");
+        var userB = CreateUser(Guid.NewGuid(), "userB");
+        context.Users.AddRange(userA, userB);
+
+        var message = new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "m" };
+        context.Messages.Add(message);
+        await context.SaveChangesAsync();
+
+        var result = await service.DeleteMessageAsync(message.Id, userB.Id);
+
+        Assert.False(result);
+        Assert.Single(context.Messages);
+    }
+
+    [Fact]
+    public async Task DeleteMessageAsync_SenderDeletes_RemovesMessage()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
+
+        var userA = CreateUser(Guid.NewGuid(), "userA");
+        var userB = CreateUser(Guid.NewGuid(), "userB");
+        context.Users.AddRange(userA, userB);
+
+        var message = new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "m" };
+        context.Messages.Add(message);
+        await context.SaveChangesAsync();
+
+        var result = await service.DeleteMessageAsync(message.Id, userA.Id);
+
+        Assert.True(result);
+        Assert.Empty(context.Messages);
+    }
+
+    [Fact]
+    public async Task GetUnreadMessageCountAsync_ReturnsCount()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        await using var context = CreateDbContext(dbName);
+        var service = new MessageService(context);
+
+        var userA = CreateUser(Guid.NewGuid(), "userA");
+        var userB = CreateUser(Guid.NewGuid(), "userB");
+        context.Users.AddRange(userA, userB);
+
+        var messages = new List<Message>
+        {
+            new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "1", IsRead = false },
+            new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "2", IsRead = true },
+            new Message { SenderId = userA.Id, ReceiverId = userB.Id, MessageContent = "3", IsRead = false }
+        };
+
+        context.Messages.AddRange(messages);
+        await context.SaveChangesAsync();
+
+        var result = await service.GetUnreadMessageCountAsync(userB.Id);
+
+        Assert.Equal(2, result);
     }
 }
