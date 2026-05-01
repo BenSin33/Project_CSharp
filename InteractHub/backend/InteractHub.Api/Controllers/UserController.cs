@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.DTOs.User_Handle;
+using InteractHub.Api.DTOs.Common;
 using InteractHub.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Client;
@@ -18,6 +19,24 @@ public class UserController : ControllerBase
     public UserController(IUserService userService)
     {
         _userService = userService;
+    }
+
+    [HttpGet("search")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SearchUsers([FromQuery] string q, [FromQuery] int skip = 0, [FromQuery] int take = 20)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            return BadRequest(ApiResponse<PaginatedResponse<UserResponseDTO>>.Fail("Search query cannot be empty"));
+        }
+
+        if (skip < 0 || take <= 0)
+        {
+            return BadRequest(ApiResponse<PaginatedResponse<UserResponseDTO>>.Fail("Skip must be >= 0 and Take must be > 0"));
+        }
+
+        var results = await _userService.SearchUsersAsync(q, skip, take);
+        return Ok(ApiResponse<PaginatedResponse<UserResponseDTO>>.Ok(results, "Search completed successfully."));
     }
 
     [HttpGet]
