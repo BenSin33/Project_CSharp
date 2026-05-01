@@ -26,36 +26,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"))
   const [isLoading, setIsLoading] = useState(true)
 
-  // Khôi phục session khi load app
+  // Khôi phục session và lấy profile từ backend khi có token
   useEffect(() => {
     const savedToken = localStorage.getItem("token")
-    const savedUser = localStorage.getItem("user")
-    if (savedToken && savedUser) {
-      try {
-        setToken(savedToken)
-        setUser(JSON.parse(savedUser))
-      } catch {
-        localStorage.removeItem("token")
-        localStorage.removeItem("user")
-      }
+    if (savedToken) {
+      setToken(savedToken)
+      // Thử lấy profile mới nhất từ backend
+      authService.getMe()
+        .then((profile) => {
+          setUser(profile)
+          localStorage.setItem("user", JSON.stringify(profile))
+        })
+        .catch(() => {
+          // Token hết hạn hoặc lỗi → dùng cached user nếu có
+          const savedUser = localStorage.getItem("user")
+          if (savedUser) {
+            try { setUser(JSON.parse(savedUser)) } catch { /* ignore */ }
+          } else {
+            // Xóa token không hợp lệ
+            localStorage.removeItem("token")
+            setToken(null)
+          }
+        })
+        .finally(() => setIsLoading(false))
+    } else {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [])
 
   const login = async (payload: LoginPayload) => {
     const result = await authService.login(payload)
     localStorage.setItem("token", result.token)
-    localStorage.setItem("user", JSON.stringify(result.user))
     setToken(result.token)
-    setUser(result.user)
+    // Lấy profile đầy đủ sau khi login
+    try {
+      const profile = await authService.getMe()
+      localStorage.setItem("user", JSON.stringify(profile))
+      setUser(profile)
+    } catch {
+      // fallback dùng user tạm
+      localStorage.setItem("user", JSON.stringify(result.user))
+      setUser(result.user)
+    }
   }
 
   const register = async (payload: RegisterPayload) => {
     const result = await authService.register(payload)
-    localStorage.setItem("token", result.token)
-    localStorage.setItem("user", JSON.stringify(result.user))
-    setToken(result.token)
-    setUser(result.user)
+    // Backend register không auto-login (trả token rỗng) → redirect to login
+    // Nếu trả token thì login luôn
+    if (result.token) {
+      localStorage.setItem("token", result.token)
+      setToken(result.token)
+      try {
+        const profile = await authService.getMe()
+        localStorage.setItem("user", JSON.stringify(profile))
+        setUser(profile)
+      } catch {
+        localStorage.setItem("user", JSON.stringify(result.user))
+        setUser(result.user)
+      }
+    }
   }
 
   const logout = () => {
