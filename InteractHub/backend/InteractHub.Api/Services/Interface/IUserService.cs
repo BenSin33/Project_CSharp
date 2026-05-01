@@ -1,4 +1,5 @@
 using InteractHub.Api.DTOs.User_Handle;
+using InteractHub.Api.DTOs.Common;
 
 namespace InteractHub.Api.Services.Interface;
 
@@ -11,4 +12,5 @@ public interface IUserService
     Task<bool> LockUserAsync(Guid id, int daysToLock);
     Task<bool> UnLockUserAsync(Guid id);
     Task<bool> AssignRoleAsync(Guid id, string roleName);
+    Task<PaginatedResponse<UserResponseDTO>> SearchUsersAsync(string query, int skip, int take);
 }

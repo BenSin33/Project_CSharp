@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using InteractHub.Api.DTOs.Post;
+using InteractHub.Api.DTOs.Common;
+using InteractHub.Api.DTOs.Post_Interactions;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Models;
 using System.Runtime.ExceptionServices;
+using System.Security.Claims;
 
 namespace InteractHub.Api.Controllers;
 
@@ -11,23 +15,120 @@ namespace InteractHub.Api.Controllers;
 public class PostController : ControllerBase
 {
     private readonly IPostService _postService;
+    private readonly ISavedPostService _savedPostService;
 
-    public PostController(IPostService postService)
+    public PostController(IPostService postService, ISavedPostService savedPostService)
     {
         _postService = postService;
+        _savedPostService = savedPostService;
+    }
+
+    /// <summary>
+    /// Get helper method to extract current user ID from claims
+    /// </summary>
+    private Guid? GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return null;
+        }
+        return userId;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllPosts()
+    public async Task<IActionResult> GetAllPosts([FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
-        var posts = await _postService.GetAllActivePostsAsync();
-        return Ok(ApiResponse<IEnumerable<PostResponseDto>>.Ok(posts, "Posts retrieved successfully."));   
+        if (skip < 0 || take <= 0)
+        {
+            return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Skip must be >= 0 and Take must be > 0"));
+        }
+
+        var currentUserId = GetCurrentUserId();
+        var posts = await _postService.GetAllActivePostsAsync(skip, take, currentUserId);
+        return Ok(ApiResponse<PaginatedResponse<PostResponseDto>>.Ok(posts, "Posts retrieved successfully."));   
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchPosts([FromQuery] string q, [FromQuery] int skip = 0, [FromQuery] int take = 20)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Search query cannot be empty"));
+        }
+
+        if (skip < 0 || take <= 0)
+        {
+            return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Skip must be >= 0 and Take must be > 0"));
+        }
+
+        var currentUserId = GetCurrentUserId();
+        var results = await _postService.SearchPostsAsync(q, skip, take, currentUserId);
+        return Ok(ApiResponse<PaginatedResponse<PostResponseDto>>.Ok(results, "Search completed successfully."));
+    }
+
+    [HttpGet("saved")]
+    [Authorize]
+    public async Task<IActionResult> GetSavedPosts([FromQuery] int skip = 0, [FromQuery] int take = 20)
+    {
+        if (skip < 0 || take <= 0)
+        {
+            return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Skip must be >= 0 and Take must be > 0"));
+        }
+
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Unauthorized(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("User not authenticated"));
+        }
+
+        var savedPosts = await _savedPostService.GetUserSavedPostsAsync(currentUserId.Value, skip, take, currentUserId);
+        return Ok(ApiResponse<PaginatedResponse<PostResponseDto>>.Ok(savedPosts, "Saved posts retrieved successfully."));
+    }
+
+    [HttpPost("{id}/save")]
+    [Authorize]
+    public async Task<IActionResult> SavePost(Guid id)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Unauthorized(ApiResponse<SavedPostResponseDto>.Fail("User not authenticated"));
+        }
+
+        var savedPost = await _savedPostService.SavePostAsync(currentUserId.Value, id);
+        if (savedPost == null)
+        {
+            return NotFound(ApiResponse<SavedPostResponseDto>.Fail($"Post with ID {id} not found"));
+        }
+
+        return Ok(ApiResponse<SavedPostResponseDto>.Ok(savedPost, "Post saved successfully."));
+    }
+
+    [HttpDelete("{id}/unsave")]
+    [Authorize]
+    public async Task<IActionResult> UnsavePost(Guid id)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Unauthorized(ApiResponse<bool>.Fail("User not authenticated"));
+        }
+
+        var result = await _savedPostService.UnsavePostAsync(currentUserId.Value, id);
+        if (!result)
+        {
+            return NotFound(ApiResponse<bool>.Fail($"Saved post not found"));
+        }
+
+        return Ok(ApiResponse<bool>.Ok(true, "Post removed from saved successfully."));
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetPostById(Guid id)
     {
-        var post = await _postService.GetPostByIdAsync(id);
+        var currentUserId = GetCurrentUserId();
+        var post = await _postService.GetPostByIdAsync(id, currentUserId);
         if (post == null)
         {
             return NotFound(ApiResponse<PostResponseDto>.Fail($"Post with ID {id} not found"));
