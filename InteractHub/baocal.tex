@@ -1,0 +1,639 @@
+\documentclass[a4paper]{article}
+\usepackage{vntex}
+%\usepackage[english,vietnam]{babel}
+%\usepackage[utf8]{inputenc}
+
+%\usepackage[utf8]{inputenc}
+%\usepackage[francais]{babel}
+\usepackage{a4wide,amssymb,epsfig,latexsym,multicol,array,hhline,fancyhdr}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{lastpage}
+\usepackage[lined,boxed,commentsnumbered]{algorithm2e}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{graphicx}							% Standard graphics package
+\usepackage{array}
+\usepackage{tabularx, caption}
+\usepackage{multirow}
+\usepackage[framemethod=tikz]{mdframed}% For highlighting paragraph backgrounds
+\usepackage{multicol}
+\usepackage{rotating}
+\usepackage{graphics}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{epsfig}
+\usepackage{tikz}
+\usepackage{listings}
+\usetikzlibrary{arrows,snakes,backgrounds}
+\usepackage{hyperref}
+\hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true} 
+%\usepackage{pstcol} 								% PSTricks with the standard color package
+
+\newtheorem{theorem}{{\bf Định lý}}
+\newtheorem{property}{{\bf Tính chất}}
+\newtheorem{proposition}{{\bf Mệnh đề}}
+\newtheorem{corollary}[proposition]{{\bf Hệ quả}}
+\newtheorem{lemma}[proposition]{{\bf Bổ đề}}
+
+\everymath{\color{blue}}
+%\usepackage{fancyhdr}
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyhead[L]{
+ \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+    \put(0,-8){\includegraphics[width=8mm, height=8mm]{logoITSGUsmall.png}}
+    %\put(0,-8){\epsfig{width=10mm,figure=hcmut.eps}}
+   \end{picture}&
+	%\includegraphics[width=8mm, height=8mm]{hcmut.png} & %
+	\begin{tabular}{l}
+		\textbf{\bf \ttfamily Trường Đại học Sài Gòn}\\
+		\textbf{\bf \ttfamily Khoa Công Nghệ Thông Tin}
+	\end{tabular} 	
+ \end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{l}
+		\tiny \bf \\
+		\tiny \bf 
+	\end{tabular}  }
+\fancyfoot{} % clear all footer fields
+\fancyfoot[L]{\scriptsize \ttfamily Bài tập lớn môn Phát triển ứng dụng Web Full-Stack - Niên khóa 2025-2026}
+\fancyfoot[R]{\scriptsize \ttfamily Trang {\thepage}/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+
+%%%
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3}
+\makeatletter
+\newcounter {subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\newcommand*{\subsubsubsectionmark}[1]{}
+\makeatother
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+	language=Matlab,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=none,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=3,
+	numbers=left,
+	stepnumber=1,
+	numbersep=1pt,    
+	firstnumber=1,
+	numberfirstline=true
+}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+TRƯỜNG ĐẠI HỌC SÀI GÒN \\
+KHOA CÔNG NGHỆ THÔNG TIN
+\end{center}
+\vspace{1cm}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=3cm]{logoITSGU.png}
+\end{center}
+\end{figure}
+
+\vspace{1cm}
+
+
+\begin{center}
+\begin{tabular}{c}
+	\multicolumn{1}{l}{\textbf{{\Large NGÔN NGỮ LẬP TRÌNH C\#}}}\\
+	~~\\
+	\hline
+	\\
+	\multicolumn{1}{l}{\textbf{{\Large Phát triển ứng dụng }}}\\
+	\\
+	
+	\textbf{{\Huge Social Media Web Application}}\\
+	\\
+	\hline
+\end{tabular}
+\end{center}
+
+\vspace{3cm}
+
+\begin{table}[h]
+\begin{tabular}{rrl}
+\hspace{5 cm} & GVHD: &Từ Lãng Phiêu\\
+& SV: & Dương Thiện Quý - 3123410298\\
+& & Trương Phúc Hoàng Anh - 3123410011 \\
+& & Nguyễn Quang Minh - 3122410241 \\
+& & Phan Trung Nghĩa - 3121410345 \\
+\end{tabular}
+\vspace{1.5 cm}
+\end{table}
+
+\begin{center}
+
+{\footnotesize TP. HỒ CHÍ MINH, THÁNG 5/2026}
+\end{center}
+\end{titlepage}
+
+
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Phần giới thiệu}
+\subsection{Tổng quan về đề tài}
+
+    Trong kỷ nguyên số hiện nay, nhu cầu kết nối và chia sẻ thông tin trực tuyến đã trở thành một phần tất yếu của đời sống xã hội. Đồ án này tập trung vào việc nghiên cứu và phát triển InteractHub – một nền tảng mạng xã hội hiện đại. Ứng dụng không chỉ đơn thuần là nơi chia sẻ trạng thái mà còn là một hệ thống phức hợp yêu cầu sự kết hợp chặt chẽ giữa giao diện người dùng tương tác cao và hệ thống quản trị dữ liệu phía sau vững chắc.
+	
+    
+	\subsection{Mục tiêu và phạm vi đề tài}
+        \subsubsection{Mục tiêu học thuật}
+	           \begin{itemize}
+	               \item Thiết kế và xây dựng giao diện người dùng đáp ứng (Responsive UI) bằng React và TypeScript.
+                   \item Xây dựng hệ thống RESTful API mạnh mẽ theo kiến trúc MVC với ASP.NET Core.
+                   \item Quản trị dữ liệu hiệu quả thông qua Entity Framework Core.
+                   \item Triển khai cơ chế bảo mật đa lớp với JWT và phân quyền người dùng.
+                   \item Tiếp cận quy trình phát triển phần mềm chuyên nghiệp với Unit Testing và CI/CD trên nền tảng đám mây Azure.
+	           \end{itemize}
+
+
+        \subsubsection{Phạm vi ứng dụng (Chức năng chính):}
+        Ứng dụng InteractHub được thiết kế để cung cấp đầy đủ các tính năng của một mạng xã hội tiêu chuẩn bao gồm:
+            \begin{itemize}
+                \item Quản lý tài khoản và xác thực bảo mật.
+                \item Đăng tải nội dung: bài viết (Status), hình ảnh và tin tạm thời (Stories).
+                \item Tương tác cộng đồng: Thích (Like), bình luận (Comment) và chia sẻ bài viết.
+                \item Quản lý mối quan hệ: Gửi và quản lý các yêu cầu kết bạn.
+                \item Hệ thống thông báo thời gian thực giúp duy trì tương tác người dùng.
+                \item Quản trị hệ thống: Theo dõi hashtag xu hướng và xử lý các báo cáo nội dung vi phạm.
+            \end{itemize}
+        
+    \subsection{Công nghệ sử dụng (Technology Stack)}
+    Để đảm bảo tính ổn định và khả năng mở rộng, hệ thống được xây dựng trên các công nghệ tiên tiến nhất:
+        \begin{itemize}
+            \item Phía người dùng (Frontend): Sử dụng React 18 kết hợp với ngôn ngữ TypeScript để đảm bảo tính chặt chẽ của mã nguồn. Tailwind CSS được lựa chọn để tối ưu hóa việc thiết kế giao diện đáp ứng
+            \item Phía máy chủ (Backend): Sử dụng ASP.NET Core 8.0 Web API. Hệ thống được tổ chức theo các mẫu thiết kế (Design Patterns) như Repository và Service để đảm bảo tính tách biệt giữa các thành phần.
+            \item Cơ sở dữ liệu và Lưu trữ: Sử dụng SQL Server cho dữ liệu có cấu trúc và Azure Blob Storage cho việc lưu trữ tài nguyên hình ảnh.
+            \item Môi trường triển khai: Toàn bộ hệ thống được triển khai trên nền tảng đám mây Microsoft Azure với quy trình CI/CD tự động thông qua GitHub Actions/Azure DevOps.
+        \end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Phân tích và Thiết kế hệ thống}
+
+    \subsection{Sơ đồ thực thể (ERD)}
+    Hệ thống được thiết kế dựa trên cơ sở dữ liệu quan hệ SQL Server với ít nhất 8 thực thể chính để đảm bảo khả năng vận hành của một mạng xã hội:
+    \begin{itemize}
+        \item \textbf{User}: Lưu trữ thông tin người dùng, tích hợp với ASP.NET Core Identity.
+        \item \textbf{Post \& Story}: Quản lý các nội dung trạng thái và tin tạm thời.
+        \item \textbf{Comment \& Like}: Lưu trữ các tương tác của người dùng trên bài viết.
+        \item \textbf{Friendship}: Quản lý mối quan hệ và danh sách bạn bè.
+        \item \textbf{Notification}: Hệ thống thông báo thời gian thực.
+        \item \textbf{Hashtag \& Report}: Theo dõi xu hướng và quản lý nội dung vi phạm.
+    \end{itemize}
+    \textit{(Lưu ý: Sinh viên cần chèn hình ảnh sơ đồ ERD được xuất từ SQL Server hoặc công cụ thiết kế tại đây bằng lệnh \texttt{\textbackslash includegraphics})}.
+
+    \subsection{Đặc tả API}
+    Hệ thống cung cấp hơn 20 endpoints RESTful để giao tiếp với Frontend React. Các API được chuẩn hóa theo định dạng JSON và sử dụng các mã trạng thái HTTP tiêu chuẩn (200, 201, 400, 401, 500). Các nhóm API chính bao gồm:
+    \begin{itemize}
+        \item \textbf{Auth API}: Đăng ký, đăng nhập và cấp phát JWT Token.
+        \item \textbf{Posts API}: Thực hiện các thao tác CRUD bài viết và upload hình ảnh.
+        \item \textbf{Users \& Friends API}: Quản lý hồ sơ cá nhân và các yêu cầu kết bạn.
+        \item \textbf{SignalR Hub}: Cung cấp các kết nối thời gian thực cho thông báo.
+    \end{itemize}
+    Dữ liệu truyền tải được đóng gói thông qua các lớp DTO (Data Transfer Objects) để tối ưu hóa hiệu suất và bảo mật.
+
+    \subsection{Kiến trúc Backend}
+    Phần Backend được xây dựng trên nền tảng ASP.NET Core 8.0, tuân thủ nghiêm ngặt các nguyên lý SOLID và mẫu thiết kế hiện đại:
+    \begin{itemize}
+        \item \textbf{Repository Pattern}: Tách biệt logic truy xuất dữ liệu khỏi logic nghiệp vụ, giúp dễ dàng bảo trì và kiểm thử.
+        \item \textbf{Service Layer}: Nơi tập trung xử lý các nghiệp vụ phức tạp của hệ thống.
+        \item \textbf{Dependency Injection}: Quản lý vòng đời của các đối tượng và giảm sự phụ thuộc giữa các thành phần.
+        \item \textbf{Entity Framework Core}: Sử dụng kiến trúc Code-First để quản lý migration và tương tác với SQL Server.
+    \end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Hiện thực hóa và kết quả}
+
+    \subsection{Frontend - Kiến trúc thành phần và giao diện đáp ứng}
+    Phần Frontend được xây dựng với React 18 và TypeScript, tuân thủ nguyên tắc Component-Based Architecture:
+    \begin{itemize}
+        \item \textbf{Cấu trúc thành phần}: Dự án tổ chức 15+ thành phần React tái sử dụng được bao gồm:
+        \begin{enumerate}
+            \item Thành phần xác thực (auth): Login, Registration, Password recovery
+            \item Thành phần bài viết (post): PostCard, PostForm, PostDetail, PostComments
+            \item Thành phần bạn bè (friends): FriendList, FriendRequest, FriendSuggestion
+            \item Thành phần thông báo (notifications): NotificationBell, NotificationPanel
+            \item Thành phần khám phá (explore): UserSearch, TrendingHashtags
+            \item Thành phần cài đặt (settings): ProfileSettings, PrivacySettings
+            \item Thành phần tin tạm thời (story): StoryViewer, StoryUploader
+            \item Thành phần gợi ý (suggestion): UserSuggestions, TrendingPosts
+        \end{enumerate}
+        \item \textbf{Responsive Design}: Sử dụng Tailwind CSS để đảm bảo giao diện đáp ứng hoàn hảo trên các thiết bị di động, máy tính bảng và máy tính để bàn.
+        \item \textbf{React Hooks}: Sử dụng useState, useEffect, useContext, useCallback để quản lý trạng thái và hiệu ứng component.
+    \end{itemize}
+
+    \subsection{Frontend - Quản lý trạng thái và tích hợp API}
+    \begin{itemize}
+        \item \textbf{AuthContext}: Triển khai React Context để quản lý trạng thái xác thực toàn cục, bao gồm thông tin người dùng, JWT token và trạng thái đăng nhập.
+        \item \textbf{API Service Layer}: Tạo các service tách biệt cho từng miền nghiệp vụ:
+        \begin{enumerate}
+            \item authService.ts - Xử lý đăng ký, đăng nhập, làm mới token
+            \item postService.ts - CRUD operations cho bài viết
+            \item commentService.ts - Quản lý bình luận
+            \item likeService.ts - Quản lý lượt thích
+            \item friendService.ts - Quản lý yêu cầu kết bạn
+            \item notificationService.ts - Lấy thông báo
+            \item storyService.ts - Quản lý tin tạm thời
+            \item shareService.ts - Chia sẻ bài viết
+            \item userService.ts - Quản lý hồ sơ người dùng
+        \end{enumerate}
+        \item \textbf{API Interceptor}: Tự động đính kèm JWT token vào headers của tất cả requests.
+        \item \textbf{Error Handling}: Xử lý lỗi API toàn cục với thông báo lỗi rõ ràng cho người dùng.
+    \end{itemize}
+
+    \subsection{Frontend - Forms với xác thực}
+    \begin{itemize}
+        \item \textbf{React Hook Form}: Triển khai các form bao gồm:
+        \begin{enumerate}
+            \item Form đăng ký: Xác thực email, mật khẩu mạnh, xác nhận mật khẩu
+            \item Form đăng nhập: Email/mật khẩu với xử lý lỗi
+            \item Form tạo bài viết: Hỗ trợ upload hình ảnh với preview
+            \item Form cập nhật hồ sơ: Thay đổi avatar, bio, thông tin cá nhân
+        \end{enumerate}
+        \item \textbf{Validation}: Kiểm tra phía client bao gồm:
+        \begin{enumerate}
+            \item Định dạng email (regex)
+            \item Độ mạnh mật khẩu (ký tự hoa, chữ số, ký tự đặc biệt, ít nhất 8 ký tự)
+            \item Kiểm tra trùng lặp email khi đăng ký
+            \item Giới hạn kích thước file hình ảnh
+        \end{enumerate}
+        \item \textbf{User Experience}: Loading states, success/error messages, form validation feedback real-time.
+    \end{itemize}
+
+    \subsection{Frontend - Routing và Dynamic Features}
+    \begin{itemize}
+        \item \textbf{React Router v6}: Cấu hình route nested bao gồm:
+        \begin{enumerate}
+            \item Public routes: /login, /register, /home (không yêu cầu xác thực)
+            \item Protected routes: /feed, /profile, /friends, /messages (yêu cầu xác thực)
+            \item Admin routes: /admin/reports, /admin/users
+        \end{enumerate}
+        \item \textbf{Route Guards}: Custom hook \texttt{useProtectedRoute} để chuyển hướng người dùng chưa xác thực tới trang login.
+        \item \textbf{Search với Debouncing}: Tìm kiếm người dùng, hashtags với debounce delay 300ms để giảm số lượng API calls.
+        \item \textbf{Pagination/Infinite Scroll}: Tải bài viết động với infinite scroll thay vì phân trang truyền thống.
+        \item \textbf{Lazy Loading}: Lazy-loaded routes bằng React.lazy() giảm kích thước bundle ban đầu.
+        \item \textbf{Real-time Notifications}: Tích hợp SignalR client để nhận thông báo ngay lập tức từ server.
+    \end{itemize}
+
+    \subsection{Chức năng xác thực Backend (Authentication \& Authorization)}
+    Hệ thống sử dụng \textbf{ASP.NET Core Identity} kết hợp với \textbf{JSON Web Token (JWT)} để quản lý người dùng và bảo mật API:
+    \begin{itemize}
+        \item \textbf{Đăng ký và Đăng nhập}: 
+        \begin{enumerate}
+            \item Endpoint: \texttt{POST /api/auth/register} - Tạo tài khoản mới với email/password
+            \item Endpoint: \texttt{POST /api/auth/login} - Xác thực và trả về JWT token
+            \item Password hashing tự động bằng Identity
+        \end{enumerate}
+        \item \textbf{JWT Token Generation}: 
+        \begin{enumerate}
+            \item Token chứa claims: UserId, Email, Roles
+            \item Expiration: 24 giờ (có thể cấu hình)
+            \item Lưu trữ ở Client-side trong localStorage/sessionStorage
+        \end{enumerate}
+        \item \textbf{Authorization}: Sử dụng \texttt{[Authorize]} attribute trên controllers để bảo vệ endpoints.
+        \item \textbf{Role-based Access}: Admin role có quyền xóa bài viết, quản lý báo cáo; User role có quyền tạo bài viết cá nhân.
+    \end{itemize}
+
+    \subsection{Database Design và Entity Framework Core}
+    Hệ thống được thiết kế với \textbf{9 entities chính}:
+    \begin{enumerate}
+        \item \textbf{User} (AspNetUsers): Người dùng, tích hợp ASP.NET Core Identity
+        \item \textbf{Post}: Bài viết với Content, CreatedAt, UserId (Foreign Key)
+        \item \textbf{Comment}: Bình luận trên bài viết
+        \item \textbf{Like}: Lượt thích bài viết
+        \item \textbf{Friendship}: Mối quan hệ bạn bè với status (Pending, Accepted, Blocked)
+        \item \textbf{Story}: Tin tạm thời với expiration (24 giờ)
+        \item \textbf{Notification}: Thông báo với type (Like, Comment, FriendRequest)
+        \item \textbf{Hashtag}: Theo dõi hashtag xu hướng
+        \item \textbf{PostReport}: Báo cáo nội dung vi phạm
+    \end{enumerate}
+
+    \subsection{RESTful API - Controllers và DTOs}
+    Hệ thống cung cấp \textbf{20+ endpoints RESTful} được tổ chức thành 11 controllers:
+    \begin{itemize}
+        \item \textbf{AuthController} (2 endpoints): Register, Login
+        \item \textbf{PostController} (6 endpoints): GetAll, GetById, Create, Update, Delete, GetUserPosts
+        \item \textbf{CommentController} (5 endpoints): Create, GetByPost, Update, Delete, GetAll
+        \item \textbf{LikeController} (3 endpoints): AddLike, RemoveLike, GetLikeCount
+        \item \textbf{FriendshipController} (5 endpoints): SendRequest, AcceptRequest, DeclineRequest, GetFriends, GetRequests
+        \item \textbf{NotificationController} (3 endpoints): GetNotifications, MarkAsRead, GetUnreadCount
+        \item \textbf{StoryController} (4 endpoints): CreateStory, GetStories, ViewStory, DeleteStory
+        \item \textbf{ShareController} (2 endpoints): SharePost, GetShares
+        \item \textbf{UserController} (4 endpoints): GetProfile, UpdateProfile, SearchUsers, GetUserStats
+        \item \textbf{MessageController} (2 endpoints): SendMessage, GetMessages
+        \item \textbf{MediaController} (2 endpoints): UploadImage, DeleteImage
+    \end{itemize}
+    Tất cả endpoints trả về JSON format chuẩn hóa với structure: \texttt{\{success, data, message, errors\}}
+
+    \subsection{Business Logic và Services Layer}
+    Triển khai \textbf{12 service interfaces} với implementation pattern:
+    \begin{itemize}
+        \item \textbf{Service Interfaces}: IAuthService, IPostService, ICommentService, ILikeService, IFriendshipService, INotificationService, IStoryService, IShareService, IUserService, IMessageService, IFileUploadService, ISavedPostService
+        \item \textbf{Dependency Injection}: Tất cả services được đăng ký trong Program.cs với Scoped lifetime.
+        \item \textbf{SOLID Principles}: 
+        \begin{enumerate}
+            \item \textit{Single Responsibility}: Mỗi service chỉ quản lý một miền nghiệp vụ
+            \item \textit{Open/Closed}: Dễ mở rộng bằng cách tạo service mới mà không sửa code hiện tại
+            \item \textit{Liskov Substitution}: Services implement từ interfaces chung
+            \item \textit{Interface Segregation}: Interfaces tập trung vào chức năng cụ thể
+            \item \textit{Dependency Inversion}: Phụ thuộc vào interfaces, không phụ thuộc vào implementations
+        \end{enumerate}
+    \end{itemize}
+
+    \subsection{Lưu trữ Cloud (Azure Blob Storage)}
+    \begin{itemize}
+        \item \textbf{File Upload Service}: Xử lý upload hình ảnh từ React lên Azure Blob Storage.
+        \item \textbf{Blob URL}: Trả về public URL của blob để hiển thị hình ảnh trên frontend.
+        \item \textbf{File Validation}: Kiểm tra định dạng (.jpg, .png, .gif) và kích thước ($\leq$ 5MB).
+    \end{itemize}
+
+    \subsection{Kết quả đạt được}
+    Sau thời gian triển khai và phát triển, ứng dụng InteractHub đã đạt được các kết quả cụ thể sau:
+    \begin{itemize}
+        \item \textbf{Frontend}: 
+        \begin{enumerate}
+            \item 15+ components React được xây dựng với TypeScript strict mode
+            \item Giao diện responsive hoàn hảo trên desktop, tablet, mobile
+            \item AuthContext quản lý trạng thái xác thực toàn cục
+            \item 10 API services tích hợp tất cả endpoints backend
+            \item Form validation toàn diện với React Hook Form
+            \item Dynamic routing với protected routes
+        \end{enumerate}
+        \item \textbf{Backend}: 
+        \begin{enumerate}
+            \item 11 API Controllers với 20+ endpoints
+            \item 12 Service Interfaces implementation
+            \item JWT Authentication và Authorization hoàn chỉnh
+            \item 9 Database entities được định nghĩa và migrate
+            \item Swagger/OpenAPI documentation tự động
+            \item CORS configuration cho React frontend
+        \end{enumerate}
+        \item \textbf{Code Quality}: 
+        \begin{enumerate}
+            \item Repository pattern cho data access
+            \item Service layer tách biệt business logic
+            \item DTO cho tất cả request/response
+            \item Proper error handling và validation
+        \end{enumerate}
+    \end{itemize}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Kiểm thử (Unit Testing)}
+
+    \subsection{Chiến lược Kiểm thử}
+    Dự án sử dụng xUnit framework để thực hiện unit testing với Moq cho việc mock dependencies:
+    \begin{itemize}
+        \item \textbf{Test Project}: InteractHub.Tests - Tổ chức theo kiến trúc tương ứng với backend
+        \item \textbf{Test Framework}: xUnit + FluentAssertions + Moq
+        \item \textbf{Coverage Target}: Ít nhất 60\% code coverage cho các service classes
+    \end{itemize}
+
+    \subsection{Test Cases được Triển khai}
+    Hiện tại đã viết unit tests cho các service quan trọng:
+    \begin{enumerate}
+        \item \textbf{AuthServiceTests}: 
+        \begin{enumerate}
+            \item RegisterAsync - Xác thực tạo người dùng mới thành công
+            \item RegisterAsync - Xử lý email trùng lặp
+            \item LoginAsync - Xác thực đăng nhập với thông tin hợp lệ
+            \item LoginAsync - Từ chối đăng nhập với mật khẩu sai
+        \end{enumerate}
+        \item \textbf{PostServiceTests}: 
+        \begin{enumerate}
+            \item CreatePostAsync - Tạo bài viết mới
+            \item GetPostByIdAsync - Lấy bài viết theo ID
+            \item UpdatePostAsync - Cập nhật nội dung bài viết
+            \item DeletePostAsync - Xóa bài viết
+        \end{enumerate}
+        \item \textbf{CommentServiceTests}: 
+        \begin{enumerate}
+            \item AddCommentAsync - Thêm bình luận trên bài viết
+            \item GetCommentsByPostAsync - Lấy tất cả bình luận
+            \item DeleteCommentAsync - Xóa bình luận
+        \end{enumerate}
+        \item \textbf{LikeServiceTests}: 
+        \begin{enumerate}
+            \item AddLikeAsync - Thêm lượt thích
+            \item RemoveLikeAsync - Bỏ thích
+            \item GetLikeCountAsync - Đếm số lượt thích
+        \end{enumerate}
+        \item \textbf{FriendshipServiceTests}: 
+        \begin{enumerate}
+            \item SendFriendRequestAsync - Gửi yêu cầu kết bạn
+            \item AcceptFriendRequestAsync - Chấp nhận yêu cầu
+            \item DeclineFriendRequestAsync - Từ chối yêu cầu
+        \end{enumerate}
+        \item \textbf{ShareServiceTests}: 
+        \begin{enumerate}
+            \item SharePostAsync - Chia sẻ bài viết
+            \item GetSharesAsync - Lấy danh sách chia sẻ
+        \end{enumerate}
+    \end{enumerate}
+
+    \subsection{Mock Objects và Fixtures}
+    \begin{itemize}
+        \item \textbf{Mock Repositories}: Sử dụng Moq để tạo mock của IPostRepository, ICommentRepository, etc.
+        \item \textbf{Test Data}: Fixtures tạo sẵn test users, posts, comments để sử dụng trong tests
+        \item \textbf{Database Context Mock}: Mock của DbContext để kiểm thử logic mà không cần database thực
+    \end{itemize}
+
+    \subsection{Test Documentation}
+    Các files documentation được sinh ra từ test execution:
+    \begin{itemize}
+        \item TEST\_DOCUMENTATION.md - Tài liệu chi tiết về các test cases
+        \item TEST\_EXECUTION\_SUMMARY.md - Kết quả chạy tests
+        \item TEST\_QUICK\_REFERENCE.md - Hướng dẫn nhanh chạy tests
+        \item EXECUTION\_SUMMARY.md - Tổng kết chung
+    \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{CI/CD và Triển khai Cloud}
+
+    \subsection{Mục tiêu Triển khai}
+    Dự án được thiết kế để triển khai trên nền tảng \textbf{Microsoft Azure} với quy trình CI/CD tự động:
+    \begin{itemize}
+        \item \textbf{Frontend}: Azure Static Web Apps hoặc Azure App Service
+        \item \textbf{Backend}: Azure App Service (Web API)
+        \item \textbf{Database}: Azure SQL Database
+        \item \textbf{Storage}: Azure Blob Storage cho media files
+        \item \textbf{CI/CD}: GitHub Actions hoặc Azure Pipelines
+    \end{itemize}
+
+    \subsection{Docker Containerization}
+    \begin{itemize}
+        \item \textbf{Backend Dockerfile}: Xây dựng multi-stage để tối ưu kích thước image
+        \begin{enumerate}
+            \item Stage 1: Build - Compile C\# code
+            \item Stage 2: Runtime - Chạy ASP.NET Core application
+        \end{enumerate}
+        \item \textbf{Frontend Dockerfile}: Build React app với Vite, serve bằng nginx
+        \item \textbf{Docker Compose}: docker-compose.yml để chạy local development environment
+    \end{itemize}
+
+    \subsection{Environment Configuration}
+    \begin{itemize}
+        \item \textbf{appsettings.json}: Configuration cho Production environment
+        \item \textbf{appsettings.Development.json}: Configuration cho Development
+        \item \textbf{Connection Strings}: Azure SQL Database connection string
+        \item \textbf{Blob Storage}: Azure Storage Account credentials
+        \item \textbf{JWT Secret}: Secure key cho JWT signing
+    \end{itemize}
+
+    \subsection{Deployment Pipeline Structure}
+    \begin{itemize}
+        \item \textbf{Trigger}: Tự động khi có commit push lên main branch
+        \item \textbf{Build Stage}:
+        \begin{enumerate}
+            \item Checkout code
+            \item Restore dependencies (NuGet packages)
+            \item Build solution
+            \item Run tests
+        \end{enumerate}
+        \item \textbf{Deploy Stage}:
+        \begin{enumerate}
+            \item Package application
+            \item Push to Azure App Service
+            \item Database migration
+            \item Health check
+        \end{enumerate}
+    \end{itemize}
+
+    \subsection{Monitoring và Logging}
+    \begin{itemize}
+        \item \textbf{Application Insights}: Theo dõi hiệu suất ứng dụng, dependencies, exceptions
+        \item \textbf{Structured Logging}: Serilog logging output tới Azure Storage
+        \item \textbf{Health Check}: Endpoint /health để kiểm tra trạng thái ứng dụng
+    \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Tóm tắt tiến độ}
+
+    \subsection{Hoàn thành}
+    \begin{itemize}
+        \item ✅ Frontend: 15+ React components với TypeScript, Responsive UI
+        \item ✅ Backend: 11 API Controllers, 20+ endpoints
+        \item ✅ Database: 9 entities, Entity Framework migrations
+        \item ✅ Authentication: JWT + ASP.NET Core Identity
+        \item ✅ Services Layer: 12 service interfaces với full implementation
+        \item ✅ Unit Tests: 15+ test methods cho core services
+        \item ✅ API Documentation: Swagger/OpenAPI
+        \item ✅ CORS Configuration: Frontend-Backend integration
+        \item ✅ Docker Setup: Dockerfile cho backend và frontend
+    \end{itemize}
+
+    \subsection{Cần hoàn thành}
+    \begin{itemize}
+        \item ⏳ Azure Deployment: Deploy lên App Service, SQL Database, Blob Storage
+        \item ⏳ CI/CD Pipeline: GitHub Actions / Azure DevOps configuration
+        \item ⏳ Screenshots & Demo: Tối thiểu 10 hình ảnh giao diện
+        \item ⏳ Performance Testing: Load testing và optimization
+        \item ⏳ Security Testing: Penetration testing, vulnerability scan
+    \end{itemize}
+
+    \subsection{Điểm mạnh của dự án}
+    \begin{itemize}
+        \item \textbf{Architecture}: Clean code, SOLID principles, Design Patterns (Repository, Dependency Injection)
+        \item \textbf{Frontend}: Modern React practices, TypeScript strict mode, Context API
+        \item \textbf{Backend}: Proper separation of concerns, comprehensive service layer, DTO pattern
+        \item \textbf{Database}: Normalized schema, proper relationships, migrations
+        \item \textbf{Testing}: Unit tests với mock objects, edge case coverage
+        \item \textbf{Documentation}: Code comments, README files, test documentation
+    \end{itemize}
+\begin{thebibliography}{80}
+
+\bibitem{ASPNetCore}
+Microsoft Documentation
+``\textbf{ASP.NET Core Documentation}'',
+\textit{https://docs.microsoft.com/aspnet/core}, truy cập năm 2026.
+
+\bibitem{EntityFramework}
+Microsoft Documentation
+``\textbf{Entity Framework Core}'',
+\textit{https://docs.microsoft.com/ef/core}, truy cập năm 2026.
+
+\bibitem{React}
+React Official Documentation
+``\textbf{React - A JavaScript Library}'',
+\textit{https://react.dev}, truy cập năm 2026.
+
+\bibitem{TypeScript}
+TypeScript Official Documentation
+``\textbf{TypeScript Handbook}'',
+\textit{https://www.typescriptlang.org/docs}, truy cập năm 2026.
+
+\bibitem{TailwindCSS}
+Tailwind Labs
+``\textbf{Tailwind CSS Documentation}'',
+\textit{https://tailwindcss.com/docs}, truy cập năm 2026.
+
+\bibitem{JWT}
+Auth0
+``\textbf{Introduction to JSON Web Tokens}'',
+\textit{https://jwt.io}, truy cập năm 2026.
+
+\bibitem{Azure}
+Microsoft Azure
+``\textbf{Azure Documentation}'',
+\textit{https://docs.microsoft.com/azure}, truy cập năm 2026.
+
+\bibitem{Docker}
+Docker Inc.
+``\textbf{Docker Documentation}'',
+\textit{https://docs.docker.com}, truy cập năm 2026.
+
+\bibitem{SOLID}
+Robert C. Martin
+``\textbf{SOLID Principles of Object-Oriented Design}'',
+\textit{Clean Architecture}, Prentice Hall, 2017.
+
+\bibitem{RepositoryPattern}
+Microsoft Documentation
+``\textbf{Repository Pattern}'',
+\textit{https://docs.microsoft.com/en-us/dotnet/architecture/microservices/}, truy cập năm 2026.
+
+\end{thebibliography}
+\end{document}
+
