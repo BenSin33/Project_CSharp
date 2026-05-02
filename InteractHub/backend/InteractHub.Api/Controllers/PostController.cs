@@ -37,17 +37,25 @@ public class PostController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllPosts([FromQuery] int skip = 0, [FromQuery] int take = 20)
-    {
-        if (skip < 0 || take <= 0)
-        {
-            return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Skip must be >= 0 and Take must be > 0"));
-        }
+   [HttpGet]
+public async Task<IActionResult> GetAllPosts([FromQuery] int skip = 0, [FromQuery] int take = 20)
+{
+    if (skip < 0 || take <= 0)
+        return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Skip must be >= 0 and Take must be > 0"));
 
+    try
+    {
         var currentUserId = GetCurrentUserId();
         var posts = await _postService.GetAllActivePostsAsync(skip, take, currentUserId);
-        return Ok(ApiResponse<PaginatedResponse<PostResponseDto>>.Ok(posts, "Posts retrieved successfully."));   
+        return Ok(ApiResponse<PaginatedResponse<PostResponseDto>>.Ok(posts, "Posts retrieved successfully."));
     }
+    catch (Exception ex)
+    {
+        // Log để tìm lỗi thực sự
+        Console.WriteLine($"[GetAllPosts ERROR] {ex}");
+        return StatusCode(500, ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Lỗi server: " + ex.Message));
+    }
+}
 
     [HttpGet("search")]
     public async Task<IActionResult> SearchPosts([FromQuery] string q, [FromQuery] int skip = 0, [FromQuery] int take = 20)

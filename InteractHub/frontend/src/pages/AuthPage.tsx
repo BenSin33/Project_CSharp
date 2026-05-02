@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import TabSwitcher from "../components/common/TabSwitcher";
 import LoginForm, { type LoginFormData } from "../components/auth/LoginForm";
 import RegisterForm, { type RegisterFormData } from "../components/auth/registerForm";
-import { authService } from "../services/authService";
+import { useAuth } from "../contexts/AuthContext";
 
 type Tab = "login" | "register";
 
@@ -29,23 +29,26 @@ const AppLogoIcon = () => (
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const { login, register } = useAuth();
   const [tab, setTab]               = useState<Tab>("login");
   const [isLoading, setIsLoading]   = useState(false);
   const [serverError, setServerError] = useState<string | undefined>();
+  const [successMsg, setSuccessMsg]  = useState<string | undefined>();
 
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     setServerError(undefined);
+    setSuccessMsg(undefined);
     try {
-      await authService.login({ email: data.email, password: data.password });
-      // authService.login đã lưu token — lấy profile qua getMe
-      const profile = await authService.getMe().catch(() => null);
-      if (profile) {
-        localStorage.setItem("user", JSON.stringify(profile));
-      }
+      // Dùng AuthContext.login → token được lưu vào cả localStorage VÀ React state
+      // → các API call sau đó sẽ có token hợp lệ
+      await login({ email: data.email, password: data.password });
       navigate("/");
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? "Invalid email or password.";
+      const msg =
+        err?.response?.data?.message ??
+        err?.message ??
+        "Email hoặc mật khẩu không đúng.";
       setServerError(msg);
     } finally {
       setIsLoading(false);
@@ -55,21 +58,26 @@ export default function AuthPage() {
   const handleRegister = async (data: RegisterFormData) => {
     setIsLoading(true);
     setServerError(undefined);
+    setSuccessMsg(undefined);
     try {
-      await authService.register({
+      await register({
         fullName: data.fullName,
         email: data.email,
         password: data.password,
-        dateOfBirth: new Date(2000, 0, 1).toISOString(),  // default — backend bắt buộc
-        gender: 2,  // 2 = Other
+        dateOfBirth: data.dateOfBirth
+          ? new Date(data.dateOfBirth).toISOString()
+          : new Date(2000, 0, 1).toISOString(),
+        gender: parseInt(data.gender ?? "2", 10),
       });
-      // Sau khi đăng ký thành công, backend có thể không trả token
-      // → chuyển về tab login để user đăng nhập
+      // Nếu backend trả token → AuthContext đã login, navigate luôn
+      // Nếu không → chuyển về tab login
       setTab("login");
-      setServerError(undefined);
-      // Hiện thông báo thành công qua navigate hoặc state
+      setSuccessMsg("Đăng ký thành công! Vui lòng đăng nhập.");
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? "Registration failed. Please try again.";
+      const msg =
+        err?.response?.data?.message ??
+        err?.message ??
+        "Đăng ký thất bại. Vui lòng thử lại.";
       setServerError(msg);
     } finally {
       setIsLoading(false);
@@ -78,10 +86,11 @@ export default function AuthPage() {
 
   const handleDemoLogin = async (role: "user" | "admin") => {
     setIsLoading(true);
+    setServerError(undefined);
     const email    = role === "admin" ? "admin@interacthub.com" : "user@interacthub.com";
     const password = role === "admin" ? "Admin@123456" : "User@123456";
     try {
-      await authService.login({ email, password });
+      await login({ email, password });
       navigate("/");
     } catch {
       // Demo credentials không tồn tại → vẫn vào app (demo mode)
@@ -94,6 +103,7 @@ export default function AuthPage() {
   const handleTabChange = (val: string) => {
     setTab(val as Tab);
     setServerError(undefined);
+    setSuccessMsg(undefined);
   };
 
   return (
@@ -128,6 +138,12 @@ export default function AuthPage() {
           boxShadow: "0 8px 40px rgba(99,102,241,0.10), 0 1px 4px rgba(0,0,0,0.06)",
         }}>
           <TabSwitcher options={TAB_OPTIONS} value={tab} onChange={handleTabChange} className="mb-6" />
+
+          {successMsg && (
+            <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "10px 14px", color: "#16a34a", fontSize: "13px", fontWeight: 500, fontFamily: "'DM Sans', sans-serif", marginBottom: "12px" }}>
+              {successMsg}
+            </div>
+          )}
 
           {tab === "login" ? (
             <LoginForm

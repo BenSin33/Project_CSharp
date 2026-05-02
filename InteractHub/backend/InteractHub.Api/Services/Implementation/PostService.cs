@@ -49,12 +49,17 @@ public class PostService : IPostService
 
         // Get saved posts for current user if provided
         var savedPostIds = new HashSet<Guid>();
+
         if (currentUserId.HasValue)
         {
-            savedPostIds = (await _context.SavedPosts
-                .Where(sp => sp.UserId == currentUserId.Value && posts.Select(p => p.Id).Contains(sp.PostId))
-                .Select(sp => sp.PostId)
-                .ToListAsync()).ToHashSet();
+            var postIds = posts.Select(p => p.Id).ToList(); // ← materialize trước
+            if (postIds.Any()) // ← guard: chỉ query khi có posts
+            {
+                savedPostIds = (await _context.SavedPosts
+                    .Where(sp => sp.UserId == currentUserId.Value && postIds.Contains(sp.PostId))
+                    .Select(sp => sp.PostId)
+                    .ToListAsync()).ToHashSet();
+            }
         }
 
         var result = new PaginatedResponse<PostResponseDto>
@@ -93,7 +98,7 @@ public class PostService : IPostService
         {
             isSaved = await _context.SavedPosts.AnyAsync(sp => sp.UserId == currentUserId.Value && sp.PostId == id);
         }
-        
+
         return MapToResponseDto(post, currentUserId, isSaved);
     }
 
@@ -307,8 +312,8 @@ public class PostService : IPostService
         {
             TotalLikes = post.Likes?.Count ?? 0,
             ReactionCounts = reactionCounts,
-            CurrentUserReaction = currentUserId.HasValue 
-                ? post.Likes?.FirstOrDefault(l => l.UserId == currentUserId)?.Type 
+            CurrentUserReaction = currentUserId.HasValue
+                ? post.Likes?.FirstOrDefault(l => l.UserId == currentUserId)?.Type
                 : null,
             TopLikes = topLikes
         };
