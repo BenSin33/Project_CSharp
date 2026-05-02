@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Post } from "../../types";
+import type { CommentItem } from "../../services/commentService";
 import Avatar from "../common/Avatar";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────────
@@ -45,23 +46,17 @@ const ChevronIcon = ({ up }: { up: boolean }) => (
   </svg>
 );
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
-
-export interface CommentItem {
-  id: string;
-  userId: string;
-  content: string;
-  createdAt: string;
-  senderName?: string;
-}
+// ─── Re-export CommentItem so it can be used from PostCard too ────────────────
+export type { CommentItem };
 
 interface Props {
   post: Post;
+  initialComments?: CommentItem[];       // Top comments preloaded from post data
   onLike?: (id: string) => Promise<any>;
-  onAddComment?: (id: string, content: string) => Promise<any>;
+  onAddComment?: (id: string, content: string) => Promise<CommentItem | undefined>;
   onLoadComments?: (id: string) => Promise<CommentItem[]>;
   onShare?: (id: string) => void;
-  onSave?: (id: string) => void;
+  onSave?: (id: string) => Promise<void>;
   onMoreOptions?: (id: string) => void;
 }
 
@@ -69,6 +64,7 @@ interface Props {
 
 export default function PostCard({
   post,
+  initialComments = [],
   onLike,
   onAddComment,
   onLoadComments,
@@ -76,21 +72,23 @@ export default function PostCard({
   onSave,
   onMoreOptions,
 }: Props) {
-  const [liked, setLiked] = useState(post.isLiked ?? false);
-  const [saved, setSaved] = useState(post.isSaved ?? false);
-  const [likes, setLikes] = useState(post.likes);
+  const [liked, setLiked]         = useState(post.isLiked ?? false);
+  const [saved, setSaved]         = useState(post.isSaved ?? false);
+  const [likes, setLikes]         = useState(post.likes);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount);
 
-  const [commentText, setCommentText] = useState("");
-  const [loadingLike, setLoadingLike] = useState(false);
+  const [commentText, setCommentText]     = useState("");
+  const [loadingLike, setLoadingLike]     = useState(false);
   const [loadingComment, setLoadingComment] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingSave, setLoadingSave]     = useState(false);
+  const [error, setError]                 = useState<string | null>(null);
 
-  // ─── Comment expand state ──────────────────────────────────────────────────
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<CommentItem[]>([]);
+  // ─── Comment expand state — seeded with initialComments ───────────────────
+  const [showComments, setShowComments]       = useState(false);
+  const [comments, setComments]               = useState<CommentItem[]>(initialComments);
   const [loadingComments, setLoadingComments] = useState(false);
-  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  // Always fetch full comment list from API on first open (initialComments chỉ là top 5 preview)
+  const [commentsLoaded, setCommentsLoaded]   = useState(false);
 
   const showError = (msg: string) => {
     setError(msg);
@@ -101,13 +99,13 @@ export default function PostCard({
 
   const handleToggleComments = async () => {
     if (showComments) {
-      // Thu lại
       setShowComments(false);
       return;
     }
 
-    // Mở ra — load lần đầu
     setShowComments(true);
+
+    // Load đầy đủ từ API nếu chưa có (hoặc chỉ có top 5 từ post)
     if (!commentsLoaded && onLoadComments) {
       setLoadingComments(true);
       try {
@@ -142,6 +140,23 @@ export default function PostCard({
     }
   };
 
+  // ─── Save (optimistic) ────────────────────────────────────────────────────
+
+  const handleSave = async () => {
+    if (loadingSave) return;
+    const next = !saved;
+    setSaved(next);
+    setLoadingSave(true);
+    try {
+      await onSave?.(post.id);
+    } catch {
+      setSaved(!next);
+      showError("Save failed");
+    } finally {
+      setLoadingSave(false);
+    }
+  };
+
   // ─── Add comment ──────────────────────────────────────────────────────────
 
   const submitComment = async () => {
@@ -153,12 +168,11 @@ export default function PostCard({
     try {
       const newComment = await onAddComment?.(post.id, text);
       setCommentsCount((c) => c + 1);
-      // Thêm comment mới vào list hiện tại nếu đang mở
       if (showComments) {
         const item: CommentItem = newComment ?? {
-          id: Date.now().toString(),
-          userId: "",
-          content: text,
+          id:        Date.now().toString(),
+          userId:    "",
+          content:   text,
           createdAt: new Date().toISOString(),
         };
         setComments((prev) => [...prev, item]);
@@ -248,11 +262,14 @@ export default function PostCard({
           </button>
         </div>
 
-        {/* Save */}
+        {/* Save / Bookmark */}
         <button
-          onClick={() => { setSaved(!saved); onSave?.(post.id); }}
+          onClick={handleSave}
+          disabled={loadingSave}
           aria-label="save"
-          className={`p-2 rounded-lg transition-colors ${saved ? "text-indigo-500" : "text-gray-400 hover:text-indigo-400 hover:bg-indigo-50"}`}
+          className={`p-2 rounded-lg transition-colors ${
+            saved ? "text-indigo-500" : "text-gray-400 hover:text-indigo-400 hover:bg-indigo-50"
+          }`}
         >
           <BookmarkIcon filled={saved}/>
         </button>
@@ -265,7 +282,9 @@ export default function PostCard({
           className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors w-full text-left"
         >
           <ChevronIcon up={showComments}/>
-          {showComments ? "Hide comments" : `View ${commentsCount} comment${commentsCount !== 1 ? "s" : ""}`}
+          {showComments
+            ? "Hide comments"
+            : `View ${commentsCount} comment${commentsCount !== 1 ? "s" : ""}`}
         </button>
       )}
 
@@ -280,8 +299,11 @@ export default function PostCard({
             <div className="flex flex-col gap-0.5 px-3 py-2">
               {comments.map((c) => (
                 <div key={c.id} className="flex gap-2.5 items-start py-1.5">
-                  <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-semibold shrink-0">
-                    {(c.senderName ?? "U")[0].toUpperCase()}
+                  <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-semibold shrink-0 overflow-hidden">
+                    {c.avatarUrl
+                      ? <img src={c.avatarUrl} alt={c.senderName ?? "U"} className="w-full h-full object-cover"/>
+                      : (c.senderName ?? "U")[0].toUpperCase()
+                    }
                   </div>
                   <div className="bg-white rounded-xl px-3 py-2 text-sm text-gray-800 shadow-sm flex-1">
                     {c.senderName && (

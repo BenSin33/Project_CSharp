@@ -69,27 +69,39 @@ export default function LoginForm({
             </div>
           )}
 
-          <TextInput label="Email Address" type="email" placeholder="you@example.com" leftIcon={<MailIcon />}
+          <TextInput label="Địa chỉ Email" type="email" placeholder="you@example.com" leftIcon={<MailIcon />}
             error={errors.email?.message}
-            {...register("email", { required: "Email is required", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email address" } })} />
+            {...register("email", {
+              required: "Email là bắt buộc",
+              pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Vui lòng nhập email hợp lệ" },
+              maxLength: { value: 256, message: "Email không được vượt quá 256 ký tự" },
+            })} />
 
-          <TextInput label="Password" placeholder="Enter your password" leftIcon={<LockIcon />}
+          <TextInput label="Mật khẩu" placeholder="Nhập mật khẩu" leftIcon={<LockIcon />}
             showPasswordToggle error={errors.password?.message}
-            {...register("password", { required: "Password is required", minLength: { value: 6, message: "Password must be at least 6 characters" } })} />
+            {...register("password", {
+              required: "Mật khẩu là bắt buộc",
+              minLength: { value: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" },
+              validate: {
+                hasUppercase: (v) => /[A-Z]/.test(v) || "Mật khẩu phải có ít nhất 1 chữ hoa",
+                hasDigit:     (v) => /\d/.test(v)    || "Mật khẩu phải có ít nhất 1 chữ số",
+                hasSpecial:   (v) => /[^A-Za-z0-9]/.test(v) || "Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#...)",
+              },
+            })} />
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px", fontWeight: 500, color: "#374151", userSelect: "none", fontFamily: "'DM Sans', sans-serif" }}>
               <input type="checkbox" {...register("rememberMe")} style={{ width: "16px", height: "16px", accentColor: "#6366f1", cursor: "pointer" }} />
-              Remember me
+              Ghi nhớ đăng nhập
             </label>
             <button type="button" onClick={onForgotPassword}
               style={{ background: "none", border: "none", cursor: "pointer", color: "#6366f1", fontSize: "14px", fontWeight: 600, padding: 0, fontFamily: "'DM Sans', sans-serif" }}>
-              Forgot password?
+              Quên mật khẩu?
             </button>
           </div>
 
           <Button type="submit" loading={isLoading} fullWidth style={{ marginTop: "4px" }}>
-            Sign In
+            Đăng nhập
           </Button>
         </div>
       </form>

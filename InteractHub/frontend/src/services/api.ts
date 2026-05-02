@@ -1,14 +1,11 @@
 import axios from "axios"
 
-// Backend .NET chạy ở port 5073 (HTTP) hoặc 7073 (HTTPS)
-// Vite proxy /api/* -> http://localhost:5073 khi dev
-// Production: đặt VITE_API_URL=https://your-domain.com
-const DEFAULT_BASE = import.meta.env.VITE_API_URL ?? ""
+const DEFAULT_BASE = ""
 
 const api = axios.create({
   baseURL: DEFAULT_BASE,
   headers: { "Content-Type": "application/json" },
-  withCredentials: false,   // JWT qua Authorization header, không dùng cookie
+  withCredentials: false,
   timeout: 15_000,
 })
 
@@ -21,14 +18,31 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Tự logout khi nhận 401
+// Tự logout khi nhận 401 — chống race condition khi nhiều request cùng fail
+let isRedirecting = false
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err?.response?.status === 401) {
-      localStorage.removeItem("token")
-      localStorage.removeItem("user")
-      window.location.href = "/login"
+      const isOnAuthPage =
+        window.location.pathname.includes("/login") ||
+        window.location.pathname.includes("/auth")
+
+      // Không redirect nếu đang ở trang auth, hoặc đang trong quá trình redirect
+      if (!isOnAuthPage && !isRedirecting) {
+        const token = localStorage.getItem("token")
+        if (token) {
+          isRedirecting = true
+          localStorage.removeItem("token")
+          localStorage.removeItem("user")
+          // Dùng timeout nhỏ để các request đang chạy kịp reject trước khi redirect
+          setTimeout(() => {
+            window.location.href = "/login"
+            isRedirecting = false
+          }, 100)
+        }
+      }
     }
     return Promise.reject(err)
   }
@@ -41,9 +55,7 @@ export default api
  * Backend trả: { success, message, data } hoặc trực tiếp object.
  */
 export function unwrap<T>(resp: any): T | undefined {
-  // ApiResponse<T> wrapper
   if (resp?.data?.data !== undefined) return resp.data.data as T
-  // Direct response
   if (resp?.data !== undefined) return resp.data as T
   return undefined
 }
