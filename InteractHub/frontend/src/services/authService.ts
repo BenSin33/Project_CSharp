@@ -80,11 +80,14 @@ async function register(payload: RegisterPayload): Promise<AuthResponse> {
 async function getMe(): Promise<AuthUser> {
   const resp = await api.get("/api/auth/profile")
   const d = resp.data
+  const fullName = d?.fullName ?? d?.FullName ?? d?.name ?? d?.Name ?? ""
+  const email = d?.email ?? d?.Email ?? ""
+  const username = d?.username ?? d?.Username ?? (email ? email.split("@")[0] : "")
   return {
     id: String(d?.id ?? d?.Id ?? ""),
-    name: d?.fullName ?? d?.FullName ?? d?.email ?? "",
-    email: d?.email ?? d?.Email ?? "",
-    username: (d?.email ?? "").split("@")[0],
+    name: fullName || email.split("@")[0] || "User",
+    email,
+    username,
     avatarUrl: d?.avatarUrl ?? d?.AvatarUrl,
   }
 }

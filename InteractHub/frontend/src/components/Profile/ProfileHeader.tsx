@@ -1,4 +1,3 @@
-
 interface Props {
   displayName: string;
   username: string;
@@ -14,6 +13,7 @@ interface Props {
   onEditProfile?: () => void;
   onFollowersClick?: () => void;
   onFollowingClick?: () => void;
+  extraActions?: React.ReactNode;
 }
 
 export default function ProfileHeader({
@@ -31,6 +31,7 @@ export default function ProfileHeader({
   onEditProfile,
   onFollowersClick,
   onFollowingClick,
+  extraActions,
 }: Props) {
   const websiteUrl = website
     ? website.startsWith("http")
@@ -76,9 +77,7 @@ export default function ProfileHeader({
               Edit Profile
             </button>
           ) : (
-            <button className="h-[34px] px-4 rounded-lg bg-blue-600 text-white text-[13px] font-medium hover:bg-blue-700 transition-colors">
-              Follow
-            </button>
+            extraActions ?? null
           )}
         </div>
 

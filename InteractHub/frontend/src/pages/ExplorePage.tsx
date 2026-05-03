@@ -35,7 +35,7 @@ export default function ExplorePage() {
     const [tab, setTab] = useState<Tab>("posts");
 
     return (
-        <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
             {/* Header */}
             <PageHeader
                 title="Explore"

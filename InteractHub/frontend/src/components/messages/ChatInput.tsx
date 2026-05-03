@@ -3,13 +3,14 @@ import { Send } from "lucide-react";
 
 interface Props {
   onSend: (text: string) => void;
+  disabled?: boolean;
 }
 
-export default function ChatInput({ onSend }: Props) {
+export default function ChatInput({ onSend, disabled }: Props) {
   const [text, setText] = useState("");
 
   const handle = () => {
-    if (!text.trim()) return;
+    if (!text.trim() || disabled) return;
     onSend(text.trim());
     setText("");
   };
@@ -21,11 +22,13 @@ export default function ChatInput({ onSend }: Props) {
         onChange={e => setText(e.target.value)}
         onKeyDown={e => e.key === "Enter" && handle()}
         placeholder="Type a message..."
-        className="flex-1 h-[42px] border border-gray-200 rounded-full px-4 text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-300"
+        disabled={disabled}
+        className="flex-1 h-[42px] border border-gray-200 rounded-full px-4 text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-300 disabled:opacity-60"
       />
       <button
         onClick={handle}
-        className="w-[42px] h-[42px] rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center flex-shrink-0 transition-colors"
+        disabled={disabled || !text.trim()}
+        className="w-[42px] h-[42px] rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center flex-shrink-0 transition-colors disabled:opacity-50"
       >
         <Send size={16} color="white" />
       </button>

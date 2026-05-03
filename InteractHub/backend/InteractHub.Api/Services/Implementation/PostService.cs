@@ -148,6 +148,46 @@ public class PostService : IPostService
         return result;
     }
 
+    public async Task<PaginatedResponse<PostResponseDto>> GetPostsByUserAsync(Guid userId, int skip, int take, Guid? currentUserId = null)
+    {
+        var query = _context.Posts
+            .Where(p => p.UserId == userId && p.Status == Status.active)
+            .Include(p => p.User)
+            .Include(p => p.PostMedias)
+            .Include(p => p.Comments).ThenInclude(c => c.User)
+            .Include(p => p.Likes).ThenInclude(l => l.User)
+            .Include(p => p.Shares)
+            .AsNoTracking();
+
+        var total = await query.CountAsync();
+        var posts = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
+
+        var savedPostIds = new HashSet<Guid>();
+        if (currentUserId.HasValue)
+        {
+            var postIds = posts.Select(p => p.Id).ToList();
+            if (postIds.Any())
+            {
+                savedPostIds = (await _context.SavedPosts
+                    .Where(sp => sp.UserId == currentUserId.Value && postIds.Contains(sp.PostId))
+                    .Select(sp => sp.PostId)
+                    .ToListAsync()).ToHashSet();
+            }
+        }
+
+        return new PaginatedResponse<PostResponseDto>
+        {
+            Data = posts.Select(p => MapToResponseDto(p, currentUserId, savedPostIds.Contains(p.Id))).ToList(),
+            Total = total,
+            Skip = skip,
+            Take = take
+        };
+    }
+
     public async Task<PostResponseDto> CreatePostAsync(CreatePostDto request)
     {
         var post = new Post

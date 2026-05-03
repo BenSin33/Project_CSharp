@@ -10,11 +10,15 @@ using InteractHub.Api.Services;
 using InteractHub.Api.Repositories;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Services.Implementation;
+using InteractHub.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Đăng ký Controllers
 builder.Services.AddControllers();
+
+// SignalR for real-time messaging
+builder.Services.AddSignalR();
 
 // 2. CẤU HÌNH SWAGGER (Chuẩn yêu cầu của đồ án)
 builder.Services.AddEndpointsApiExplorer();
@@ -52,7 +56,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5173", "http://localhost:5174") 
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials();  // Required for SignalR
     });
 });
 
@@ -86,6 +90,20 @@ builder.Services.AddAuthentication(options => {
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+    // SignalR cần lấy token từ query string
+    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 builder.Services.AddAuthorization();
@@ -137,6 +155,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 // 10. Chạy Seeder
 using (var scope = app.Services.CreateScope())

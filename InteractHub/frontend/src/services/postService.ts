@@ -240,3 +240,24 @@ export async function updatePost(id: string, payload: { content?: string; visibi
 export async function deletePost(id: string): Promise<void> {
   await api.delete(`/api/post/${id}`)
 }
+
+export async function getPostsByUser(userId: string, skip = 0, take = 20): Promise<PaginatedResponse<PostDto>> {
+  const resp = await api.get(`/api/post/user/${userId}`, { params: { skip, take } })
+  const outer = resp?.data
+  const inner = outer?.data
+  if (!inner) return { data: [], total: 0, skip, take, totalPages: 0, hasNextPage: false }
+  if (!Array.isArray(inner) && Array.isArray(inner?.data)) {
+    return {
+      data: inner.data.map(mapFromBackend),
+      total: inner.total ?? inner.data.length,
+      skip: inner.skip ?? skip,
+      take: inner.take ?? take,
+      totalPages: inner.totalPages ?? 1,
+      hasNextPage: inner.hasNextPage ?? false,
+    }
+  }
+  if (Array.isArray(inner)) {
+    return { data: inner.map(mapFromBackend), total: inner.length, skip: 0, take: inner.length, totalPages: 1, hasNextPage: false }
+  }
+  return { data: [], total: 0, skip, take, totalPages: 0, hasNextPage: false }
+}
