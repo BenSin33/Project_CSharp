@@ -92,7 +92,7 @@ export default function FriendsPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-[22px] font-semibold text-gray-900 mb-5">Friends</h1>
 
       {/* Tabs */}

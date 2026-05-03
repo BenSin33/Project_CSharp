@@ -34,7 +34,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
   ];
 
   return (
-    <nav className="w-64 bg-gray-50 h-full py-4 px-3 flex flex-col gap-1">
+    <nav className="w-full bg-gray-50 py-2 px-1 flex flex-col gap-1">
       {navItems.map(({ id, label, path, icon }) => (
         <NavLink key={id} to={path}
           className={({ isActive }) =>

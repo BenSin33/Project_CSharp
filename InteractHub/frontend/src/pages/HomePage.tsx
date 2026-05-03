@@ -9,6 +9,7 @@ import type { PostDto } from "../services/postService";
 import { getAllPosts } from "../services/postService";
 import { toggleLike, LikeType } from "../services/likeService";
 import { toggleSavePost } from "../services/savedPostService";
+import { shareService } from "../services/shareService";
 import { useAuth } from "../contexts/AuthContext";
 
 function toUiPost(p: PostDto): Post & { _topComments: CommentItem[] } {
@@ -104,6 +105,26 @@ function Home() {
     }
   }, [posts]);
 
+  const handleShare = useCallback(async (postId: string) => {
+    try {
+      await shareService.sharePost({ postId });
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, shares: p.shares + 1 } : p));
+    } catch (err) {
+      console.error("[HomePage] share failed:", err);
+    }
+  }, []);
+
+  const handleDelete = useCallback((postId: string) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+  }, []);
+
+  // Refresh when a new post is created
+  useEffect(() => {
+    const handler = () => { if (!authLoading) fetchPosts(); };
+    window.addEventListener("post-created", handler);
+    return () => window.removeEventListener("post-created", handler);
+  }, [authLoading, fetchPosts]);
+
   const isActuallyLoading = authLoading || loading;
 
   return (
@@ -159,6 +180,8 @@ function Home() {
                 onAddComment={handleAddComment}
                 onLoadComments={handleLoadComments}
                 onSave={handleSave}
+                onShare={handleShare}
+                onDelete={handleDelete}
               />
             ))
           )}

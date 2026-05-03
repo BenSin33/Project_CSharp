@@ -47,6 +47,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetUserById(Guid id)
     {
         var user = await _userService.GetUserByIdAsync(id);
@@ -58,6 +59,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize]
     public async Task<IActionResult> UpdateUser (Guid id, [FromBody] UpdateUserDTO request)
     {
         //  validate the incoming request
