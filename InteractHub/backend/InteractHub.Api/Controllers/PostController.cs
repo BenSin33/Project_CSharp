@@ -57,6 +57,23 @@ public async Task<IActionResult> GetAllPosts([FromQuery] int skip = 0, [FromQuer
     }
 }
 
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetPostsByUser(Guid userId, [FromQuery] int skip = 0, [FromQuery] int take = 20)
+    {
+        if (skip < 0 || take <= 0)
+            return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Skip must be >= 0 and Take must be > 0"));
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            var posts = await _postService.GetPostsByUserAsync(userId, skip, take, currentUserId);
+            return Ok(ApiResponse<PaginatedResponse<PostResponseDto>>.Ok(posts, "Posts retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Server error: " + ex.Message));
+        }
+    }
+
     [HttpGet("search")]
     public async Task<IActionResult> SearchPosts([FromQuery] string q, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
@@ -207,4 +224,46 @@ public async Task<IActionResult> GetAllPosts([FromQuery] int skip = 0, [FromQuer
         return Ok(ApiResponse<bool>.Ok(true, "Post deleted successfully."));
     }
 
+    [HttpPost("report")]
+    [Authorize]
+    public async Task<IActionResult> ReportPost([FromBody] ReportPostRequest request)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+            return Unauthorized(ApiResponse<bool>.Fail("User not authenticated"));
+
+        if (string.IsNullOrWhiteSpace(request.Reason))
+            return BadRequest(ApiResponse<bool>.Fail("Reason is required"));
+
+        try
+        {
+            var report = new PostReport
+            {
+                UserId      = currentUserId.Value,
+                PostId      = request.PostId,
+                Reason      = request.Reason,
+                ReportType  = (ReportType)(request.ReportType ?? 3),
+                ReportStatus = ReportStatus.Pending,
+            };
+
+            var dbContext = HttpContext.RequestServices
+                .GetRequiredService<InteractHub.Api.Data.ApplicationDbContext>();
+            dbContext.PostReports.Add(report);
+            await dbContext.SaveChangesAsync();
+
+            return Ok(ApiResponse<bool>.Ok(true, "Post reported successfully."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<bool>.Fail("Server error: " + ex.Message));
+        }
+    }
+
+}
+
+public class ReportPostRequest
+{
+    public Guid PostId { get; set; }
+    public string Reason { get; set; } = "";
+    public int? ReportType { get; set; }
 }

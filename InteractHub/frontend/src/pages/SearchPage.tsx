@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import PostCard from "../components/post/PostCard";
 import type { CommentItem } from "../services/commentService";
 import { mapDetailToItem, addComment, getCommentsByPost } from "../services/commentService";
@@ -8,6 +8,7 @@ import type { PostDto } from "../services/postService";
 import { searchPosts } from "../services/postService";
 import { toggleLike, LikeType } from "../services/likeService";
 import { toggleSavePost } from "../services/savedPostService";
+import { shareService } from "../services/shareService";
 import { userService } from "../services/userService";
 import type { UserResponseDTO } from "../services/userService";
 
@@ -56,7 +57,7 @@ function toUiPost(p: PostDto): UiPost {
 
 // ─── UserCard ────────────────────────────────────────────────────────────────
 
-function UserResultCard({ user }: { user: UserResponseDTO }) {
+function UserResultCard({ user, onClick }: { user: UserResponseDTO; onClick: () => void }) {
   const initials = user.fullName
     .split(" ")
     .map((n) => n[0])
@@ -65,7 +66,10 @@ function UserResultCard({ user }: { user: UserResponseDTO }) {
     .toUpperCase();
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
+    <div
+      onClick={onClick}
+      className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-4 cursor-pointer hover:border-indigo-200 hover:shadow-md transition-all"
+    >
       <div
         className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
         style={{ background: user.avatarUrl ? "transparent" : "linear-gradient(135deg,#818cf8,#6366f1)" }}
@@ -80,6 +84,9 @@ function UserResultCard({ user }: { user: UserResponseDTO }) {
         <p className="text-xs text-gray-400 truncate">{user.email}</p>
         {user.bio && <p className="text-xs text-gray-500 mt-0.5 truncate">{user.bio}</p>}
       </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400 shrink-0">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
     </div>
   );
 }
@@ -87,6 +94,7 @@ function UserResultCard({ user }: { user: UserResponseDTO }) {
 // ─── SearchPage ──────────────────────────────────────────────────────────────
 
 export default function SearchPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
 
@@ -162,6 +170,11 @@ export default function SearchPage() {
     const newSaved = await toggleSavePost(postId, post.isSaved ?? false);
     setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isSaved: newSaved } : p)));
   }, [posts]);
+
+  const handleShare = useCallback(async (postId: string) => {
+    await shareService.sharePost({ postId });
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, shares: p.shares + 1 } : p));
+  }, []);
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -300,6 +313,7 @@ export default function SearchPage() {
               onAddComment={handleAddComment}
               onLoadComments={handleLoadComments}
               onSave={handleSave}
+              onShare={handleShare}
             />
           ))}
         </div>
@@ -309,7 +323,7 @@ export default function SearchPage() {
       {!loading && activeTab === "users" && users.length > 0 && (
         <div className="flex flex-col gap-3">
           {users.map((u) => (
-            <UserResultCard key={u.id} user={u}/>
+            <UserResultCard key={u.id} user={u} onClick={() => navigate(`/users/${u.id}`)} />
           ))}
         </div>
       )}

@@ -10,13 +10,13 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
 ];
 
 // ─── Stories ──────────────────────────────────────────────────────────────────
-export const MOCK_STORIES: Story[] = [
-  { id: "2", userId: "u2", username: "Sarah",   avatarUrl: "https://i.pravatar.cc/150?img=47", viewed: false, active: true  },
-  { id: "3", userId: "u3", username: "Michael", avatarUrl: "https://i.pravatar.cc/150?img=12", viewed: false, active: true  },
-  { id: "4", userId: "u4", username: "David",   avatarUrl: "https://i.pravatar.cc/150?img=53", viewed: true,  active: false },
-  { id: "5", userId: "u5", username: "Emma",    avatarUrl: "https://i.pravatar.cc/150?img=9",  viewed: false, active: true  },
-  { id: "6", userId: "u6", username: "James",   avatarUrl: "https://i.pravatar.cc/150?img=33", viewed: true,  active: false },
-  { id: "7", userId: "u7", username: "Olivia",  avatarUrl: "https://i.pravatar.cc/150?img=21", viewed: false, active: true  },
+export const MOCK_STORIES: (Story & { imageUrl?: string })[] = [
+  { id: "2", userId: "u2", username: "Sarah",   avatarUrl: "https://i.pravatar.cc/150?img=47", viewed: false, active: true,  imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80" },
+  { id: "3", userId: "u3", username: "Michael", avatarUrl: "https://i.pravatar.cc/150?img=12", viewed: false, active: true,  imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80" },
+  { id: "4", userId: "u4", username: "David",   avatarUrl: "https://i.pravatar.cc/150?img=53", viewed: true,  active: false, imageUrl: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&q=80" },
+  { id: "5", userId: "u5", username: "Emma",    avatarUrl: "https://i.pravatar.cc/150?img=9",  viewed: false, active: true,  imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&q=80" },
+  { id: "6", userId: "u6", username: "James",   avatarUrl: "https://i.pravatar.cc/150?img=33", viewed: true,  active: false, imageUrl: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80" },
+  { id: "7", userId: "u7", username: "Olivia",  avatarUrl: "https://i.pravatar.cc/150?img=21", viewed: false, active: true,  imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80" },
 ];
 
 // ─── Messages ─────────────────────────────────────────────────────────────────
@@ -88,12 +88,12 @@ export const MOCK_POSTS: Post[] = [
 
 // ─── Explore ──────────────────────────────────────────────────────────────────
 export const EXPLORE_CATEGORIES = [
-  { label: "Travel",      color: "#b0c4de", badgeColor: "#1d4ed8" },
-  { label: "Technology",  color: "#2d3748", badgeColor: "#2563eb" },
-  { label: "Fitness",     color: "#1a202c", badgeColor: "#7c3aed" },
-  { label: "Food",        color: "#92400e", badgeColor: "#d97706" },
-  { label: "Fashion",     color: "#78716c", badgeColor: "#f59e0b" },
-  { label: "Nature",      color: "#365314", badgeColor: "#16a34a" },
+  { label: "Travel",      color: "#b0c4de", badgeColor: "#1d4ed8", imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" },
+  { label: "Technology",  color: "#2d3748", badgeColor: "#2563eb", imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80" },
+  { label: "Fitness",     color: "#1a202c", badgeColor: "#7c3aed", imageUrl: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&q=80" },
+  { label: "Food",        color: "#92400e", badgeColor: "#d97706", imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" },
+  { label: "Fashion",     color: "#78716c", badgeColor: "#f59e0b", imageUrl: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80" },
+  { label: "Nature",      color: "#365314", badgeColor: "#16a34a", imageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80" },
 ];
 
 export const EXPLORE_HASHTAGS = [
@@ -121,12 +121,12 @@ export const SAVED_POSTS = [
 ];
 
 export const EXPLORE_REELS = [
-  { title: "Mountain Sunrise", color: "#374151" },
-  { title: "Street Food Tour", color: "#78350f" },
-  { title: "Morning Workout",  color: "#1e3a5f" },
-  { title: "City Lights",      color: "#1a202c" },
-  { title: "Ocean Waves",      color: "#164e63" },
-  { title: "Forest Walk",      color: "#14532d" },
+  { title: "Mountain Sunrise", color: "#374151", thumbnailUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=300&q=80" },
+  { title: "Street Food Tour", color: "#78350f", thumbnailUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&q=80" },
+  { title: "Morning Workout",  color: "#1e3a5f", thumbnailUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=300&q=80" },
+  { title: "City Lights",      color: "#1a202c", thumbnailUrl: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=300&q=80" },
+  { title: "Ocean Waves",      color: "#164e63", thumbnailUrl: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=300&q=80" },
+  { title: "Forest Walk",      color: "#14532d", thumbnailUrl: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=300&q=80" },
 ];
 
 // ─── Settings tabs ────────────────────────────────────────────────────────────

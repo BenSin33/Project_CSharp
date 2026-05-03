@@ -12,4 +12,5 @@ public interface IPostService
     Task<PostResponseDto?> UpdatePostAsync(Guid id, UpdatePostDto request);
     Task<bool> DeletePostAsync(Guid id);
     Task<PaginatedResponse<PostResponseDto>> SearchPostsAsync(string query, int skip, int take, Guid? currentUserId = null);
+    Task<PaginatedResponse<PostResponseDto>> GetPostsByUserAsync(Guid userId, int skip, int take, Guid? currentUserId = null);
 }

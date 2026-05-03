@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/HomePage";
 import MainLayout from "./layouts/MainLayout";
 import ProfilePage from "./pages/ProfilePage";
+import UserProfilePage from "./pages/UserProfilePage";
 import FriendsPage from "./pages/Friends";
 import ExplorePage from "./pages/ExplorePage";
 import MessagesPage from "./pages/Messages";
@@ -38,14 +39,15 @@ function App() {
         </RequireAuth>
       }>
         <Route index element={<Home />} />
-        <Route path="profile"   element={<ProfilePage />} />
-        <Route path="friends"   element={<FriendsPage />} />
-        <Route path="explore"   element={<ExplorePage />} />
-        <Route path="messages"  element={<MessagesPage />} />
-        <Route path="bookmarks" element={<BookMarkPage />} />
-        <Route path="settings"  element={<SettingsPage />} />
-        <Route path="search"    element={<SearchPage />} />
-        <Route path="admin/*"   element={<RequireAdmin><AdminPage /></RequireAdmin>} />
+        <Route path="profile"     element={<ProfilePage />} />
+        <Route path="users/:id"   element={<UserProfilePage />} />
+        <Route path="friends"     element={<FriendsPage />} />
+        <Route path="explore"     element={<ExplorePage />} />
+        <Route path="messages"    element={<MessagesPage />} />
+        <Route path="bookmarks"   element={<BookMarkPage />} />
+        <Route path="settings"    element={<SettingsPage />} />
+        <Route path="search"      element={<SearchPage />} />
+        <Route path="admin/*"     element={<RequireAdmin><AdminPage /></RequireAdmin>} />
       </Route>
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
