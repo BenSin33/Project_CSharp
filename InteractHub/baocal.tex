@@ -214,6 +214,19 @@ KHOA CÔNG NGHỆ THÔNG TIN
     \end{center}
     \end{figure}
 
+    \subsection{Ý nghĩa thực tiễn và đóng góp của đề tài}
+    Bên cạnh mục tiêu học thuật, đề tài còn mang ý nghĩa thực tiễn cao khi mô phỏng đầy đủ vòng đời phát triển của một sản phẩm phần mềm hiện đại, từ phân tích yêu cầu, thiết kế hệ thống, hiện thực chức năng, kiểm thử cho tới đóng gói và triển khai. Nhóm thực hiện không chỉ tập trung vào việc xây dựng các chức năng "chạy được", mà còn chú trọng yếu tố bảo trì lâu dài thông qua kiến trúc tách lớp, tiêu chuẩn hóa API và quản lý trạng thái ở phía frontend.
+
+    Trong bối cảnh các hệ thống mạng xã hội yêu cầu khả năng phản hồi nhanh, độ ổn định cao và tính mở rộng theo số lượng người dùng, InteractHub là một bài toán phù hợp để vận dụng kiến thức full-stack một cách toàn diện. Cụ thể:
+    \begin{itemize}
+        \item Về mặt \textbf{kỹ thuật}: dự án minh họa cách kết hợp React + TypeScript với ASP.NET Core theo mô hình client-server hiện đại.
+        \item Về mặt \textbf{kiến trúc}: hệ thống thể hiện rõ vai trò của Repository, Service Layer, DTO, DI trong việc giảm coupling và tăng testability.
+        \item Về mặt \textbf{vận hành}: quy trình Docker hóa, chuẩn bị CI/CD và cloud deployment giúp tăng khả năng đưa sản phẩm vào môi trường thực tế.
+        \item Về mặt \textbf{chất lượng}: áp dụng unit testing và chuẩn hóa xử lý lỗi giúp giảm rủi ro phát sinh khi mở rộng chức năng.
+    \end{itemize}
+
+    Ngoài ra, nhóm cũng rút ra được nhiều kinh nghiệm quan trọng trong quá trình triển khai, đặc biệt là việc đồng bộ dữ liệu giữa frontend-backend, quản lý phiên đăng nhập (session), xử lý tương thích schema database, và giải quyết xung đột mã nguồn khi làm việc nhóm trên Git.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Phân tích và Thiết kế hệ thống}
@@ -261,6 +274,50 @@ KHOA CÔNG NGHỆ THÔNG TIN
     \begin{center}
     \includegraphics[width=14cm]{hinh2.png}
     \caption{Kiến trúc Backend với Repository Pattern và Service Layer}
+    \end{center}
+    \end{figure}
+
+    \subsection{Phân tích luồng nghiệp vụ chính (Use-case Flows)}
+    Để hệ thống vận hành ổn định, nhóm xác định và hiện thực các luồng nghiệp vụ cốt lõi theo thứ tự ưu tiên từ cao xuống thấp. Mỗi luồng đều được mô tả bằng các bước xử lý ở cả frontend và backend nhằm đảm bảo tính nhất quán dữ liệu.
+
+    \subsubsection{Luồng xác thực và khởi tạo phiên làm việc}
+    \begin{enumerate}
+        \item Người dùng nhập email và mật khẩu tại giao diện đăng nhập.
+        \item Frontend gửi yêu cầu \texttt{POST /api/auth/login}.
+        \item Backend kiểm tra thông tin người dùng qua Identity, phát hành JWT nếu hợp lệ.
+        \item Frontend lưu token, gọi \texttt{/api/auth/profile} để lấy đầy đủ roles và thông tin hồ sơ.
+        \item Router guard phân quyền điều hướng về trang tương ứng (User/Admin).
+    \end{enumerate}
+
+    \subsubsection{Luồng tạo bài viết có media}
+    \begin{enumerate}
+        \item Người dùng mở modal tạo bài viết và chọn nội dung media.
+        \item Frontend upload file qua \texttt{/api/media/upload}, nhận lại URL tài nguyên.
+        \item Frontend gửi dữ liệu bài viết gồm content, visibility và danh sách media URL.
+        \item Backend validate dữ liệu, ghi nhận vào Post và PostMedia, trả về object chuẩn hóa.
+        \item Feed được đồng bộ lại để hiển thị bài viết mới theo thời gian thực gần nhất.
+    \end{enumerate}
+
+    \subsubsection{Luồng tương tác xã hội (Like/Comment/Share)}
+    \begin{itemize}
+        \item Người dùng thao tác trên PostCard và nhận phản hồi tức thời (optimistic UI).
+        \item API cập nhật trạng thái tương tác, đồng thời tạo Notification cho chủ bài viết nếu cần.
+        \item Dữ liệu số lượng like/comment/share được cập nhật đồng bộ ở feed và trang chi tiết.
+    \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh13.png - sơ đồ sequence đăng nhập và phân quyền.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh13.png}
+    \caption{Sequence Diagram cho luồng đăng nhập và lấy profile}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh14.png - sơ đồ sequence tạo bài viết và upload media.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh14.png}
+    \caption{Sequence Diagram cho luồng tạo bài viết có media}
     \end{center}
     \end{figure}
 
@@ -481,6 +538,95 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \end{enumerate}
     \end{itemize}
 
+    \subsection{Minh chứng kết quả giao diện và chức năng}
+    Mục này tập trung trình bày các ảnh chụp màn hình kết quả chạy thực tế của hệ thống theo từng nhóm tính năng. Người đọc có thể đối chiếu trực tiếp giữa yêu cầu chức năng và hành vi của sản phẩm.
+
+    \subsubsection{Nhóm chức năng xác thực}
+    \begin{itemize}
+        \item Màn hình đăng nhập với xử lý validation và thông báo lỗi thân thiện.
+        \item Màn hình đăng ký với các ràng buộc mật khẩu mạnh.
+        \item Điều hướng theo vai trò sau khi xác thực thành công.
+    \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh15.png - giao diện đăng nhập thành công.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=13.5cm]{hinh15.png}
+    \caption{Giao diện đăng nhập và phản hồi xác thực}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh16.png - giao diện đăng ký và validation form.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=13.5cm]{hinh16.png}
+    \caption{Form đăng ký với kiểm tra dữ liệu đầu vào}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Nhóm chức năng feed và bài viết}
+    \begin{itemize}
+        \item Hiển thị danh sách bài viết theo thời gian.
+        \item Tạo bài viết mới, upload ảnh và hiển thị tức thời.
+        \item Tương tác like, comment, share và save post.
+    \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh17.png - trang feed chính.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=13.5cm]{hinh17.png}
+    \caption{Trang chủ (Feed) sau khi người dùng đăng nhập}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh18.png - modal tạo bài viết và upload media.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=13.5cm]{hinh18.png}
+    \caption{Tạo bài viết mới và upload media}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Nhóm chức năng quản lý quan hệ và nhắn tin}
+    \begin{itemize}
+        \item Danh sách bạn bè, lời mời kết bạn và gợi ý người dùng.
+        \item Nhắn tin giữa hai người dùng, hiển thị hội thoại theo thời gian.
+        \item Kết nối thời gian thực qua SignalR cho chức năng chat/notification.
+    \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh19.png - trang bạn bè và lời mời kết bạn.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=13.5cm]{hinh19.png}
+    \caption{Quản lý bạn bè và lời mời kết bạn}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh20.png - trang nhắn tin (messages).}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=13.5cm]{hinh20.png}
+    \caption{Giao diện nhắn tin và hội thoại người dùng}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Nhóm chức năng story, tìm kiếm và trang cá nhân}
+    \textit{Gợi ý hình cần chèn: hinh21.png - story viewer và create story modal.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=13.5cm]{hinh21.png}
+    \caption{Story viewer và luồng tạo story}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh22.png - trang profile/search.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=13.5cm]{hinh22.png}
+    \caption{Trang cá nhân và tính năng tìm kiếm người dùng}
+    \end{center}
+    \end{figure}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -557,6 +703,38 @@ KHOA CÔNG NGHỆ THÔNG TIN
     \begin{center}
     \includegraphics[width=14cm]{hinh9.png}
     \caption{Unit Testing và tài liệu kiểm thử của InteractHub}
+    \end{center}
+    \end{figure}
+
+    \subsection{Kết quả kiểm thử và phân tích độ tin cậy}
+    Ngoài việc liệt kê các test case, nhóm tiến hành phân tích kết quả theo ba góc nhìn: độ phủ nghiệp vụ, độ ổn định khi chạy lặp, và khả năng phát hiện lỗi biên.
+    \begin{itemize}
+        \item \textbf{Độ phủ nghiệp vụ}: tập trung vào các nghiệp vụ có rủi ro cao như xác thực, phân quyền, xử lý tương tác bài viết và gửi thông báo.
+        \item \textbf{Độ ổn định}: chạy nhiều lần trên cùng bộ test để xác nhận không xuất hiện lỗi ngẫu nhiên.
+        \item \textbf{Khả năng mở rộng}: bộ test được thiết kế theo hướng dễ thêm case mới khi có endpoint hoặc service mới.
+    \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh23.png - kết quả chạy test trong terminal/CI.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh23.png}
+    \caption{Kết quả chạy unit test trên môi trường phát triển}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh24.png - báo cáo coverage.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh24.png}
+    \caption{Báo cáo độ phủ mã nguồn (test coverage)}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh25.png - minh chứng test docs hoặc test summary.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh25.png}
+    \caption{Tài liệu tổng hợp kết quả kiểm thử}
     \end{center}
     \end{figure}
 
@@ -643,6 +821,49 @@ KHOA CÔNG NGHỆ THÔNG TIN
     \end{center}
     \end{figure}
 
+    \subsection{Minh chứng triển khai và vận hành thực tế}
+    Để tăng tính thuyết phục cho phần triển khai, nhóm bổ sung bộ minh chứng bao gồm ảnh quá trình build image, chạy container, cấu hình môi trường và xác nhận API hoạt động.
+
+    \textit{Gợi ý hình cần chèn: hinh26.png - kết quả docker compose up/build.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh26.png}
+    \caption{Kết quả khởi chạy hệ thống bằng Docker Compose}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh27.png - danh sách container và trạng thái healthy.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh27.png}
+    \caption{Trạng thái các container của hệ thống}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh28.png - swagger endpoints sau deploy.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh28.png}
+    \caption{Swagger UI kiểm chứng endpoint backend sau triển khai}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh29.png - log ứng dụng hoặc health check.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh29.png}
+    \caption{Log vận hành và health check của dịch vụ}
+    \end{center}
+    \end{figure}
+
+    \textit{Gợi ý hình cần chèn: hinh30.png - kết quả gọi API login/profile thành công sau deploy.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh30.png}
+    \caption{Kiểm chứng luồng xác thực hoạt động sau triển khai}
+    \end{center}
+    \end{figure}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Tóm tắt tiến độ}
 
@@ -676,6 +897,36 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{Database}: Normalized schema, proper relationships, migrations
         \item \textbf{Testing}: Unit tests với mock objects, edge case coverage
         \item \textbf{Documentation}: Code comments, README files, test documentation
+    \end{itemize}
+
+    \subsection{Bài học kinh nghiệm và hướng phát triển tiếp theo}
+    Trong quá trình thực hiện dự án, nhóm ghi nhận một số bài học quan trọng:
+    \begin{itemize}
+        \item Cần thống nhất chuẩn dữ liệu response giữa các API ngay từ đầu để giảm chi phí xử lý compatibility ở frontend.
+        \item Quản lý migration database phải đi kèm quy trình kiểm tra schema trước khi seed dữ liệu trong môi trường Docker/Cloud.
+        \item Cần tách rõ cấu hình theo môi trường (Development/Staging/Production), đặc biệt với JWT key và connection strings.
+        \item Việc viết test sớm cho service layer giúp giảm đáng kể thời gian debug khi tích hợp liên thông nhiều module.
+    \end{itemize}
+
+    Trong giai đoạn tiếp theo, hệ thống có thể được nâng cấp theo các hướng sau:
+    \begin{enumerate}
+        \item Bổ sung cơ chế cache (Redis) cho các endpoint đọc nhiều như feed và notifications.
+        \item Hoàn thiện real-time chat với trạng thái online/offline, typing indicator và read receipts.
+        \item Nâng cấp cơ chế phân tích nội dung (moderation) bằng AI service cho bài viết và bình luận.
+        \item Chuẩn hóa observability với tracing tập trung để theo dõi hiệu năng toàn hệ thống.
+        \item Hoàn thiện pipeline CI/CD đầy đủ các bước: lint, test, security scan, deploy và rollback.
+    \end{enumerate}
+
+    \subsection{Phụ lục danh mục hình ảnh minh chứng (đề xuất)}
+    Để tiện bổ sung báo cáo, danh mục hình minh chứng được đề xuất theo mẫu \texttt{hinhX.png} như sau:
+    \begin{itemize}
+        \item hinh1 đến hinh3: Thiết kế tổng quan và công nghệ.
+        \item hinh4 đến hinh8: Kiến trúc frontend/backend và API.
+        \item hinh9 đến hinh12: Unit testing, CI/CD, monitoring.
+        \item hinh13 đến hinh14: Sequence diagram các luồng nghiệp vụ chính.
+        \item hinh15 đến hinh22: Ảnh giao diện và chức năng người dùng.
+        \item hinh23 đến hinh25: Kết quả test execution và coverage.
+        \item hinh26 đến hinh30: Minh chứng triển khai Docker/Cloud và vận hành.
     \end{itemize}
 \begin{thebibliography}{80}
 
