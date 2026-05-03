@@ -18,7 +18,6 @@ function MainLayout() {
     const { user, logout } = useAuth();
     const [showPostModal, setShowPostModal] = useState(false);
     const { notifications, isOpen: showNotif, setIsOpen: setShowNotif, unreadCount, markAllRead } = useNotifications();
-
     const handleLogout = () => {
         logout();
         navigate("/login");
@@ -55,26 +54,21 @@ function MainLayout() {
         <div className="min-h-screen bg-gray-50">
             <Navbar
                 onLogout={handleLogout}
-                user={user ? { name: user.name, email: user.email, avatarUrl: user.avatarUrl } : { name: "", email: "" }}
+                user={{
+                    name: user?.name ?? "User",
+                    email: user?.email ?? "",
+                    avatarUrl: user?.avatarUrl,
+                }}
                 notificationCount={unreadCount}
                 onSearch={(q) => navigate(`/search?q=${q}`)}
                 onCreatePost={() => setShowPostModal(true)}
                 onNotificationsClick={() => setShowNotif(v => !v)}
             />
 
-            <div className="max-w-[1200px] mx-auto px-4 pt-6 pb-10 flex gap-5 items-start">
-                {/* Left Sidebar */}
-                <aside className="w-[220px] shrink-0 sticky top-20">
-                    <Sidebar currentUser={user ? { name: user.name, avatarUrl: user.avatarUrl } : undefined} />
-                </aside>
-
-                {/* Main content */}
-                <main className="flex-1 min-w-0 flex flex-col gap-4">
-                    <Outlet />
-                </main>
-
-                {/* Right Sidebar */}
-                <aside className="w-[260px] shrink-0 sticky top-20 flex flex-col gap-4">
+            <div className="max-w-6xl mx-auto px-6 py-6 grid grid-cols-[220px_1fr_280px] gap-6 items-start">
+                <aside className="sticky top-20"><Sidebar currentUser={user ?? undefined} /></aside>
+                <main className="flex flex-col gap-4 min-w-0"><Outlet /></main>
+                <aside className="sticky top-20 flex flex-col gap-4">
                     <TrendingHashtags />
                     <SuggestionPanel />
                 </aside>
