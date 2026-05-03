@@ -144,6 +144,16 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        await db.Database.ExecuteSqlRawAsync(@"
+            IF COL_LENGTH('AspNetUsers', 'CreatedAt') IS NULL
+            BEGIN
+                ALTER TABLE [AspNetUsers]
+                ADD [CreatedAt] datetime2 NOT NULL
+                    CONSTRAINT [DF_AspNetUsers_CreatedAt] DEFAULT SYSUTCDATETIME();
+            END
+        ");
+
         await DataSeeder.SeedUserAsync(services);
         await DataSeeder.SeedPostsAsync(services);
         await DataSeeder.SeedNotificationsAsync(services);

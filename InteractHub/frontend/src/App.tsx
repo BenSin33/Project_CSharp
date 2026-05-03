@@ -10,12 +10,20 @@ import SettingsPage from "./pages/Settings";
 import AuthPage from "./pages/AuthPage";
 import SearchPage from "./pages/SearchPage";
 import { useAuth } from "./contexts/AuthContext";
+import AdminPage from "./pages/AdminPage";
 
 // Guard route: chỉ cho vào nếu đã login
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) return null; // Chờ khôi phục session
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  const { isLoading, user } = useAuth();
+  if (isLoading) return null;
+  if (!user?.roles?.includes("Admin")) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -37,6 +45,7 @@ function App() {
         <Route path="bookmarks" element={<BookMarkPage />} />
         <Route path="settings"  element={<SettingsPage />} />
         <Route path="search"    element={<SearchPage />} />
+        <Route path="admin/*"   element={<RequireAdmin><AdminPage /></RequireAdmin>} />
       </Route>
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

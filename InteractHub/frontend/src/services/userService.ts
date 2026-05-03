@@ -35,6 +35,7 @@ export interface UserProfileDto {
   avatarUrl?: string
   bio?: string
   location?: string
+  roles?: string[]
   joinedAt: string
   followingCount: number
   followersCount: number
@@ -51,6 +52,7 @@ function mapFromBackend(d: UserResponseDTO): UserProfileDto {
     avatarUrl:      d.avatarUrl,
     bio:            d.bio,
     location:       d.location,
+    roles:          d.roles ?? d.roles,
     joinedAt:       "",
     followingCount: 0,
     followersCount: 0,
@@ -105,6 +107,7 @@ async function getMyProfile(): Promise<UserProfileDto> {
       avatarUrl:      d?.avatarUrl ?? d?.AvatarUrl,
       bio:            undefined,
       location:       undefined,
+      roles:          d?.roles ?? d?.Roles ?? [],
       joinedAt:       "",
       followingCount: 0,
       followersCount: 0,

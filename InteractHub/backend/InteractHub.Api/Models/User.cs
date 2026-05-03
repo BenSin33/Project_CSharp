@@ -5,6 +5,7 @@ namespace InteractHub.Api.Models;
 
 public class User : IdentityUser<Guid>
 {
+    public DateTime CreatedAt {get;set;} = DateTime.UtcNow;
     [Required]
     [StringLength(200)]
     public string FullName {get;set;} = null!; // Full name of the user

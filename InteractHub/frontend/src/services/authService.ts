@@ -44,6 +44,7 @@ async function login(payload: LoginPayload): Promise<AuthResponse> {
       name: payload.email.split("@")[0],
       email: payload.email,
       username: payload.email.split("@")[0],
+      roles: [],
     }
   }
 
@@ -86,6 +87,7 @@ async function getMe(): Promise<AuthUser> {
     email: d?.email ?? d?.Email ?? "",
     username: (d?.email ?? "").split("@")[0],
     avatarUrl: d?.avatarUrl ?? d?.AvatarUrl,
+    roles: d?.roles ?? d?.Roles ?? [],
   }
 }
 

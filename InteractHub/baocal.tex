@@ -206,6 +206,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
             \item Môi trường triển khai: Toàn bộ hệ thống được triển khai trên nền tảng đám mây Microsoft Azure với quy trình CI/CD tự động thông qua GitHub Actions/Azure DevOps.
         \end{itemize}
 
+    \textit{Gợi ý hình cần chèn: hinh3.png - technology stack của dự án.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh3.png}
+    \caption{Technology Stack của InteractHub}
+    \end{center}
+    \end{figure}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Phân tích và Thiết kế hệ thống}
@@ -220,7 +228,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{Notification}: Hệ thống thông báo thời gian thực.
         \item \textbf{Hashtag \& Report}: Theo dõi xu hướng và quản lý nội dung vi phạm.
     \end{itemize}
-    \textit{(Lưu ý: Sinh viên cần chèn hình ảnh sơ đồ ERD được xuất từ SQL Server hoặc công cụ thiết kế tại đây bằng lệnh \texttt{\textbackslash includegraphics})}.
+
+    \textit{Gợi ý hình cần chèn: hinh1.png - sơ đồ ERD tổng quan của hệ thống.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=15cm]{hinh1.png}
+    \caption{Sơ đồ thực thể (ERD) của hệ thống InteractHub}
+    \end{center}
+    \end{figure}
 
     \subsection{Đặc tả API}
     Hệ thống cung cấp hơn 20 endpoints RESTful để giao tiếp với Frontend React. Các API được chuẩn hóa theo định dạng JSON và sử dụng các mã trạng thái HTTP tiêu chuẩn (200, 201, 400, 401, 500). Các nhóm API chính bao gồm:
@@ -240,6 +255,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{Dependency Injection}: Quản lý vòng đời của các đối tượng và giảm sự phụ thuộc giữa các thành phần.
         \item \textbf{Entity Framework Core}: Sử dụng kiến trúc Code-First để quản lý migration và tương tác với SQL Server.
     \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh2.png - kiến trúc backend, repository và service layer.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh2.png}
+    \caption{Kiến trúc Backend với Repository Pattern và Service Layer}
+    \end{center}
+    \end{figure}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,6 +285,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{Responsive Design}: Sử dụng Tailwind CSS để đảm bảo giao diện đáp ứng hoàn hảo trên các thiết bị di động, máy tính bảng và máy tính để bàn.
         \item \textbf{React Hooks}: Sử dụng useState, useEffect, useContext, useCallback để quản lý trạng thái và hiệu ứng component.
     \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh4.png - cấu trúc component và giao diện Frontend.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh4.png}
+    \caption{Frontend Architecture và cấu trúc component chính}
+    \end{center}
+    \end{figure}
 
     \subsection{Frontend - Quản lý trạng thái và tích hợp API}
     \begin{itemize}
@@ -301,6 +332,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{User Experience}: Loading states, success/error messages, form validation feedback real-time.
     \end{itemize}
 
+    \textit{Gợi ý hình cần chèn: hinh5.png - các form đăng ký, đăng nhập và cập nhật hồ sơ.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh5.png}
+    \caption{Forms và Validation của hệ thống}
+    \end{center}
+    \end{figure}
+
     \subsection{Frontend - Routing và Dynamic Features}
     \begin{itemize}
         \item \textbf{React Router v6}: Cấu hình route nested bao gồm:
@@ -315,6 +354,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{Lazy Loading}: Lazy-loaded routes bằng React.lazy() giảm kích thước bundle ban đầu.
         \item \textbf{Real-time Notifications}: Tích hợp SignalR client để nhận thông báo ngay lập tức từ server.
     \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh6.png - routing, protected routes và real-time features.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh6.png}
+    \caption{Routing và Dynamic Features}
+    \end{center}
+    \end{figure}
 
     \subsection{Chức năng xác thực Backend (Authentication \& Authorization)}
     Hệ thống sử dụng \textbf{ASP.NET Core Identity} kết hợp với \textbf{JSON Web Token (JWT)} để quản lý người dùng và bảo mật API:
@@ -349,6 +396,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{PostReport}: Báo cáo nội dung vi phạm
     \end{enumerate}
 
+    \textit{Gợi ý hình cần chèn: hinh7.png - sơ đồ quan hệ các entity trong database.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh7.png}
+    \caption{Database Design và quan hệ giữa các entity}
+    \end{center}
+    \end{figure}
+
     \subsection{RESTful API - Controllers và DTOs}
     Hệ thống cung cấp \textbf{20+ endpoints RESTful} được tổ chức thành 11 controllers:
     \begin{itemize}
@@ -365,6 +420,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{MediaController} (2 endpoints): UploadImage, DeleteImage
     \end{itemize}
     Tất cả endpoints trả về JSON format chuẩn hóa với structure: \texttt{\{success, data, message, errors\}}
+
+    \textit{Gợi ý hình cần chèn: hinh8.png - cấu trúc controllers, DTOs và API endpoints.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh8.png}
+    \caption{RESTful API - Controllers và DTOs}
+    \end{center}
+    \end{figure}
 
     \subsection{Business Logic và Services Layer}
     Triển khai \textbf{12 service interfaces} với implementation pattern:
@@ -489,6 +552,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item EXECUTION\_SUMMARY.md - Tổng kết chung
     \end{itemize}
 
+    \textit{Gợi ý hình cần chèn: hinh9.png - kết quả và tài liệu unit testing.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh9.png}
+    \caption{Unit Testing và tài liệu kiểm thử của InteractHub}
+    \end{center}
+    \end{figure}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CI/CD và Triển khai Cloud}
 
@@ -512,6 +583,14 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \item \textbf{Frontend Dockerfile}: Build React app với Vite, serve bằng nginx
         \item \textbf{Docker Compose}: docker-compose.yml để chạy local development environment
     \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh10.png - Docker cho backend, frontend và docker-compose.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh10.png}
+    \caption{Docker Containerization của hệ thống}
+    \end{center}
+    \end{figure}
 
     \subsection{Environment Configuration}
     \begin{itemize}
@@ -541,12 +620,28 @@ KHOA CÔNG NGHỆ THÔNG TIN
         \end{enumerate}
     \end{itemize}
 
+    \textit{Gợi ý hình cần chèn: hinh11.png - quy trình CI/CD từ build đến deploy.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh11.png}
+    \caption{CI/CD Pipeline của dự án}
+    \end{center}
+    \end{figure}
+
     \subsection{Monitoring và Logging}
     \begin{itemize}
         \item \textbf{Application Insights}: Theo dõi hiệu suất ứng dụng, dependencies, exceptions
         \item \textbf{Structured Logging}: Serilog logging output tới Azure Storage
         \item \textbf{Health Check}: Endpoint /health để kiểm tra trạng thái ứng dụng
     \end{itemize}
+
+    \textit{Gợi ý hình cần chèn: hinh12.png - monitoring, logging và health check.}
+    \begin{figure}[h!]
+    \begin{center}
+    \includegraphics[width=14cm]{hinh12.png}
+    \caption{Monitoring và Logging của ứng dụng}
+    \end{center}
+    \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Tóm tắt tiến độ}

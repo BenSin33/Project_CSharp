@@ -42,7 +42,7 @@ const ShieldIcon = () => (
 );
 
 const DEMO_CREDENTIALS = [
-  { label: "Admin Demo:", value: "admin@interacthub.com / admin123" },
+  { label: "Admin Demo:", value: "admin@interacthub.com / Admin@123" },
 ];
 
 // ─── LoginForm ────────────────────────────────────────────────────────────────

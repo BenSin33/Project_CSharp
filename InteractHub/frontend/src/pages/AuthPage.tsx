@@ -35,6 +35,17 @@ export default function AuthPage() {
   const [serverError, setServerError] = useState<string | undefined>();
   const [successMsg, setSuccessMsg]  = useState<string | undefined>();
 
+  const toFriendlyAuthError = (err: any, fallback: string) => {
+    const status = err?.response?.status;
+    if (status === 502) {
+      return "Không thể kết nối API (502 Bad Gateway). Hãy kiểm tra backend hoặc cấu hình proxy.";
+    }
+    if (!err?.response && err?.message === "Network Error") {
+      return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra backend đang chạy.";
+    }
+    return err?.response?.data?.message ?? err?.message ?? fallback;
+  };
+
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     setServerError(undefined);
@@ -43,12 +54,19 @@ export default function AuthPage() {
       // Dùng AuthContext.login → token được lưu vào cả localStorage VÀ React state
       // → các API call sau đó sẽ có token hợp lệ
       await login({ email: data.email, password: data.password });
-      navigate("/");
+      const cachedUser = localStorage.getItem("user");
+      let isAdmin = false;
+      if (cachedUser) {
+        try {
+          const parsed = JSON.parse(cachedUser);
+          isAdmin = Array.isArray(parsed?.roles) && parsed.roles.includes("Admin");
+        } catch {
+          isAdmin = false;
+        }
+      }
+      navigate(isAdmin ? "/admin" : "/");
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ??
-        err?.message ??
-        "Email hoặc mật khẩu không đúng.";
+      const msg = toFriendlyAuthError(err, "Email hoặc mật khẩu không đúng.");
       setServerError(msg);
     } finally {
       setIsLoading(false);
@@ -74,10 +92,7 @@ export default function AuthPage() {
       setTab("login");
       setSuccessMsg("Đăng ký thành công! Vui lòng đăng nhập.");
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ??
-        err?.message ??
-        "Đăng ký thất bại. Vui lòng thử lại.";
+      const msg = toFriendlyAuthError(err, "Đăng ký thất bại. Vui lòng thử lại.");
       setServerError(msg);
     } finally {
       setIsLoading(false);
@@ -88,13 +103,23 @@ export default function AuthPage() {
     setIsLoading(true);
     setServerError(undefined);
     const email    = role === "admin" ? "admin@interacthub.com" : "user@interacthub.com";
-    const password = role === "admin" ? "Admin@123456" : "User@123456";
+    const password = role === "admin" ? "Admin@123" : "User@123";
     try {
       await login({ email, password });
-      navigate("/");
-    } catch {
-      // Demo credentials không tồn tại → vẫn vào app (demo mode)
-      navigate("/");
+      const cachedUser = localStorage.getItem("user");
+      let isAdmin = false;
+      if (cachedUser) {
+        try {
+          const parsed = JSON.parse(cachedUser);
+          isAdmin = Array.isArray(parsed?.roles) && parsed.roles.includes("Admin");
+        } catch {
+          isAdmin = false;
+        }
+      }
+      navigate(isAdmin ? "/admin" : "/");
+    } catch (err: any) {
+      const msg = toFriendlyAuthError(err, "Đăng nhập demo thất bại. Vui lòng kiểm tra backend/API.");
+      setServerError(msg);
     } finally {
       setIsLoading(false);
     }

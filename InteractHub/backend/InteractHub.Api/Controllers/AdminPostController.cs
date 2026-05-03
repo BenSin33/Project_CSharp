@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using InteractHub.Api.DTOs.Admin;
 using InteractHub.Api.DTOs.Common;
+using InteractHub.Api.Models;
 using InteractHub.Api.Services.Interface;
 
 namespace InteractHub.Api.Controllers;

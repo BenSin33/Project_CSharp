@@ -7,6 +7,7 @@ export interface AuthUser {
   email: string
   username: string
   avatarUrl?: string
+  roles?: string[]
 }
 
 interface AuthContextValue {
