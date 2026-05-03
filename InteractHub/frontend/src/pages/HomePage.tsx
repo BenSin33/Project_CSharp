@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import StoryBar from "../components/story/StoryBar";
+import StoryViewer from "../components/story/StoryViewer";
+import CreateStoryModal from "../components/story/CreateStoryModal";
 import PostCard from "../components/post/PostCard";
 import type { CommentItem } from "../services/commentService";
 import { mapDetailToItem, addComment, getCommentsByPost } from "../services/commentService";
@@ -11,6 +12,7 @@ import { toggleLike, LikeType } from "../services/likeService";
 import { toggleSavePost } from "../services/savedPostService";
 import { shareService } from "../services/shareService";
 import { useAuth } from "../contexts/AuthContext";
+import { MOCK_STORIES } from "../constants/mock";
 
 function toUiPost(p: PostDto): Post & { _topComments: CommentItem[] } {
   return {
@@ -31,11 +33,16 @@ function toUiPost(p: PostDto): Post & { _topComments: CommentItem[] } {
 type UiPost = Post & { _topComments: CommentItem[] }
 
 function Home() {
-  const navigate = useNavigate();
   const { isLoading: authLoading } = useAuth();
   const [posts, setPosts]     = useState<UiPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
+
+  // Story viewer state
+  const [storyViewerOpen,  setStoryViewerOpen]  = useState(false);
+  const [storyStartIndex,  setStoryStartIndex]  = useState(0);
+  // Create story modal
+  const [createStoryOpen, setCreateStoryOpen]   = useState(false);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -130,8 +137,32 @@ function Home() {
   return (
     <div>
       <StoryBar
-        onAddStory={() => navigate("/stories/create")}
-        onViewStory={(s) => navigate(`/stories/${s.id}`)}
+        stories={MOCK_STORIES}
+        onAddStory={() => setCreateStoryOpen(true)}
+        onViewStory={(s) => {
+          const idx = MOCK_STORIES.findIndex(ms => ms.id === s.id);
+          setStoryStartIndex(idx >= 0 ? idx : 0);
+          setStoryViewerOpen(true);
+        }}
+      />
+
+      {storyViewerOpen && (
+        <StoryViewer
+          stories={MOCK_STORIES}
+          startIndex={storyStartIndex}
+          onClose={() => setStoryViewerOpen(false)}
+        />
+      )}
+
+      <CreateStoryModal
+        isOpen={createStoryOpen}
+        onClose={() => setCreateStoryOpen(false)}
+        userAvatarUrl={undefined}
+        userName="You"
+        onCreated={() => {
+          // Có thể refresh story bar ở đây nếu cần
+          console.log("Story created!");
+        }}
       />
 
       {isActuallyLoading && (
