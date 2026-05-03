@@ -47,6 +47,7 @@ export interface Story {
   username: string;
   avatarUrl?: string;
   viewed: boolean;
+  imageUrl: string;
   active: boolean;
   expiresAt?: string;
 }

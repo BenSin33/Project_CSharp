@@ -23,9 +23,14 @@ function toConversation(dto: ConversationDTO): Conversation {
   //   .toUpperCase();
   return {
     id: String(dto.userId),
-    name: dto.userName,
+    name: dto.userName ?? "Unknown User",
     preview: dto.lastMessage ?? "",
-    time: new Date(dto.lastMessageTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+   time: dto.lastMessageTime
+  ? new Date(dto.lastMessageTime).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  : "",
     unreadCount: dto.unreadCount || undefined,
     avatarUrl: dto.userAvatar,
     avatarColor: "#e0e7ff",
@@ -37,7 +42,12 @@ function toMessage(dto: MessageResponseDTO, currentUserId: string): Message {
   return {
     id: String(dto.id),
     text: dto.messageContent ?? "",
-    time: new Date(dto.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: dto.sentAt
+      ? new Date(dto.sentAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "",
     isMine: String(dto.senderId) === currentUserId,
   };
 }
