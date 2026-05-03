@@ -11,11 +11,11 @@ const STORY_DURATION = 5000; // 5 seconds per story
 
 export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(startIndex);
-  const [progress, setProgress]         = useState(0);
-  const intervalRef                     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startTimeRef                    = useRef<number>(Date.now());
-  const pausedAtRef                     = useRef<number>(0);
-  const [paused, setPaused]             = useState(false);
+  const [progress, setProgress] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number>(Date.now());
+  const pausedAtRef = useRef<number>(0);
+  const [paused, setPaused] = useState(false);
 
   const story = stories[currentIndex];
 
@@ -84,13 +84,13 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
   return (
     <div
       style={{
-        position:        "fixed",
-        inset:           0,
-        zIndex:          9999,
-        background:      "#000",
-        display:         "flex",
-        alignItems:      "center",
-        justifyContent:  "center",
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "#000",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       <style>{`
@@ -108,16 +108,16 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
       <div
         className="story-viewer-wrap"
         style={{
-          position:     "relative",
-          width:        "100%",
-          maxWidth:     "420px",
-          height:       "100svh",
-          maxHeight:    "100svh",
-          overflow:     "hidden",
+          position: "relative",
+          width: "100%",
+          maxWidth: "420px",
+          height: "100svh",
+          maxHeight: "100svh",
+          overflow: "hidden",
           borderRadius: "0",
-          background:   "#111",
-          display:      "flex",
-          flexDirection:"column",
+          background: "#111",
+          display: "flex",
+          flexDirection: "column",
         }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
@@ -126,28 +126,28 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
         {/* Progress bars */}
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0,
-          padding:  "12px 12px 0",
-          display:  "flex",
-          gap:      "4px",
-          zIndex:   10,
+          padding: "12px 12px 0",
+          display: "flex",
+          gap: "4px",
+          zIndex: 10,
         }}>
           {stories.map((_, i) => (
             <div
               key={i}
               style={{
-                flex:          1,
-                height:        "2.5px",
-                background:    "rgba(255,255,255,0.35)",
-                borderRadius:  "2px",
-                overflow:      "hidden",
+                flex: 1,
+                height: "2.5px",
+                background: "rgba(255,255,255,0.35)",
+                borderRadius: "2px",
+                overflow: "hidden",
               }}
             >
               <div style={{
-                height:     "100%",
+                height: "100%",
                 background: "#fff",
                 borderRadius: "2px",
-                width:       i < currentIndex ? "100%" : i === currentIndex ? `${progress}%` : "0%",
-                transition:  i === currentIndex ? "none" : "none",
+                width: i < currentIndex ? "100%" : i === currentIndex ? `${progress}%` : "0%",
+                transition: i === currentIndex ? "none" : "none",
               }} />
             </div>
           ))}
@@ -155,36 +155,36 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
 
         {/* Header */}
         <div style={{
-          position:       "absolute",
-          top:            0,
-          left:           0,
-          right:          0,
-          padding:        "28px 14px 14px",
-          display:        "flex",
-          alignItems:     "center",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: "28px 14px 14px",
+          display: "flex",
+          alignItems: "center",
           justifyContent: "space-between",
-          zIndex:         10,
-          background:     "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)",
+          zIndex: 10,
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{
-              width:        "38px",
-              height:       "38px",
+              width: "38px",
+              height: "38px",
               borderRadius: "50%",
-              overflow:     "hidden",
-              border:       "1.5px solid #fff",
-              flexShrink:   0,
+              overflow: "hidden",
+              border: "1.5px solid #fff",
+              flexShrink: 0,
             }}>
               {story.avatarUrl
                 ? <img src={story.avatarUrl} alt={story.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : <div style={{
-                    width: "100%", height: "100%",
-                    background: "linear-gradient(135deg,#818cf8,#6366f1)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "#fff", fontWeight: 700, fontSize: "16px",
-                  }}>
-                    {story.username[0].toUpperCase()}
-                  </div>
+                  width: "100%", height: "100%",
+                  background: "linear-gradient(135deg,#818cf8,#6366f1)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#fff", fontWeight: 700, fontSize: "16px",
+                }}>
+                  {story.username[0].toUpperCase()}
+                </div>
               }
             </div>
             <div>
@@ -201,19 +201,19 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
           <button
             onClick={(e) => { e.stopPropagation(); onClose(); }}
             style={{
-              background:   "rgba(0,0,0,0.35)",
-              border:       "none",
+              background: "rgba(0,0,0,0.35)",
+              border: "none",
               borderRadius: "50%",
-              width:        "34px",
-              height:       "34px",
-              display:      "flex",
-              alignItems:   "center",
+              width: "34px",
+              height: "34px",
+              display: "flex",
+              alignItems: "center",
               justifyContent: "center",
-              cursor:       "pointer",
-              color:        "#fff",
-              fontSize:     "18px",
-              lineHeight:   1,
-              flexShrink:   0,
+              cursor: "pointer",
+              color: "#fff",
+              fontSize: "18px",
+              lineHeight: 1,
+              flexShrink: 0,
             }}
             aria-label="Close story"
           >
@@ -228,20 +228,20 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
               src={story.imageUrl}
               alt={`${story.username}'s story`}
               style={{
-                width:      "100%",
-                height:     "100%",
-                objectFit:  "cover",
-                display:    "block",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
                 userSelect: "none",
               }}
               draggable={false}
             />
           ) : (
             <div style={{
-              width:      "100%",
-              height:     "100%",
+              width: "100%",
+              height: "100%",
               background: "linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%)",
-              display:    "flex",
+              display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}>
