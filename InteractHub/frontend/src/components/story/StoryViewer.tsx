@@ -233,7 +233,6 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
                 objectFit: "cover",
                 display: "block",
                 userSelect: "none",
-                ...({ WebkitUserDrag: "none" } as any),
               }}
               draggable={false}
             />

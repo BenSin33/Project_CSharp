@@ -122,6 +122,12 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+
+// 7b. Đăng ký Admin Services
+builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<IAdminPostService, AdminPostService>();
+
 builder.Services.AddHostedService<MediaCleanupService>();
 
 // Đăng ký FileUploadService để sau này có thể inject vào Controller hoặc Service khác khi cần thiết.
@@ -157,6 +163,16 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        await db.Database.ExecuteSqlRawAsync(@"
+            IF COL_LENGTH('AspNetUsers', 'CreatedAt') IS NULL
+            BEGIN
+                ALTER TABLE [AspNetUsers]
+                ADD [CreatedAt] datetime2 NOT NULL
+                    CONSTRAINT [DF_AspNetUsers_CreatedAt] DEFAULT SYSUTCDATETIME();
+            END
+        ");
+
         await DataSeeder.SeedUserAsync(services);
         await DataSeeder.SeedPostsAsync(services);
         await DataSeeder.SeedNotificationsAsync(services);

@@ -1,0 +1,3 @@
+az group show --name interacthub-rg
+az webapp show --resource-group interacthub-rg --name interacthub-api-2026
+az sql server show --resource-group interacthub-rg --name interacthub-server-2026

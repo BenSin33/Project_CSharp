@@ -6,6 +6,7 @@ export interface User {
   username?: string;
   avatarUrl?: string;
   bio?: string;
+  roles?: string[];
 }
 
 // ─── Post ─────────────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ export interface Story {
   userId: string;
   username: string;
   avatarUrl?: string;
+  imageUrl?: string;
   viewed: boolean;
   imageUrl: string;
   active: boolean;

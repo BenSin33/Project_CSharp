@@ -5,6 +5,19 @@
 2. [Xác Thực & Phân Quyền](#xác-thực--phân-quyền)
 3. [Cấu Hình Cơ Bản](#cấu-hình-cơ-bản)
 4. [Endpoints API](#endpoints-api)
+   - [Bình Luận (Comment)](#-bình-luận-comment)
+   - [Lượt Thích (Like)](#️-lượt-thích-like)
+   - [Chia Sẻ (Share)](#-chia-sẻ-share)
+   - [Bài Viết (Post)](#-bài-viết-post)
+   - [Bài Viết Đã Lưu (Saved Posts)](#-bài-viết-đã-lưu-saved-posts)
+   - [Người Dùng (User)](#-người-dùng-user)
+   - [Tin Nhắn (Message)](#-tin-nhắn-message)
+   - [Thông Báo (Notification)](#-thông-báo-notification)
+   - [Bạnhoa (Friendship)](#-bạnhoa-friendship)
+   - [Cập Nhật (Story)](#-cập-nhật-story)
+   - [**Báo Cáo (Report)**](#-báo-cáo-bình-luận-report---admin--user)
+   - [**Dashboard Admin**](#-dashboard-admin-admin-dashboard)
+   - [**Quản Lý Nội Dung**](#️-quản-lý-nội-dung-admin-post-management)
 5. [Các Dạng Dữ Liệu](#các-dạng-dữ-liệu)
 6. [Mã Lỗi](#mã-lỗi)
 7. [Ví Dụ Sử Dụng](#ví-dụ-sử-dụng)
@@ -871,6 +884,608 @@ Authorization: Bearer {token}
 
 ---
 
+### 🚨 BÁO CÁO BÌNH LUẬN (Report) - *Admin & User*
+
+#### Người Dùng Báo Cáo Bài Viết
+
+```http
+POST /api/report
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "postId": "123e4567-e89b-12d3-a456-426614174000",
+  "reason": "Nội dung không phù hợp",
+  "reportType": "inappropriate"
+}
+```
+
+**Phản hồi (201 Created):**
+```json
+{
+  "id": "e23e4567-e89b-12d3-a456-426614174000",
+  "postId": "123e4567-e89b-12d3-a456-426614174000",
+  "reporterId": "223e4567-e89b-12d3-a456-426614174000",
+  "reason": "Nội dung không phù hợp",
+  "reportType": "inappropriate",
+  "status": "pending",
+  "createdAt": "2026-05-01T10:30:00Z"
+}
+```
+
+---
+
+#### Admin: Lấy Tất Cả Báo Cáo
+
+```http
+GET /api/report?skip=0&take=20&status=pending
+Authorization: Bearer {admin_token}
+```
+
+**Tham số Query:**
+| Tham số | Bắt buộc | Kiểu | Mô Tả |
+|--------|---------|------|-------|
+| `skip` | ❌ | int | Số bản ghi bỏ qua (mặc định: 0) |
+| `take` | ❌ | int | Số bản ghi lấy (mặc định: 20) |
+| `status` | ❌ | string | Lọc: pending, reviewed, resolved |
+
+**Phản hồi (200 OK):**
+```json
+{
+  "data": [
+    {
+      "id": "e23e4567-e89b-12d3-a456-426614174000",
+      "postId": "123e4567-e89b-12d3-a456-426614174000",
+      "post": {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "content": "Nội dung bài viết...",
+        "author": {
+          "id": "223e4567-e89b-12d3-a456-426614174000",
+          "fullName": "Nguyễn Văn A"
+        }
+      },
+      "reporter": {
+        "id": "323e4567-e89b-12d3-a456-426614174000",
+        "fullName": "Trần Thị B"
+      },
+      "reason": "Nội dung không phù hợp",
+      "reportType": "inappropriate",
+      "status": "pending",
+      "adminNotes": null,
+      "createdAt": "2026-05-01T10:30:00Z"
+    }
+  ],
+  "total": 45,
+  "pendingCount": 15,
+  "reviewedCount": 20,
+  "resolvedCount": 10,
+  "skip": 0,
+  "take": 20
+}
+```
+
+---
+
+#### Admin: Cập Nhật Trạng Thái Báo Cáo
+
+```http
+PUT /api/report/{id}/status
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+  "status": "reviewed",
+  "adminNotes": "Bài viết vi phạm chính sách. Sẽ ẩn bài."
+}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Cập nhật trạng thái báo cáo thành công"
+}
+```
+
+---
+
+#### Admin: Lấy Thống Kê Báo Cáo
+
+```http
+GET /api/report/stats/summary
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "pending": 15,
+  "reviewed": 25,
+  "resolved": 50,
+  "total": 90
+}
+```
+
+---
+
+#### Admin: Lấy Top Bài Viết Bị Báo Cáo Nhiều Nhất
+
+```http
+GET /api/report/top-reported?count=10
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+[
+  {
+    "postId": "123e4567-e89b-12d3-a456-426614174000",
+    "authorName": "Nguyễn Văn A",
+    "content": "Nội dung bài viết...",
+    "reportCount": 25,
+    "lastReportedAt": "2026-05-01T10:30:00Z"
+  }
+]
+```
+
+---
+
+### 📊 DASHBOARD ADMIN (Admin Dashboard)
+
+#### Admin: Lấy Dashboard Đầy Đủ
+
+```http
+GET /api/admin/dashboard
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "stats": {
+    "userStats": {
+      "totalUsers": 1500,
+      "newUsersThisMonth": 150,
+      "activeUsersThisMonth": 800,
+      "lockedUsers": 5
+    },
+    "postStats": {
+      "totalPosts": 5000,
+      "newPostsThisMonth": 500,
+      "deletedPostsThisMonth": 25,
+      "hiddenPostsThisMonth": 10
+    },
+    "reportStats": {
+      "pendingReports": 12,
+      "reviewedReports": 45,
+      "resolvedReports": 80
+    },
+    "engagementStats": {
+      "totalComments": 15000,
+      "totalLikes": 50000,
+      "totalShares": 3000
+    }
+  },
+  "recentActivities": [
+    {
+      "type": "new_post",
+      "description": "Nguyễn Văn A đã tạo bài viết mới",
+      "timestamp": "2026-05-01T10:30:00Z",
+      "relatedUserIds": ["223e4567-e89b-12d3-a456-426614174000"]
+    },
+    {
+      "type": "new_report",
+      "description": "Có báo cáo mới về bài viết",
+      "timestamp": "2026-05-01T10:25:00Z",
+      "relatedPostIds": ["123e4567-e89b-12d3-a456-426614174000"]
+    }
+  ],
+  "pendingActions": [
+    {
+      "actionType": "report_review",
+      "priority": 1,
+      "title": "Xử lý báo cáo",
+      "description": "Có 12 báo cáo chờ xử lý"
+    },
+    {
+      "actionType": "locked_user",
+      "priority": 2,
+      "title": "Kiểm tra người dùng bị khóa",
+      "description": "5 người dùng bị khóa"
+    }
+  ]
+}
+```
+
+---
+
+#### Admin: Lấy Thống Kê Dashboard
+
+```http
+GET /api/admin/dashboard/stats
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "userStats": {
+    "totalUsers": 1500,
+    "newUsersThisMonth": 150,
+    "activeUsersThisMonth": 800,
+    "lockedUsers": 5
+  },
+  "postStats": {
+    "totalPosts": 5000,
+    "newPostsThisMonth": 500,
+    "deletedPostsThisMonth": 25,
+    "hiddenPostsThisMonth": 10
+  }
+}
+```
+
+---
+
+#### Admin: Lấy Hoạt Động Gần Đây
+
+```http
+GET /api/admin/dashboard/recent-activity?count=20
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+[
+  {
+    "type": "new_post",
+    "description": "Nguyễn Văn A đã tạo bài viết mới",
+    "timestamp": "2026-05-01T10:30:00Z"
+  }
+]
+```
+
+---
+
+#### Admin: Lấy Các Hành Động Chờ Xử Lý
+
+```http
+GET /api/admin/dashboard/pending-actions
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+[
+  {
+    "actionType": "report_review",
+    "priority": 1,
+    "title": "Xử lý báo cáo",
+    "description": "Có 12 báo cáo chờ xử lý"
+  }
+]
+```
+
+---
+
+#### Admin: Lấy Tóm Tắt Hoạt Động Người Dùng
+
+```http
+GET /api/admin/dashboard/user-activity
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "todayPostsCount": 50,
+  "thisWeekPostsCount": 350,
+  "thisMonthPostsCount": 1500,
+  "averagePostsPerUser": 3.33,
+  "todayActiveUsers": 200,
+  "thisWeekActiveUsers": 800
+}
+```
+
+---
+
+#### Admin: Kiểm Tra Sức Khỏe Hệ Thống
+
+```http
+GET /api/admin/dashboard/health
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "activeConnections": 450,
+  "diskUsagePercent": 65,
+  "memoryUsagePercent": 72,
+  "databasePoolConnections": 20,
+  "lastBackupTime": "2026-05-01T02:00:00Z"
+}
+```
+
+---
+
+### 🛡️ QUẢN LÝ NỘI DUNG (Admin Post Management)
+
+#### Admin: Lấy Chi Tiết Bài Viết (Chế Độ Xem Admin)
+
+```http
+GET /api/admin/posts/{id}
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "content": "Nội dung bài viết",
+  "status": "active",
+  "visibility": "public",
+  "author": {
+    "id": "223e4567-e89b-12d3-a456-426614174000",
+    "fullName": "Nguyễn Văn A",
+    "email": "user@example.com"
+  },
+  "commentCount": 25,
+  "likeCount": 150,
+  "shareCount": 10,
+  "reportCount": 3,
+  "reportReasons": ["inappropriate", "spam"],
+  "createdAt": "2026-05-01T08:00:00Z",
+  "updatedAt": "2026-05-01T08:00:00Z"
+}
+```
+
+---
+
+#### Admin: Xóa Bài Viết
+
+```http
+DELETE /api/admin/posts/{id}
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+  "reason": "Vi phạm chính sách nội dung",
+  "adminNotes": "Chứa nội dung không phù hợp"
+}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Bài viết đã được xóa thành công"
+}
+```
+
+---
+
+#### Admin: Ẩn Bài Viết
+
+```http
+POST /api/admin/posts/{id}/hide
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+"Vi phạm chính sách cộng đồng"
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Bài viết đã được ẩn thành công"
+}
+```
+
+---
+
+#### Admin: Hiện Bài Viết (Bỏ Ẩn)
+
+```http
+POST /api/admin/posts/{id}/unhide
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Bài viết đã được hiện thành công"
+}
+```
+
+---
+
+#### Admin: Cập Nhật Visibility Bài Viết
+
+```http
+PUT /api/admin/posts/{id}/visibility
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+  "newVisibility": "private",
+  "adminNotes": "Thay đổi từ public thành private"
+}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Visibility bài viết đã được cập nhật thành công"
+}
+```
+
+---
+
+#### Admin: Lấy Danh Sách Bài Viết Bị Báo Cáo
+
+```http
+GET /api/admin/posts/reported?skip=0&take=20
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "data": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "content": "Nội dung bài viết",
+      "reportCount": 5,
+      "author": {
+        "id": "223e4567-e89b-12d3-a456-426614174000",
+        "fullName": "Nguyễn Văn A"
+      }
+    }
+  ],
+  "total": 35,
+  "skip": 0,
+  "take": 20,
+  "totalPages": 2,
+  "hasNextPage": true
+}
+```
+
+---
+
+#### Admin: Lấy Bài Viết Của Một Người Dùng
+
+```http
+GET /api/admin/posts/user/{userId}?skip=0&take=20
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "data": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "content": "Nội dung bài viết",
+      "status": "active",
+      "createdAt": "2026-05-01T08:00:00Z"
+    }
+  ],
+  "total": 50,
+  "skip": 0,
+  "take": 20,
+  "totalPages": 3,
+  "hasNextPage": true
+}
+```
+
+---
+
+#### Admin: Thao Tác Hàng Loạt Trên Bài Viết
+
+```http
+POST /api/admin/posts/bulk-action
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+  "postIds": [
+    "123e4567-e89b-12d3-a456-426614174000",
+    "223e4567-e89b-12d3-a456-426614174000"
+  ],
+  "action": "hide",
+  "reason": "Vi phạm chính sách",
+  "adminNotes": "Nội dung không phù hợp"
+}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "success": 2,
+  "failed": 0,
+  "total": 2,
+  "message": "Bulk action completed: 2 succeeded, 0 failed"
+}
+```
+
+---
+
+#### Admin: Tìm Kiếm Bài Viết
+
+```http
+GET /api/admin/posts/search?query=lập trình&skip=0&take=20
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "data": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "content": "Nội dung về lập trình",
+      "author": {
+        "fullName": "Nguyễn Văn A"
+      }
+    }
+  ],
+  "total": 25,
+  "skip": 0,
+  "take": 20,
+  "totalPages": 2,
+  "hasNextPage": true
+}
+```
+
+---
+
+#### Admin: Lấy Bài Viết Chờ Xét Duyệt
+
+```http
+GET /api/admin/posts/pending-review
+Authorization: Bearer {admin_token}
+```
+
+**Phản hồi (200 OK):**
+```json
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "content": "Nội dung bài viết",
+    "reportCount": 3,
+    "author": {
+      "fullName": "Nguyễn Văn A"
+    },
+    "createdAt": "2026-05-01T08:00:00Z"
+  }
+]
+```
+
+---
+
+#### Admin: Xóa Bình Luận
+
+```http
+DELETE /api/admin/posts/comments/{commentId}
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+"Nội dung bình luận không phù hợp"
+```
+
+**Phản hồi (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Bình luận đã được xóa thành công"
+}
+```
+
+---
+
 ## 📊 Các Dạng Dữ Liệu
 
 ### PostResponseDto
@@ -1107,6 +1722,193 @@ async function createComment(postId, content) {
 const postId = "123e4567-e89b-12d3-a456-426614174000";
 const newComment = await createComment(postId, "Bài viết rất hay!");
 console.log("Bình luận mới:", newComment);
+```
+
+---
+
+### Ví Dụ 5: Admin Báo Cáo Quản Lý - Lấy Dashboard
+
+**JavaScript/TypeScript:**
+```javascript
+import axios from 'axios';
+
+const API_URL = "http://localhost:5000/api";
+const adminToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // Admin token
+
+// Lấy Dashboard Admin
+async function getAdminDashboard() {
+  try {
+    const response = await axios.get(
+      `${API_URL}/admin/dashboard`,
+      {
+        headers: {
+          "Authorization": `Bearer ${adminToken}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy dashboard:", error.response.data);
+  }
+}
+
+// Sử dụng
+const dashboard = await getAdminDashboard();
+console.log("Thống kê người dùng:", dashboard.stats.userStats);
+console.log("Báo cáo chờ xử lý:", dashboard.pendingActions);
+console.log("Hoạt động gần đây:", dashboard.recentActivities);
+```
+
+---
+
+### Ví Dụ 6: Admin Xử Lý Báo Cáo
+
+**Python:**
+```python
+import requests
+
+API_URL = "http://localhost:5000/api"
+admin_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# Lấy danh sách báo cáo chờ xử lý
+def get_pending_reports(skip=0, take=20):
+    headers = {
+        "Authorization": f"Bearer {admin_token}"
+    }
+    params = {
+        "skip": skip,
+        "take": take,
+        "status": "pending"
+    }
+    response = requests.get(f"{API_URL}/report", headers=headers, params=params)
+    return response.json()
+
+# Cập nhật trạng thái báo cáo
+def update_report_status(report_id, status, admin_notes):
+    headers = {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "status": status,
+        "adminNotes": admin_notes
+    }
+    response = requests.put(
+        f"{API_URL}/report/{report_id}/status",
+        headers=headers,
+        json=data
+    )
+    return response.json()
+
+# Sử dụng
+reports = get_pending_reports()
+print(f"Có {reports['pendingCount']} báo cáo chờ xử lý")
+
+if reports['data']:
+    report = reports['data'][0]
+    result = update_report_status(
+        report['id'],
+        "reviewed",
+        "Bài viết vi phạm chính sách. Sẽ ẩn bài."
+    )
+    print("Báo cáo đã được cập nhật:", result)
+```
+
+---
+
+### Ví Dụ 7: Admin Quản Lý Nội Dung - Ẩn/Xóa Bài Viết
+
+**cURL:**
+```bash
+# Ẩn bài viết
+curl -X POST http://localhost:5000/api/admin/posts/{postId}/hide \
+  -H "Authorization: Bearer {admin_token}" \
+  -H "Content-Type: application/json" \
+  -d '"Nội dung vi phạm chính sách cộng đồng"'
+
+# Xóa bài viết
+curl -X DELETE http://localhost:5000/api/admin/posts/{postId} \
+  -H "Authorization: Bearer {admin_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reason": "Nội dung không phù hợp",
+    "adminNotes": "Chứa spam và quảng cáo"
+  }'
+
+# Thao tác hàng loạt - Ẩn nhiều bài viết
+curl -X POST http://localhost:5000/api/admin/posts/bulk-action \
+  -H "Authorization: Bearer {admin_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "postIds": [
+      "123e4567-e89b-12d3-a456-426614174000",
+      "223e4567-e89b-12d3-a456-426614174000"
+    ],
+    "action": "hide",
+    "reason": "Spam",
+    "adminNotes": "Bài viết spam"
+  }'
+```
+
+---
+
+### Ví Dụ 8: Admin Tìm Kiếm và Xem Bài Viết Chờ Xét Duyệt
+
+**JavaScript/TypeScript:**
+```javascript
+const API_URL = "http://localhost:5000/api";
+const adminToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+
+// Tìm kiếm bài viết
+async function searchPosts(query, skip = 0, take = 20) {
+  try {
+    const response = await fetch(
+      `${API_URL}/admin/posts/search?query=${encodeURIComponent(query)}&skip=${skip}&take=${take}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${adminToken}`
+        }
+      }
+    );
+    return await response.json();
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm:", error);
+  }
+}
+
+// Lấy bài viết chờ xét duyệt
+async function getPendingReviewPosts() {
+  try {
+    const response = await fetch(
+      `${API_URL}/admin/posts/pending-review`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${adminToken}`
+        }
+      }
+    );
+    return await response.json();
+  } catch (error) {
+    console.error("Lỗi khi lấy bài viết chờ xét duyệt:", error);
+  }
+}
+
+// Sử dụng
+const searchResults = await searchPosts("spam");
+console.log(`Tìm thấy ${searchResults.total} bài viết chứa từ "spam"`);
+
+const pendingPosts = await getPendingReviewPosts();
+console.log(`Có ${pendingPosts.length} bài viết chờ xét duyệt`);
+
+// Xem chi tiết từng bài viết
+pendingPosts.forEach(post => {
+  console.log(`\nBài viết ID: ${post.id}`);
+  console.log(`Tác giả: ${post.author.fullName}`);
+  console.log(`Số báo cáo: ${post.reportCount}`);
+  console.log(`Nội dung: ${post.content.substring(0, 100)}...`);
+});
 ```
 
 ---
