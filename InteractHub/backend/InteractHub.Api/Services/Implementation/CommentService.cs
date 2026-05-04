@@ -1,8 +1,10 @@
 using InteractHub.Api.Repositories;
 using InteractHub.Api.DTOs.Post_Interactions;
+using InteractHub.Api.DTOs.Common;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Models;
-using Microsoft.Identity.Client;
+using InteractHub.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace InteractHub.Api.Services.Implementation;
 
@@ -10,26 +12,38 @@ public class CommentService : ICommentService
 {
     private readonly IGenericRepository<Comment> _commentRepo;
     private readonly IGenericRepository<Post> _postRepo;
-
-    public CommentService(IGenericRepository<Comment> commentRepo, IGenericRepository<Post> postRepo)
+    private readonly ApplicationDbContext _context;
+    
+    public CommentService(IGenericRepository<Comment> commentRepo, IGenericRepository<Post> postRepo,ApplicationDbContext context)
     {
         _commentRepo = commentRepo;
         _postRepo = postRepo;
+        _context = context; 
     }
 
-    public async Task<IEnumerable<CommentResponseDTO>> GetCommentsByPostIdAsync(Guid postId)
+     public async Task<IEnumerable<CommentDetailDto>> GetCommentsByPostIdAsync(Guid postId)
     {
-        var comments = await _commentRepo.GetAllAsync();
-        return comments.Where(c => c.PostId == postId && c.DeletedAt == null )
-            .OrderByDescending(c => c.CreatedAt).Select(c => new CommentResponseDTO
+        return await _context.Comments
+            .Where(c => c.PostId == postId && c.DeletedAt == null)
+            .Include(c => c.User)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new CommentDetailDto
             {
                 Id = c.Id,
                 PostId = c.PostId,
-                UserId = c.UserId,
                 Content = c.Content!,
                 CreatedAt = c.CreatedAt,
-                UpdatedAt = c.UpdatedAt
-            });
+                UpdatedAt = c.UpdatedAt,
+                User = c.User != null ? new UserBasicDto
+                {
+                    Id = c.User.Id,
+                    FullName = c.User.FullName,
+                    Email = c.User.Email ?? "",
+                    AvatarUrl = c.User.AvatarUrl,
+                    Bio = c.User.Bio
+                } : null
+            })
+            .ToListAsync();
     }
 
     public async Task<CommentResponseDTO> AddCommentAsync(Guid userId, CreateCommentDTO request)
@@ -44,7 +58,6 @@ public class CommentService : ICommentService
             UserId = userId,
             Content = request.Content,
             CreatedAt = DateTime.UtcNow,
-            DeletedAt = DateTime.UtcNow
         };
         await _commentRepo.AddAsync(comment);
         await _commentRepo.SaveChangesAsync();

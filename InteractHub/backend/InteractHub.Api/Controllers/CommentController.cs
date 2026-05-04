@@ -25,7 +25,7 @@ public class CommentController : ControllerBase
     public async Task<IActionResult> GetComments(Guid postId)
     {
         var comments = await _commentService.GetCommentsByPostIdAsync(postId);
-        return Ok(ApiResponse<IEnumerable<CommentResponseDTO>>.Ok(comments));
+       return Ok(ApiResponse<IEnumerable<CommentDetailDto>>.Ok(comments));
 
     }
 

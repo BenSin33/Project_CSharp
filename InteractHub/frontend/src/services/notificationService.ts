@@ -1,7 +1,35 @@
 import api, { unwrap } from "./api"
 
+// Enum NotificationType khớp backend:
+// Like=0, Comment=1, Share=2, Message=3, FriendRequest=4, FriendAccept=5,
+// PostMention=6, CommentMention=7, FriendPost=8
 export type NotifType = "like" | "comment" | "friend_request" | "share" | "mention"
 
+// Map enum số -> NotifType UI
+const NOTIF_TYPE_MAP: Record<number, NotifType> = {
+  0: "like",
+  1: "comment",
+  2: "share",
+  3: "mention",
+  4: "friend_request",
+  5: "friend_request",
+  6: "mention",
+  7: "mention",
+  8: "mention",
+}
+
+/** DTO trả về từ backend */
+export interface NotificationResponseDTO {
+  id: string
+  content: string   // backend dùng 'content', không có 'message'
+  type: number      // NotificationType enum (số nguyên)
+  isRead: boolean
+  userId: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** DTO dùng trong UI */
 export interface NotificationDto {
   id: string
   type: NotifType
@@ -9,28 +37,42 @@ export interface NotificationDto {
   message: string
   timeAgo: string
   isRead: boolean
+  raw: NotificationResponseDTO
 }
 
+/** DTO tạo notification — khớp backend CreateNotificationDTO */
 export interface CreateNotificationDTO {
-  userId: string
-  type: NotifType
-  message: string
-  actorId?: string
+  content: string       // backend dùng 'content' (bắt buộc)
+  type: number          // NotificationType enum số
+  userId: string        // Guid — user nhận notification
 }
 
+function mapFromBackend(n: NotificationResponseDTO): NotificationDto {
+  const typeKey = typeof n.type === "number" ? n.type : 0
+  return {
+    id: String(n.id),
+    type: NOTIF_TYPE_MAP[typeKey] ?? "mention",
+    actor: { name: "System" },  // backend chưa trả actor — để mặc định
+    message: n.content,
+    timeAgo: n.createdAt ? new Date(n.createdAt).toLocaleDateString("vi-VN") : "",
+    isRead: n.isRead,
+    raw: n,
+  }
+}
+
+// Mock khi backend down
 const MOCK_NOTIFICATIONS: NotificationDto[] = [
-  { id:"1", type:"like",           actor:{ name:"Sarah Johnson"  }, message:"liked your post",           timeAgo:"4 days ago", isRead:false },
-  { id:"2", type:"comment",        actor:{ name:"Michael Chen"   }, message:"commented on your post",    timeAgo:"4 days ago", isRead:false },
-  { id:"3", type:"friend_request", actor:{ name:"Sarah Johnson"  }, message:"sent you a friend request", timeAgo:"5 days ago", isRead:false },
-  { id:"4", type:"share",          actor:{ name:"David Williams" }, message:"shared your post",          timeAgo:"5 days ago", isRead:true  },
-  { id:"5", type:"mention",        actor:{ name:"Michael Chen"   }, message:"mentioned you in a comment",timeAgo:"6 days ago", isRead:true  },
+  { id:"1", type:"like",           actor:{ name:"Sarah Johnson"  }, message:"liked your post",           timeAgo:"4 days ago", isRead:false, raw: {} as any },
+  { id:"2", type:"comment",        actor:{ name:"Michael Chen"   }, message:"commented on your post",    timeAgo:"4 days ago", isRead:false, raw: {} as any },
+  { id:"3", type:"friend_request", actor:{ name:"Sarah Johnson"  }, message:"sent you a friend request", timeAgo:"5 days ago", isRead:false, raw: {} as any },
 ]
 
 // GET /api/notifications?skip=0&take=10
 async function getNotifications(skip = 0, take = 10): Promise<NotificationDto[]> {
   try {
     const resp = await api.get("/api/notifications", { params: { skip, take } })
-    return unwrap<NotificationDto[]>(resp) ?? []
+    const raw = unwrap<NotificationResponseDTO[]>(resp) ?? []
+    return raw.map(mapFromBackend)
   } catch (err: any) {
     if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) return MOCK_NOTIFICATIONS
     throw err
@@ -40,26 +82,28 @@ async function getNotifications(skip = 0, take = 10): Promise<NotificationDto[]>
 // GET /api/notifications/{id}
 async function getNotificationById(id: string): Promise<NotificationDto | undefined> {
   const resp = await api.get(`/api/notifications/${id}`)
-  return unwrap<NotificationDto>(resp)
+  const raw = unwrap<NotificationResponseDTO>(resp)
+  return raw ? mapFromBackend(raw) : undefined
 }
 
-// POST /api/notifications
+// POST /api/notifications — backend nhận CreateNotificationDTO
 async function createNotification(payload: CreateNotificationDTO): Promise<NotificationDto> {
   const resp = await api.post("/api/notifications", payload)
-  return unwrap<NotificationDto>(resp)!
+  const raw = unwrap<NotificationResponseDTO>(resp)!
+  return mapFromBackend(raw)
 }
 
-// PUT /api/notifications/{id}/read  ← đây là PUT, không phải POST
+// PUT /api/notifications/{id}/read
 async function markRead(id: string): Promise<void> {
   await api.put(`/api/notifications/${id}/read`)
 }
 
-// PUT /api/notifications/mark-all-read  ← PUT, không phải POST
+// PUT /api/notifications/mark-all-read
 async function markAllRead(): Promise<void> {
   try {
     await api.put("/api/notifications/mark-all-read")
   } catch {
-    // optimistic — ignore if offline
+    // optimistic — bỏ qua nếu offline
   }
 }
 

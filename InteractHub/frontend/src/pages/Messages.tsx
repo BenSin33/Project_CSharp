@@ -1,48 +1,180 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Search } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import ConversationItem, { type Conversation } from "../components/messages/ConversationItem";
 import ChatBubble, { type Message } from "../components/messages/ChatBubble";
 import ChatHeader from "../components/messages/ChatHeader";
 import ChatInput from "../components/messages/ChatInput";
+import {
+  getConversations,
+  getConversation,
+  sendMessage,
+  type ConversationDTO,
+  type MessageResponseDTO,
+} from "../services/messageService";
+import { useAuth } from "../contexts/AuthContext";
 
-const CONVS: Conversation[] = [
-  { id:"1", name:"Sarah Johnson", preview:"Hey! How are you?",    time:"2m ago", unreadCount:2, avatarColor:"#e0e7ff", avatarTextColor:"#4338ca" },
-  { id:"2", name:"Mike Chen",     preview:"Thanks for the help!", time:"1h ago",                avatarColor:"#fce7f3", avatarTextColor:"#9d174d" },
-  { id:"3", name:"Emma Davis",    preview:"See you tomorrow!",    time:"3h ago",                avatarColor:"#d1fae5", avatarTextColor:"#065f46" },
-  { id:"4", name:"Alex Turner",   preview:"That sounds great!",   time:"5h ago", unreadCount:1, avatarColor:"#fef3c7", avatarTextColor:"#92400e" },
-  { id:"5", name:"James Wilson",  preview:"Let's catch up soon",  time:"1d ago",                avatarColor:"#ede9fe", avatarTextColor:"#6d28d9" },
-];
+function toConversation(dto: ConversationDTO): Conversation {
+  // const initials = dto.userName
+  //   .split(" ")
+  //   .map(n => n[0])
+  //   .join("")
+  //   .slice(0, 2)
+  //   .toUpperCase();
+  return {
+    id: String(dto.userId),
+    name: dto.userName ?? "Unknown User",
+    preview: dto.lastMessage ?? "",
+    time: new Date(dto.lastMessageTime ?? new Date().toISOString()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    unreadCount: dto.unreadCount || undefined,
+    avatarUrl: dto.userAvatar,
+    avatarColor: "#e0e7ff",
+    avatarTextColor: "#4338ca",
+  };
+}
 
-const INITIAL_MESSAGES: Record<string, Message[]> = {
-  "1": [
-    { id:"m1", text:"Hey! How are you?",                  time:"10:30 AM", isMine:false },
-    { id:"m2", text:"I'm doing great! Thanks for asking", time:"10:32 AM", isMine:true  },
-    { id:"m3", text:"That's wonderful to hear!",          time:"10:33 AM", isMine:false },
-  ],
-};
+function toMessage(dto: MessageResponseDTO, currentUserId: string): Message {
+  return {
+    id: String(dto.id),
+    text: dto.messageContent ?? "",
+    time: new Date(dto.sentAt ?? new Date().toISOString()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    isMine: String(dto.senderId) === currentUserId,
+  };
+}
 
 export default function MessagesPage() {
-  const [activeId, setActiveId]   = useState("1");
-  const [search, setSearch]       = useState("");
-  const [messages, setMessages]   = useState(INITIAL_MESSAGES);
+  const { user } = useAuth();
+  const location = useLocation();
+  const locationState = location.state as { openUserId?: string; openUserName?: string } | null;
 
-  const activeConv = CONVS.find(c => c.id === activeId)!;
-  const currentMsgs = messages[activeId] ?? [];
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(locationState?.openUserId ?? null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [search, setSearch] = useState("");
+  const [loadingConvs, setLoadingConvs] = useState(true);
+  const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [sending, setSending] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = (text: string) => {
-    const msg: Message = {
-      id: Date.now().toString(),
+  // Load conversations on mount
+  const loadConversations = useCallback(async () => {
+    try {
+      const data = await getConversations();
+      setConversations(data.map(toConversation));
+      // If no activeId yet, default to first conversation
+      if (!activeId && !locationState?.openUserId && data.length > 0) {
+        setActiveId(String(data[0].userId));
+      }
+      // If we navigated here with a target user, ensure they appear in conversation list
+      if (locationState?.openUserId) {
+        const exists = data.some(d => String(d.userId) === String(locationState.openUserId));
+        if (!exists && locationState.openUserName) {
+          const ghost: Conversation = {
+            id: locationState.openUserId,
+            name: locationState.openUserName,
+            preview: "",
+            time: "",
+            avatarColor: "#e0e7ff",
+            avatarTextColor: "#4338ca",
+          };
+          setConversations(prev => {
+            const alreadyAdded = prev.some(c => c.id === ghost.id);
+            return alreadyAdded ? prev : [ghost, ...prev];
+          });
+        }
+        setActiveId(locationState.openUserId);
+      }
+    } catch (err) {
+      console.error("loadConversations error:", err);
+    } finally {
+      setLoadingConvs(false);
+    }
+  }, [activeId, locationState]);
+
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  // Load messages for active conversation
+  const loadMessages = useCallback(async (otherUserId: string) => {
+    if (!user) return;
+    setLoadingMsgs(true);
+    try {
+      const data = await getConversation(otherUserId);
+      setMessages(data.map(m => toMessage(m, user.id)));
+    } catch (err) {
+      console.error("loadMessages error:", err);
+    } finally {
+      setLoadingMsgs(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    loadMessages(activeId);
+  }, [activeId, loadMessages]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Poll for new messages every 3 seconds
+  useEffect(() => {
+    if (!activeId || !user) return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const data = await getConversation(activeId);
+        setMessages(data.map(m => toMessage(m, user.id)));
+      } catch { /* silent */ }
+    }, 3000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [activeId, user]);
+
+  const handleSend = async (text: string) => {
+    if (!activeId || !user || sending) return;
+    setSending(true);
+
+    // Optimistic update
+    const optimistic: Message = {
+      id: "opt-" + Date.now(),
       text,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       isMine: true,
     };
-    setMessages(prev => ({ ...prev, [activeId]: [...(prev[activeId] ?? []), msg] }));
+    setMessages(prev => [...prev, optimistic]);
+
+    try {
+      const sent = await sendMessage({ messageContent: text, receiverId: activeId });
+      // Replace optimistic with real message
+      setMessages(prev => prev.map(m =>
+        m.id === optimistic.id ? toMessage(sent, user.id) : m
+      ));
+      // Update conversation preview
+      setConversations(prev => prev.map(c =>
+        c.id === activeId ? { ...c, preview: text, time: optimistic.time } : c
+      ));
+      // Reload conversation list so order updates
+      await loadConversations();
+    } catch (err) {
+      console.error("sendMessage error:", err);
+      // Revert optimistic
+      setMessages(prev => prev.filter(m => m.id !== optimistic.id));
+    } finally {
+      setSending(false);
+    }
   };
 
-  const filtered = CONVS.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  const activeConv = conversations.find(c => c.id === activeId);
+  const filtered = conversations.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-white border border-gray-100 rounded-xl overflow-hidden">
+    <div className="flex h-[calc(100vh-88px)] bg-white border border-gray-100 rounded-xl overflow-hidden">
 
       {/* Sidebar */}
       <aside className="w-[300px] flex-shrink-0 border-r border-gray-100 flex flex-col">
@@ -58,30 +190,79 @@ export default function MessagesPage() {
             />
           </div>
         </div>
+
         <div className="flex-1 overflow-y-auto">
-          {filtered.map(c => (
-            <ConversationItem
-              key={c.id}
-              conversation={c}
-              isActive={c.id === activeId}
-              onClick={() => setActiveId(c.id)}
-            />
-          ))}
+          {loadingConvs ? (
+            <div className="p-4 flex flex-col gap-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex gap-3 animate-pulse">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
+                  <div className="flex-1">
+                    <div className="h-3 bg-gray-200 rounded w-24 mb-2" />
+                    <div className="h-2 bg-gray-100 rounded w-36" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 text-sm">
+              {search ? "No conversations found" : "No messages yet"}
+            </div>
+          ) : (
+            filtered.map(c => (
+              <ConversationItem
+                key={c.id}
+                conversation={c}
+                isActive={c.id === activeId}
+                onClick={() => setActiveId(c.id)}
+              />
+            ))
+          )}
         </div>
       </aside>
 
       {/* Chat pane */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <ChatHeader
-          name={activeConv.name}
-          avatarColor={activeConv.avatarColor}
-          avatarTextColor={activeConv.avatarTextColor}
-        />
-        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3">
-          {currentMsgs.map(m => <ChatBubble key={m.id} message={m} />)}
+      {activeConv ? (
+        <div className="flex-1 flex flex-col min-w-0">
+          <ChatHeader
+            name={activeConv.name}
+            avatarUrl={activeConv.avatarUrl}
+            avatarColor={activeConv.avatarColor}
+            avatarTextColor={activeConv.avatarTextColor}
+          />
+          <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3">
+            {loadingMsgs ? (
+              <div className="flex flex-col gap-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : ""}`}>
+                    <div className="h-10 w-48 bg-gray-200 rounded-2xl animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+                No messages yet. Say hello! 👋
+              </div>
+            ) : (
+              messages.map(m => <ChatBubble key={m.id} message={m} />)
+            )}
+            <div ref={chatBottomRef} />
+          </div>
+          <ChatInput onSend={handleSend} disabled={sending} />
         </div>
-        <ChatInput onSend={handleSend} />
-      </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center text-gray-400">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14z"/>
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-gray-600">Select a conversation</p>
+            <p className="text-xs text-gray-400 mt-1">Choose from your messages on the left</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

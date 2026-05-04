@@ -1,9 +1,10 @@
 import api, { unwrap } from "./api"
 
-export interface FriendshipDto {
+/** Tương ứng FriendshipResponseDTO backend */
+export interface FriendshipResponseDTO {
   id: string
-  requesterId: string
-  receiverId: string
+  requester: { id: string; fullName?: string; avatarUrl?: string; bio?: string }
+  receiver:  { id: string; fullName?: string; avatarUrl?: string; bio?: string }
   status: string
   createdAt: string
 }
@@ -24,7 +25,7 @@ export interface SuggestionDto extends FriendDto {
   label: string
 }
 
-// ─── Mocks fallback ────────────────────────────────────────────────────────
+// ─── Mock fallback ────────────────────────────────────────────────────────────
 const MOCK_REQUESTS: FriendRequestDto[] = [
   { id: "1", friendshipId: "f1", name: "Sarah Johnson", username: "sarahj", timeAgo: "4 days ago" },
   { id: "2", friendshipId: "f2", name: "Michael Chen",  username: "mchen",  timeAgo: "5 days ago" },
@@ -38,13 +39,35 @@ const MOCK_SUGGESTIONS: SuggestionDto[] = [
   { id: "2", name: "James Wilson", username: "jwilson", label: "Suggested for you" },
 ]
 
-// ─── API calls ─────────────────────────────────────────────────────────────
+function mapFriendshipToRequest(f: FriendshipResponseDTO, currentUserId: string): FriendRequestDto {
+  // Người gửi request là requester
+  const other = f.requester.id !== currentUserId ? f.requester : f.receiver
+  return {
+    id: String(other.id),
+    friendshipId: String(f.id),
+    name: other.fullName ?? "",
+    username: "",
+    avatarUrl: other.avatarUrl,
+    timeAgo: f.createdAt ? new Date(f.createdAt).toLocaleDateString("vi-VN") : "",
+  }
+}
+
+function mapFriendshipToFriend(f: FriendshipResponseDTO, currentUserId: string): FriendDto {
+  const other = f.requester.id !== currentUserId ? f.requester : f.receiver
+  return {
+    id: String(other.id),
+    name: other.fullName ?? "",
+    username: "",
+    avatarUrl: other.avatarUrl,
+  }
+}
 
 // GET /api/friendships/pending/{userId}
 async function getPendingRequests(userId: string): Promise<FriendRequestDto[]> {
   try {
     const resp = await api.get(`/api/friendships/pending/${userId}`)
-    return unwrap<FriendRequestDto[]>(resp) ?? []
+    const raw = unwrap<FriendshipResponseDTO[]>(resp) ?? []
+    return raw.map((f) => mapFriendshipToRequest(f, userId))
   } catch (err: any) {
     if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) return MOCK_REQUESTS
     throw err
@@ -55,7 +78,8 @@ async function getPendingRequests(userId: string): Promise<FriendRequestDto[]> {
 async function getFriendList(userId: string): Promise<FriendDto[]> {
   try {
     const resp = await api.get(`/api/friendships/list/${userId}`)
-    return unwrap<FriendDto[]>(resp) ?? []
+    const raw = unwrap<FriendshipResponseDTO[]>(resp) ?? []
+    return raw.map((f) => mapFriendshipToFriend(f, userId))
   } catch (err: any) {
     if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) return MOCK_FRIENDS
     throw err
@@ -64,7 +88,7 @@ async function getFriendList(userId: string): Promise<FriendDto[]> {
 
 // POST /api/friendships/request — body: { requesterId, receiverId }
 async function sendFriendRequest(requesterId: string, receiverId: string): Promise<void> {
-  await api.post("/api/friendships/request", { requesterId, receiverId })
+  await api.post("/api/friendships/request", { RequesterId: requesterId, ReceiverId: receiverId })
 }
 
 // PUT /api/friendships/accept/{id}?userId={userId}
@@ -97,15 +121,9 @@ async function checkFriendshipStatus(user1: string, user2: string): Promise<stri
   return data?.status ?? "none"
 }
 
-// Mock only — backend chưa có endpoint suggestions
+// Backend chưa có endpoint suggestions — dùng mock
 async function getSuggestions(): Promise<SuggestionDto[]> {
-  try {
-    const resp = await api.get("/api/friendships/suggestions")
-    return unwrap<SuggestionDto[]>(resp) ?? []
-  } catch (err: any) {
-    if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) return MOCK_SUGGESTIONS
-    throw err
-  }
+  return MOCK_SUGGESTIONS
 }
 
 export const friendService = {

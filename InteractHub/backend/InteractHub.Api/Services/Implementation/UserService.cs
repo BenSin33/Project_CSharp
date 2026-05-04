@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using InteractHub.Api.Models;
 using InteractHub.Api.DTOs.User_Handle;
+using InteractHub.Api.DTOs.Common;
 using InteractHub.Api.Services.Interface;
 
 namespace InteractHub.Api.Services.Implementation;
@@ -35,6 +36,40 @@ public class UserService : IUserService
         if(user == null) return null;
 
         return await MapToResponseDtoAsync(user);
+    }
+
+    /// <summary>
+    /// Search users by name, email, or username
+    /// </summary>
+    public async Task<PaginatedResponse<UserResponseDTO>> SearchUsersAsync(string query, int skip, int take)
+    {
+        var searchQuery = query.ToLower();
+
+        var users = await _userManager.Users
+            .Where(u => !u.LockoutEnabled || u.LockoutEnd == null)  // Exclude locked out users
+            .Where(u => 
+                u.FullName!.ToLower().Contains(searchQuery) ||
+                u.Email!.ToLower().Contains(searchQuery) ||
+                u.UserName!.ToLower().Contains(searchQuery))
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
+
+        var total = users.Count;
+        var pagedUsers = users.Skip(skip).Take(take).ToList();
+
+        var userDtos = new List<UserResponseDTO>();
+        foreach (var user in pagedUsers)
+        {
+            userDtos.Add(await MapToResponseDtoAsync(user));
+        }
+
+        return new PaginatedResponse<UserResponseDTO>
+        {
+            Data = userDtos,
+            Total = total,
+            Skip = skip,
+            Take = take
+        };
     }
 
     public async Task<UserResponseDTO?> UpdateUserAsync(Guid id, UpdateUserDTO request)

@@ -10,11 +10,15 @@ using InteractHub.Api.Services;
 using InteractHub.Api.Repositories;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Services.Implementation;
+using InteractHub.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Đăng ký Controllers
 builder.Services.AddControllers();
+
+// SignalR for real-time messaging
+builder.Services.AddSignalR();
 
 // 2. CẤU HÌNH SWAGGER (Chuẩn yêu cầu của đồ án)
 builder.Services.AddEndpointsApiExplorer();
@@ -52,7 +56,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5173", "http://localhost:5174") 
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials();  // Required for SignalR
     });
 });
 
@@ -87,6 +91,20 @@ builder.Services.AddAuthentication(options => {
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
+    // SignalR cần lấy token từ query string
+    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 builder.Services.AddAuthorization();
 
@@ -98,11 +116,18 @@ builder.Services.AddScoped<IFileUploadService, FileUploadService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IShareService, ShareService>();
+builder.Services.AddScoped<ISavedPostService, SavedPostService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+
+// 7b. Đăng ký Admin Services
+builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<IAdminPostService, AdminPostService>();
+
 builder.Services.AddHostedService<MediaCleanupService>();
 
 // Đăng ký FileUploadService để sau này có thể inject vào Controller hoặc Service khác khi cần thiết.
@@ -130,6 +155,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 // 10. Chạy Seeder
 using (var scope = app.Services.CreateScope())
@@ -137,6 +163,16 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        await db.Database.ExecuteSqlRawAsync(@"
+            IF COL_LENGTH('AspNetUsers', 'CreatedAt') IS NULL
+            BEGIN
+                ALTER TABLE [AspNetUsers]
+                ADD [CreatedAt] datetime2 NOT NULL
+                    CONSTRAINT [DF_AspNetUsers_CreatedAt] DEFAULT SYSUTCDATETIME();
+            END
+        ");
+
         await DataSeeder.SeedUserAsync(services);
         await DataSeeder.SeedPostsAsync(services);
         await DataSeeder.SeedNotificationsAsync(services);

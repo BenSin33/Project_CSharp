@@ -1,0 +1,282 @@
+import api, { unwrap } from "./api"
+
+export type ReportStatus = "Pending" | "Reviewed" | "Resolved"
+
+export interface DashboardStats {
+  userStats?: {
+    totalUsers?: number
+    newUsersThisMonth?: number
+    activeUsersThisMonth?: number
+    lockedUsers?: number
+  }
+  postStats?: {
+    totalPosts?: number
+    newPostsThisMonth?: number
+    deletedPostsThisMonth?: number
+    hiddenPostsThisMonth?: number
+  }
+  reportStats?: {
+    pendingReports?: number
+    reviewedReports?: number
+    resolvedReports?: number
+  }
+  engagementStats?: {
+    totalComments?: number
+    totalLikes?: number
+    totalShares?: number
+  }
+}
+
+export interface RecentActivity {
+  id?: string
+  type?: string
+  description?: string
+  timestamp?: string
+  relatedUserIds?: string[]
+  relatedPostIds?: string[]
+}
+
+export interface PendingAction {
+  actionType?: string
+  priority?: number
+  title?: string
+  description?: string
+}
+
+export interface AdminDashboard {
+  stats?: DashboardStats
+  recentActivities?: RecentActivity[]
+  pendingActions?: PendingAction[]
+}
+
+export interface AdminReportAuthor {
+  id?: string
+  fullName?: string
+  name?: string
+  email?: string
+}
+
+export interface AdminReportPost {
+  id?: string
+  content?: string
+  author?: AdminReportAuthor
+}
+
+export interface AdminReportItem {
+  id: string
+  postId?: string
+  reason?: string
+  reportType?: string
+  status?: string
+  adminNotes?: string
+  createdAt?: string
+  reporter?: AdminReportAuthor
+  post?: AdminReportPost
+}
+
+export interface AdminReportsResponse {
+  data: AdminReportItem[]
+  total: number
+  skip: number
+  take: number
+  totalPages?: number
+  hasNextPage?: boolean
+  pendingCount?: number
+  reviewedCount?: number
+  resolvedCount?: number
+}
+
+export interface AdminPostAuthor {
+  id?: string
+  fullName?: string
+  name?: string
+  email?: string
+  avatarUrl?: string
+}
+
+export interface AdminPostItem {
+  id: string
+  content?: string
+  status?: string
+  visibility?: string
+  reportCount?: number
+  commentCount?: number
+  likeCount?: number
+  shareCount?: number
+  createdAt?: string
+  updatedAt?: string
+  author?: AdminPostAuthor
+  reportReasons?: string[]
+}
+
+export interface AdminUserItem {
+  id: string
+  email?: string
+  fullName?: string
+  avatarUrl?: string
+  bio?: string
+  location?: string
+  roles?: string[]
+  isLockedOut?: boolean
+}
+
+export interface UpdateReportStatusPayload {
+  status: ReportStatus | string
+  adminNotes?: string
+}
+
+export interface AdminDeletePostPayload {
+  reason: string
+  adminNotes?: string
+}
+
+export interface UpdatePostVisibilityPayload {
+  newVisibility: string
+  adminNotes?: string
+}
+
+export interface UpdatePostStatusPayload {
+  newStatus: string
+  reason?: string
+  adminNotes?: string
+}
+
+export interface AssignRolePayload {
+  roleName: string
+}
+
+function unwrapList<T>(resp: unknown): T {
+  const raw = unwrap<T>(resp as any)
+  return raw ?? (resp as any)?.data ?? ({} as T)
+}
+
+async function getDashboard(): Promise<AdminDashboard> {
+  const resp = await api.get("/api/admin/dashboard")
+  return unwrapList<AdminDashboard>(resp)
+}
+
+async function getRecentActivities(count = 10): Promise<RecentActivity[]> {
+  const resp = await api.get("/api/admin/dashboard/recent-activity", { params: { count } })
+  return unwrapList<RecentActivity[]>(resp) ?? []
+}
+
+async function getPendingActions(): Promise<PendingAction[]> {
+  const resp = await api.get("/api/admin/dashboard/pending-actions")
+  return unwrapList<PendingAction[]>(resp) ?? []
+}
+
+async function getReports(skip = 0, take = 10, status?: ReportStatus | "all"): Promise<AdminReportsResponse> {
+  const params: Record<string, unknown> = { skip, take }
+  if (status && status !== "all") params.status = status
+  const resp = await api.get("/api/report", { params })
+  return unwrapList<AdminReportsResponse>(resp)
+}
+
+async function updateReportStatus(reportId: string, payload: UpdateReportStatusPayload): Promise<boolean> {
+  const resp = await api.put(`/api/report/${reportId}/status`, {
+    status: payload.status,
+    adminNotes: payload.adminNotes,
+  })
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function getReportedPosts(skip = 0, take = 10): Promise<AdminPostItem[]> {
+  const resp = await api.get("/api/admin/posts/reported", { params: { skip, take } })
+  const raw = unwrapList<any>(resp)
+  return Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []
+}
+
+async function getPostsPendingReview(): Promise<AdminPostItem[]> {
+  const resp = await api.get("/api/admin/posts/pending-review")
+  const raw = unwrapList<any>(resp)
+  return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
+}
+
+async function getUsers(): Promise<AdminUserItem[]> {
+  const resp = await api.get("/api/user")
+  const raw = unwrapList<any>(resp)
+  if (Array.isArray(raw)) return raw
+  if (Array.isArray(raw?.data)) return raw.data
+  return []
+}
+
+async function searchUsers(query: string, skip = 0, take = 20): Promise<AdminUserItem[]> {
+  const resp = await api.get("/api/user/search", { params: { q: query, skip, take } })
+  const raw = unwrapList<any>(resp)
+  if (Array.isArray(raw?.data)) return raw.data
+  if (Array.isArray(raw)) return raw
+  return []
+}
+
+async function lockUser(userId: string, days = 7): Promise<boolean> {
+  const resp = await api.post(`/api/user/${userId}/lock`, days, {
+    headers: { "Content-Type": "application/json" },
+  })
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function unlockUser(userId: string): Promise<boolean> {
+  const resp = await api.post(`/api/user/${userId}/unlock`)
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function assignRole(userId: string, roleName: string): Promise<boolean> {
+  const resp = await api.post(`/api/user/${userId}/roles`, { roleName })
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function hidePost(postId: string, reason: string): Promise<boolean> {
+  const resp = await api.post(`/api/admin/posts/${postId}/hide`, JSON.stringify(reason), {
+    headers: { "Content-Type": "application/json" },
+  })
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function unhidePost(postId: string): Promise<boolean> {
+  const resp = await api.post(`/api/admin/posts/${postId}/unhide`)
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function deletePost(postId: string, payload: AdminDeletePostPayload): Promise<boolean> {
+  const resp = await api.delete(`/api/admin/posts/${postId}`, { data: payload })
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function updatePostVisibility(postId: string, payload: UpdatePostVisibilityPayload): Promise<boolean> {
+  const resp = await api.put(`/api/admin/posts/${postId}/visibility`, payload)
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function updatePostStatus(postId: string, payload: UpdatePostStatusPayload): Promise<boolean> {
+  const resp = await api.put(`/api/admin/posts/${postId}/status`, payload)
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+export const adminService = {
+  getDashboard,
+  getRecentActivities,
+  getPendingActions,
+  getReports,
+  updateReportStatus,
+  getReportedPosts,
+  getPostsPendingReview,
+  getUsers,
+  searchUsers,
+  lockUser,
+  unlockUser,
+  assignRole,
+  hidePost,
+  unhidePost,
+  deletePost,
+  updatePostVisibility,
+  updatePostStatus,
+}

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using InteractHub.Api.DTOs.Common;
 
 namespace InteractHub.Api.DTOs.Post_Interactions;
 
@@ -20,5 +21,18 @@ public class CommentResponseDTO
     public string Content{get;set;} = null!;
     public DateTime CreatedAt{get;set;}
     public DateTime UpdatedAt{get;set;}
+}
+
+/// <summary>
+/// Enhanced comment response with user details
+/// </summary>
+public class CommentDetailDto
+{
+    public Guid Id { get; set; }
+    public Guid PostId { get; set; }
+    public string Content { get; set; } = null!;
+    public UserBasicDto? User { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
 

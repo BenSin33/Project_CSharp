@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import TabSwitcher from "../components/common/TabSwitcher";
 import LoginForm, { type LoginFormData } from "../components/auth/LoginForm";
 import RegisterForm, { type RegisterFormData } from "../components/auth/registerForm";
+import { useAuth } from "../contexts/AuthContext";
 
 type Tab = "login" | "register";
 
@@ -28,29 +29,45 @@ const AppLogoIcon = () => (
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const { login, register } = useAuth();
   const [tab, setTab]               = useState<Tab>("login");
   const [isLoading, setIsLoading]   = useState(false);
   const [serverError, setServerError] = useState<string | undefined>();
+  const [successMsg, setSuccessMsg]  = useState<string | undefined>();
+
+  const toFriendlyAuthError = (err: any, fallback: string) => {
+    const status = err?.response?.status;
+    if (status === 502) {
+      return "Không thể kết nối API (502 Bad Gateway). Hãy kiểm tra backend hoặc cấu hình proxy.";
+    }
+    if (!err?.response && err?.message === "Network Error") {
+      return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra backend đang chạy.";
+    }
+    return err?.response?.data?.message ?? err?.message ?? fallback;
+  };
 
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     setServerError(undefined);
+    setSuccessMsg(undefined);
     try {
-        // NOTE (2026-04-27):
-        // - Phần này được cập nhật để gọi API backend (Auth).
-        // - Gọi POST /api/auth/login và lưu token trả về vào localStorage nếu có.
-      const api = (await import("../services/api")).default;
-      const resp = await api.post(`/api/auth/login`, { email: data.email, password: data.password });
-      if (resp?.data?.token ?? resp?.data?.data?.token) {
-        const token = resp.data.token ?? resp.data.data.token;
-        localStorage.setItem("token", token);
-        navigate("/");
-      } else {
-        // hiển thị message từ backend nếu có
-        setServerError(resp?.data?.message ?? resp?.data?.Message ?? "Login failed");
+      // Dùng AuthContext.login → token được lưu vào cả localStorage VÀ React state
+      // → các API call sau đó sẽ có token hợp lệ
+      await login({ email: data.email, password: data.password });
+      const cachedUser = localStorage.getItem("user");
+      let isAdmin = false;
+      if (cachedUser) {
+        try {
+          const parsed = JSON.parse(cachedUser);
+          isAdmin = Array.isArray(parsed?.roles) && parsed.roles.includes("Admin");
+        } catch {
+          isAdmin = false;
+        }
       }
-    } catch {
-      setServerError("Invalid email or password. Please try again.");
+      navigate(isAdmin ? "/admin" : "/");
+    } catch (err: any) {
+      const msg = toFriendlyAuthError(err, "Email hoặc mật khẩu không đúng.");
+      setServerError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -59,29 +76,24 @@ export default function AuthPage() {
   const handleRegister = async (data: RegisterFormData) => {
     setIsLoading(true);
     setServerError(undefined);
+    setSuccessMsg(undefined);
     try {
-      const api = (await import("../services/api")).default;
-      // NOTE (2026-04-27):
-      // - Gọi POST /api/auth/register. Nếu backend trả token, lưu token và redirect.
-      // - Mapping dữ liệu frontend -> DTO backend được thực hiện ở payload dưới.
-      const payload = {
-        FullName: data.fullName,
-        Email: data.email,
-        Password: data.password,
-        DateOfBirth: new Date().toISOString(),
-        Gender: "other",
-      };
-      const resp = await api.post(`/api/auth/register`, payload);
-      if (resp?.data?.success ?? resp?.data?.Success) {
-          // auto-login và xử lý response (nếu trả token thì lưu
-        const token = resp.data.token ?? resp.data.data?.token;
-        if (token) localStorage.setItem("token", token);
-        navigate("/");
-      } else {
-        setServerError(resp?.data?.message ?? resp?.data?.Message ?? "Registration failed");
-      }
-    } catch {
-      setServerError("Registration failed. Please try again.");
+      await register({
+        fullName: data.fullName,
+        email: data.email,
+        password: data.password,
+        dateOfBirth: data.dateOfBirth
+          ? new Date(data.dateOfBirth).toISOString()
+          : new Date(2000, 0, 1).toISOString(),
+        gender: parseInt(data.gender ?? "2", 10),
+      });
+      // Nếu backend trả token → AuthContext đã login, navigate luôn
+      // Nếu không → chuyển về tab login
+      setTab("login");
+      setSuccessMsg("Đăng ký thành công! Vui lòng đăng nhập.");
+    } catch (err: any) {
+      const msg = toFriendlyAuthError(err, "Đăng ký thất bại. Vui lòng thử lại.");
+      setServerError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -89,15 +101,34 @@ export default function AuthPage() {
 
   const handleDemoLogin = async (role: "user" | "admin") => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 600));
-    console.log("demo login:", role);
-    setIsLoading(false);
-    navigate("/");
+    setServerError(undefined);
+    const email    = role === "admin" ? "admin@interacthub.com" : "user@interacthub.com";
+    const password = role === "admin" ? "Admin@123" : "User@123";
+    try {
+      await login({ email, password });
+      const cachedUser = localStorage.getItem("user");
+      let isAdmin = false;
+      if (cachedUser) {
+        try {
+          const parsed = JSON.parse(cachedUser);
+          isAdmin = Array.isArray(parsed?.roles) && parsed.roles.includes("Admin");
+        } catch {
+          isAdmin = false;
+        }
+      }
+      navigate(isAdmin ? "/admin" : "/");
+    } catch (err: any) {
+      const msg = toFriendlyAuthError(err, "Đăng nhập demo thất bại. Vui lòng kiểm tra backend/API.");
+      setServerError(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleTabChange = (val: string) => {
     setTab(val as Tab);
     setServerError(undefined);
+    setSuccessMsg(undefined);
   };
 
   return (
@@ -107,7 +138,6 @@ export default function AuthPage() {
         * { box-sizing: border-box; }
       `}</style>
 
-      {/* Full-page background */}
       <div style={{
         minHeight: "100vh",
         background: "linear-gradient(135deg, #e0e7ff 0%, #f8faff 40%, #faf5ff 100%)",
@@ -117,13 +147,9 @@ export default function AuthPage() {
         fontFamily: "'DM Sans', sans-serif",
       }}>
 
-        {/* Branding */}
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <AppLogoIcon />
-          <h1 style={{
-            fontSize: "28px", fontWeight: 800, color: "#0f172a",
-            margin: "0 0 6px", letterSpacing: "-0.5px",
-          }}>
+          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.5px" }}>
             InteractHub
           </h1>
           <p style={{ fontSize: "15px", color: "#64748b", margin: 0 }}>
@@ -131,22 +157,19 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {/* Card */}
         <div style={{
           width: "100%", maxWidth: "460px", background: "#ffffff",
           borderRadius: "24px", padding: "28px 32px 32px",
           boxShadow: "0 8px 40px rgba(99,102,241,0.10), 0 1px 4px rgba(0,0,0,0.06)",
         }}>
+          <TabSwitcher options={TAB_OPTIONS} value={tab} onChange={handleTabChange} className="mb-6" />
 
-          {/* Tab switcher — duy nhất 1 chỗ */}
-          <TabSwitcher
-            options={TAB_OPTIONS}
-            value={tab}
-            onChange={handleTabChange}
-            className="mb-6"
-          />
+          {successMsg && (
+            <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "10px 14px", color: "#16a34a", fontSize: "13px", fontWeight: 500, fontFamily: "'DM Sans', sans-serif", marginBottom: "12px" }}>
+              {successMsg}
+            </div>
+          )}
 
-          {/* Form content */}
           {tab === "login" ? (
             <LoginForm
               onLogin={handleLogin}
@@ -165,7 +188,6 @@ export default function AuthPage() {
           )}
         </div>
 
-        {/* Footer */}
         <p style={{ marginTop: "24px", fontSize: "13px", color: "#94a3b8", textAlign: "center" }}>
           By continuing, you agree to InteractHub's Terms of Service and Privacy Policy
         </p>

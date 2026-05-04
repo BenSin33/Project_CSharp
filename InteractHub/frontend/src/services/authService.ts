@@ -1,4 +1,4 @@
-import api, { unwrap } from "./api"
+import api from "./api"
 import type { AuthUser } from "../contexts/AuthContext"
 
 export interface LoginPayload {
@@ -11,6 +11,8 @@ export interface RegisterPayload {
   fullName: string
   email: string
   password: string
+  dateOfBirth?: string
+  gender?: number
 }
 
 export interface AuthResponse {
@@ -18,55 +20,78 @@ export interface AuthResponse {
   user: AuthUser
 }
 
-// Mock fallback — dùng khi backend chưa sẵn sàng
-const MOCK_USER: AuthUser = {
-  id: "demo-1",
-  name: "Alex Kim",
-  email: "demo@user.com",
-  username: "alexkim",
-  avatarUrl: undefined,
-}
-
 async function login(payload: LoginPayload): Promise<AuthResponse> {
-  try {
-    const resp = await api.post("/api/auth/login", payload)
-    const data = unwrap<AuthResponse>(resp)
-    if (data) return data
-    throw new Error("Empty response")
-  } catch (err: any) {
-    // Fallback demo mode khi backend down
-    if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) {
-      console.warn("[authService] Backend unavailable, using demo fallback")
-      return { token: "demo-token", user: MOCK_USER }
-    }
-    throw err
+  const resp = await api.post("/api/auth/login", {
+    email: payload.email,
+    password: payload.password,
+  })
+  const data = resp.data
+
+  if (!data?.success || !data?.token) {
+    throw new Error(data?.message ?? "Login failed")
   }
+
+  // Lưu token vào localStorage TRƯỚC khi gọi getMe
+  localStorage.setItem("token", data.token)
+
+  // Lấy profile đầy đủ
+  let user: AuthUser
+  try {
+    user = await getMe()
+  } catch {
+    user = {
+      id: "",
+      name: payload.email.split("@")[0],
+      email: payload.email,
+      username: payload.email.split("@")[0],
+      roles: [],
+    }
+  }
+
+  localStorage.setItem("user", JSON.stringify(user))
+  return { token: data.token, user }
 }
 
 async function register(payload: RegisterPayload): Promise<AuthResponse> {
-  try {
-    const resp = await api.post("/api/auth/register", payload)
-    const data = unwrap<AuthResponse>(resp)
-    if (data) return data
-    throw new Error("Empty response")
-  } catch (err: any) {
-    if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) {
-      console.warn("[authService] Backend unavailable, using demo fallback")
-      const newUser: AuthUser = {
-        id: "new-" + Date.now(),
-        name: payload.fullName,
-        email: payload.email,
-        username: payload.email.split("@")[0],
-      }
-      return { token: "demo-token", user: newUser }
-    }
-    throw err
+  const resp = await api.post("/api/auth/register", {
+    FullName: payload.fullName,
+    Email: payload.email,
+    Password: payload.password,
+    DateOfBirth: payload.dateOfBirth ?? new Date(2000, 0, 1).toISOString(),
+    Gender: payload.gender ?? 2,
+  })
+  const data = resp.data
+
+  if (!data?.success) {
+    throw new Error(data?.message ?? "Registration failed")
+  }
+
+  // Backend register không trả token, chỉ trả success
+  return {
+    token: "",
+    user: {
+      id: "",
+      name: payload.fullName,
+      email: payload.email,
+      username: payload.email.split("@")[0],
+    },
   }
 }
 
 async function getMe(): Promise<AuthUser> {
   const resp = await api.get("/api/auth/profile")
-  return unwrap<AuthUser>(resp)!
+  const d = resp.data
+  const fullName = d?.fullName ?? d?.FullName ?? d?.name ?? d?.Name ?? ""
+  const email = d?.email ?? d?.Email ?? ""
+  const username = d?.username ?? d?.Username ?? (email ? email.split("@")[0] : "")
+  return {
+    id: String(d?.id ?? d?.Id ?? ""),
+    name: fullName || email.split("@")[0] || "User",
+    email,
+    username,
+    avatarUrl: d?.avatarUrl ?? d?.AvatarUrl,
+    roles: d?.roles ?? d?.Roles ?? [],
+  }
 }
 
 export const authService = { login, register, getMe }

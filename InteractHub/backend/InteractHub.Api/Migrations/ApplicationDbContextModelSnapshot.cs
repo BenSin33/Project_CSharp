@@ -344,6 +344,36 @@ namespace InteractHub.Api.Migrations
                     b.ToTable("PostReports");
                 });
 
+            modelBuilder.Entity("InteractHub.Api.Models.SavedPost", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SavedPosts");
+                });
+
             modelBuilder.Entity("InteractHub.Api.Models.Share", b =>
                 {
                     b.Property<Guid>("Id")
@@ -770,6 +800,25 @@ namespace InteractHub.Api.Migrations
                 });
 
             modelBuilder.Entity("InteractHub.Api.Models.PostReport", b =>
+                {
+                    b.HasOne("InteractHub.Api.Models.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InteractHub.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("InteractHub.Api.Models.SavedPost", b =>
                 {
                     b.HasOne("InteractHub.Api.Models.Post", "Post")
                         .WithMany()

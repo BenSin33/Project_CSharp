@@ -148,6 +148,7 @@ public static class DataSeeder
 
         context.Posts.AddRange(posts);
         await context.SaveChangesAsync();
+        
     }
 
     public static async Task SeedNotificationsAsync(IServiceProvider serviceProvider)

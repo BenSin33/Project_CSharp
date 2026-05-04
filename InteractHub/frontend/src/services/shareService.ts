@@ -10,9 +10,9 @@ export async function getShareCount(postId: string): Promise<number> {
   return unwrap<number>(resp) ?? 0
 }
 
-// POST /api/share  — requires auth
+// POST /api/share — backend lấy userId từ JWT, nhận CreateShareDTO { PostId }
 export async function sharePost(payload: CreateShareDTO): Promise<boolean> {
-  const resp = await api.post("/api/share", payload)
+  const resp = await api.post("/api/share", { PostId: payload.postId })
   return unwrap<boolean>(resp) ?? false
 }
 

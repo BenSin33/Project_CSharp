@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using InteractHub.Api.DTOs;
 using InteractHub.Api.Models;
 using InteractHub.Api.Services.Interface;
+using InteractHub.Api.Hubs;
 
 namespace InteractHub.Api.Controllers;
 
@@ -13,14 +15,16 @@ namespace InteractHub.Api.Controllers;
 public class MessageController : ControllerBase
 {
     private readonly IMessageService _messageService;
+    private readonly IHubContext<ChatHub> _hubContext;
 
-    public MessageController(IMessageService messageService)
+    public MessageController(IMessageService messageService, IHubContext<ChatHub> hubContext)
     {
         _messageService = messageService;
+        _hubContext = hubContext;
     }
 
     /// <summary>
-    /// Gửi tin nhắn mới đến user khác
+    /// Gửi tin nhắn mới đến user khác (REST — cũng push qua SignalR)
     /// </summary>
     [HttpPost("send")]
     public async Task<IActionResult> SendMessage([FromBody] CreateMessageDTO createMessageDto)
@@ -34,7 +38,17 @@ public class MessageController : ControllerBase
             }
 
             var message = await _messageService.SendMessageAsync(createMessageDto, senderId);
+<<<<<<< HEAD
             return Ok(ApiResponse<MessageResponseDTO>.Ok(message, "Message sent successfully"));
+=======
+
+            // Push real-time đến receiver qua SignalR
+            await _hubContext.Clients
+                .Group($"user-{createMessageDto.ReceiverId}")
+                .SendAsync("ReceiveMessage", message);
+
+            return Ok(new { success = true, message = "Message sent successfully", data = message });
+>>>>>>> 615baee9bbd0dc3116078ae898e0837c275e8321
         }
         catch (ArgumentException ex)
         {
