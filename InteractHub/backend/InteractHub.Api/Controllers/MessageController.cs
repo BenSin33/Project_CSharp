@@ -38,17 +38,13 @@ public class MessageController : ControllerBase
             }
 
             var message = await _messageService.SendMessageAsync(createMessageDto, senderId);
-<<<<<<< HEAD
-            return Ok(ApiResponse<MessageResponseDTO>.Ok(message, "Message sent successfully"));
-=======
 
             // Push real-time đến receiver qua SignalR
             await _hubContext.Clients
                 .Group($"user-{createMessageDto.ReceiverId}")
                 .SendAsync("ReceiveMessage", message);
 
-            return Ok(new { success = true, message = "Message sent successfully", data = message });
->>>>>>> 615baee9bbd0dc3116078ae898e0837c275e8321
+            return Ok(ApiResponse<MessageResponseDTO>.Ok(message, "Message sent successfully"));
         }
         catch (ArgumentException ex)
         {
