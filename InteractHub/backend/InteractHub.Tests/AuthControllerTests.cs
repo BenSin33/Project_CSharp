@@ -37,7 +37,7 @@ public class AuthControllerTests
         var result = await _authController.Register(dto);
 
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        var response = Assert.IsType<AuthResponseDTO>(badRequestResult.Value);
+        var response = Assert.IsType<ApiResponse<AuthResponseDTO>>(badRequestResult.Value);
         Assert.False(response.Success);
         Assert.Equal("Email already exists", response.Message);
     }
@@ -54,9 +54,9 @@ public class AuthControllerTests
         var result = await _authController.Register(dto);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<AuthResponseDTO>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<AuthResponseDTO>>(okResult.Value);
         Assert.True(response.Success);
-        Assert.Equal("User registered successfully", response.Message);
+        Assert.Equal("User registered successfully", response.Data?.Message);
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class AuthControllerTests
         var result = await _authController.Login(dto);
 
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
-        var response = Assert.IsType<AuthResponseDTO>(unauthorizedResult.Value);
+        var response = Assert.IsType<ApiResponse<AuthResponseDTO>>(unauthorizedResult.Value);
         Assert.False(response.Success);
     }
 
@@ -86,9 +86,8 @@ public class AuthControllerTests
         var result = await _authController.Login(dto);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<AuthResponseDTO>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<AuthResponseDTO>>(okResult.Value);
         Assert.True(response.Success);
-        Assert.NotNull(response.Token);
-        Assert.NotEmpty(response.Token);
+        Assert.False(string.IsNullOrEmpty(response.Data?.Token));
     }
 }

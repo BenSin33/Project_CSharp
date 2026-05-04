@@ -27,7 +27,9 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register(RegisterDTO model)
     {
         var result = await _authService.RegisterAsync(model);
-        return result.Success ? Ok(result) : BadRequest(result);
+        return result.Success
+            ? Ok(ApiResponse<AuthResponseDTO>.Ok(result, result.Message ?? "Registered successfully"))
+            : BadRequest(ApiResponse<AuthResponseDTO>.Fail(result.Message ?? "Registration failed"));
 
     }
 
@@ -35,7 +37,9 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginDTO model)
     {
         var result = await _authService.LoginAsync(model);
-        return result.Success ? Ok(result) : Unauthorized(result);
+        return result.Success
+            ? Ok(ApiResponse<AuthResponseDTO>.Ok(result, result.Message ?? "Login successful"))
+            : Unauthorized(ApiResponse<AuthResponseDTO>.Fail(result.Message ?? "Login failed"));
     }
 
     [HttpPost("refresh-token")]
@@ -45,17 +49,19 @@ public class AuthController : ControllerBase
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if(string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {
-            return Unauthorized(new AuthResponseDTO(false,"Invalid token"));
+            return Unauthorized(ApiResponse<AuthResponseDTO>.Fail("Invalid token"));
         }
 
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if(user == null)
         {
-            return Unauthorized(new AuthResponseDTO(false, "User not found !"));
+            return Unauthorized(ApiResponse<AuthResponseDTO>.Fail("User not found !"));
         }
 
         var newToken = await _authService.GenerateJwtTokenAsync(user);
-        return Ok(new AuthResponseDTO(true, "Token refreshed successfully", newToken));
+        return Ok(ApiResponse<AuthResponseDTO>.Ok(
+            new AuthResponseDTO(true, "Token refreshed successfully", newToken),
+            "Token refreshed successfully"));
 
     }
 
@@ -66,17 +72,18 @@ public class AuthController : ControllerBase
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {
-            return Unauthorized(new AuthResponseDTO(false, "Invalid token"));
+            return Unauthorized(ApiResponse<string>.Fail("Invalid token"));
         }
 
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user == null)
         {
-            return NotFound(new AuthResponseDTO(false, "User not found"));
+            return NotFound(ApiResponse<string>.Fail("User not found"));
         }
 
         var roles = await _userManager.GetRolesAsync(user);
-        return Ok(new { user.Id, user.Email, user.FullName, user.AvatarUrl, roles });
+        var profile = new { user.Id, user.Email, user.FullName, user.AvatarUrl, roles };
+        return Ok(ApiResponse<object>.Ok(profile, "Profile retrieved successfully"));
     }
 
 }

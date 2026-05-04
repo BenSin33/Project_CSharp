@@ -1,5 +1,6 @@
 using InteractHub.Api.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
+using InteractHub.Api.Models;
 
 namespace InteractHub.Api.Controllers;
 
@@ -20,22 +21,17 @@ public class MediaController : ControllerBase
         try
         {
             var fileUrl = await _fileUploadService.UploadFileAsync(file, "interacthub-media");
-            return Ok (
-                new
-                {
-                    success = true, 
-                    message = "Upload file successfully",
-                    url = fileUrl
-                }
-            );
+            return Ok(ApiResponse<string>.Ok(fileUrl, "Upload file successfully"));
         }
         catch (ArgumentException ex)
         {
-            return BadRequest ( new { success = false, message = ex.Message});
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
         }
         catch (Exception ex)
         {
-            return StatusCode (500, new {success = false, message = "An error occurred while uploading the file", error = ex.Message});
+            return StatusCode(500, ApiResponse<string>.Fail(
+                "An error occurred while uploading the file",
+                new List<string> { ex.Message }));
         }
     }
 
@@ -46,10 +42,10 @@ public class MediaController : ControllerBase
 
         if (result)
         {
-            return Ok (new {success = true, message = "File deleted successfully"});
+            return Ok(ApiResponse<bool>.Ok(true, "File deleted successfully"));
         }
 
-        return BadRequest (new {success = false, message ="Failed to delete file or file not found"});
+        return BadRequest(ApiResponse<bool>.Fail("Failed to delete file or file not found"));
 
     }
 

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.DTOs.FriendshipDTO;
-using System.Security.Claims;
+using InteractHub.Api.Models;
 
 namespace InteractHub.Api.Controllers
 {
@@ -22,9 +22,9 @@ namespace InteractHub.Api.Controllers
         {
             try {
                 var result = await _friendshipService.SendFriendRequestAsync(dto.RequesterId, dto.ReceiverId);
-                return Ok(result);
+                return Ok(ApiResponse<FriendshipResponseDTO>.Ok(result, "Friend request sent."));
             } catch (Exception ex) {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ApiResponse<string>.Fail(ex.Message));
             }
         }
 
@@ -33,7 +33,8 @@ namespace InteractHub.Api.Controllers
         public async Task<IActionResult> GetPending(Guid userId)
         {
             var requests = await _friendshipService.GetPendingRequestsAsync(userId);
-            return Ok(requests);
+            return Ok(ApiResponse<IEnumerable<FriendshipResponseDTO>>.Ok(
+                requests, "Pending requests retrieved successfully."));
         }
 
         // PUT: api/Friendships/accept/{id}
@@ -41,8 +42,8 @@ namespace InteractHub.Api.Controllers
         public async Task<IActionResult> AcceptRequest(Guid id, [FromQuery] Guid userId)
         {
             var success = await _friendshipService.AcceptFriendRequestAsync(id, userId);
-            if (!success) return BadRequest("Không thể chấp nhận lời mời.");
-            return Ok(new { message = "Đã trở thành bạn bè!" });
+            if (!success) return BadRequest(ApiResponse<string>.Fail("Không thể chấp nhận lời mời."));
+            return Ok(ApiResponse<bool>.Ok(true, "Đã trở thành bạn bè!"));
         }
 
         // PUT: api/Friendships/reject/{id}
@@ -50,8 +51,8 @@ namespace InteractHub.Api.Controllers
         public async Task<IActionResult> RejectRequest(Guid id, [FromQuery] Guid userId)
         {
             var success = await _friendshipService.RejectFriendRequestAsync(id, userId);
-            if (!success) return BadRequest("Thao tác thất bại.");
-            return Ok(new { message = "Đã từ chối lời mời." });
+            if (!success) return BadRequest(ApiResponse<string>.Fail("Thao tác thất bại."));
+            return Ok(ApiResponse<bool>.Ok(true, "Đã từ chối lời mời."));
         }
 
         // GET: api/Friendships/list/{userId}
@@ -59,7 +60,8 @@ namespace InteractHub.Api.Controllers
         public async Task<IActionResult> GetFriends(Guid userId)
         {
             var friends = await _friendshipService.GetFriendListAsync(userId);
-            return Ok(friends);
+            return Ok(ApiResponse<IEnumerable<UserFriendDTO>>.Ok(
+                friends, "Friend list retrieved successfully."));
         }
 
         // DELETE: api/Friendships/{id}
@@ -67,8 +69,8 @@ namespace InteractHub.Api.Controllers
         public async Task<IActionResult> RemoveFriend(Guid id, [FromQuery] Guid userId)
         {
             var success = await _friendshipService.RemoveFriendAsync(id, userId);
-            if (!success) return NotFound("Mối quan hệ không tồn tại.");
-            return Ok(new { message = "Đã xóa bạn bè." });
+            if (!success) return NotFound(ApiResponse<string>.Fail("Mối quan hệ không tồn tại."));
+            return Ok(ApiResponse<bool>.Ok(true, "Đã xóa bạn bè."));
         }
 
         // GET: api/Friendships/status
@@ -76,7 +78,7 @@ namespace InteractHub.Api.Controllers
         public async Task<IActionResult> GetStatus([FromQuery] Guid user1, [FromQuery] Guid user2)
         {
             var status = await _friendshipService.CheckFriendshipStatusAsync(user1, user2);
-            return Ok(new { status });
+            return Ok(ApiResponse<string>.Ok(status, "Friendship status retrieved."));
         }
     }
 }

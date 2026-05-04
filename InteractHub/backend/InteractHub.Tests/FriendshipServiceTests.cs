@@ -192,7 +192,7 @@ public class FriendshipServiceTests
         Assert.Single(result);
         Assert.Equal(friendshipId, result[0].Id);
         Assert.NotNull(result[0].Requester);
-        Assert.Equal(requesterId, result[0].Requester.Id);
+        Assert.Equal(requesterId, result[0].Requester!.Id);
     }
 
     [Fact]

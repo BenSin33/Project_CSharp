@@ -41,7 +41,8 @@ public class NotificationsControllerTests
         var result = await _notificationsController.GetMyNotifications(0, 10);
         
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotNull(okResult.Value);
+        var response = Assert.IsType<ApiResponse<IEnumerable<NotificationResponseDTO>>>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]
@@ -54,7 +55,8 @@ public class NotificationsControllerTests
         var result = await _notificationsController.GetNotification(notificationId);
         
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotNull(okResult.Value);
+        var response = Assert.IsType<ApiResponse<NotificationResponseDTO>>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]
@@ -77,7 +79,9 @@ public class NotificationsControllerTests
         _notificationServiceMock.Setup(x => x.CreateNotificationAsync(createDto)).ReturnsAsync(createdNotification);
         var result = await _notificationsController.CreateNotification(createDto);
         
-        Assert.IsType<CreatedAtActionResult>(result.Result);
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        var response = Assert.IsType<ApiResponse<NotificationResponseDTO>>(createdResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]
@@ -88,7 +92,9 @@ public class NotificationsControllerTests
         _notificationServiceMock.Setup(x => x.MarkAsReadAsync(notificationId, _testUserId)).ReturnsAsync(true);
         var result = await _notificationsController.MarkAsRead(notificationId);
         
-        Assert.IsType<NoContentResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<ApiResponse<bool>>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]
@@ -108,7 +114,9 @@ public class NotificationsControllerTests
         _notificationServiceMock.Setup(x => x.MarkAllAsReadAsync(_testUserId)).ReturnsAsync(true);
         var result = await _notificationsController.MarkAllAsRead();
         
-        Assert.IsType<NoContentResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<ApiResponse<bool>>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]
@@ -119,7 +127,9 @@ public class NotificationsControllerTests
         _notificationServiceMock.Setup(x => x.DeleteNotificationAsync(notificationId, _testUserId)).ReturnsAsync(true);
         var result = await _notificationsController.DeleteNotification(notificationId);
         
-        Assert.IsType<NoContentResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<ApiResponse<bool>>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]
@@ -140,6 +150,7 @@ public class NotificationsControllerTests
         var result = await _notificationsController.GetUnreadCount();
         
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(5, okResult.Value);
+        var response = Assert.IsType<ApiResponse<int>>(okResult.Value);
+        Assert.Equal(5, response.Data);
     }
 }
