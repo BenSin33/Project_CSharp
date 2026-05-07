@@ -26,4 +26,7 @@ public class PostResponseDto
     
     // Top comments with user details
     public List<CommentDetailDto> TopComments { get; set; } = new List<CommentDetailDto>();
+
+    // Hashtags
+    public List<string> HashTags { get; set; } = new List<string>();
 }
