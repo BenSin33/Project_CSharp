@@ -122,7 +122,120 @@ public class UserController : ControllerBase
         {
             return BadRequest(ApiResponse<string>.Fail(ex.Message));
         }
+    }
 
+    [HttpPost("{id}/ban")]
+    public async Task<IActionResult> BanUser(Guid id, [FromBody] BanUserDTO request)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            return BadRequest(ApiResponse<string>.Fail("Validation failed", errors));
+        }
+
+        try
+        {
+            var result = await _userService.BanUserAsync(id, request.Reason);
+            if (!result)
+                return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "User banned successfully"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
+        }
+    }
+
+    [HttpPost("{id}/unban")]
+    public async Task<IActionResult> UnbanUser(Guid id)
+    {
+        try
+        {
+            var result = await _userService.UnbanUserAsync(id);
+            if (!result)
+                return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "User unbanned successfully"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
+        }
+    }
+
+    [HttpPost("{id}/suspend")]
+    public async Task<IActionResult> SuspendUser(Guid id, [FromBody] SuspendUserDTO request)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            return BadRequest(ApiResponse<string>.Fail("Validation failed", errors));
+        }
+
+        try
+        {
+            var result = await _userService.SuspendUserAsync(id, request.DaysUntilExpiry, request.Reason);
+            if (!result)
+                return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, $"User suspended for {request.DaysUntilExpiry} days"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
+        }
+    }
+
+    [HttpPost("{id}/unsuspend")]
+    public async Task<IActionResult> UnsuspendUser(Guid id)
+    {
+        try
+        {
+            var result = await _userService.UnsuspendUserAsync(id);
+            if (!result)
+                return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "User unsuspended successfully"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
+        }
+    }
+
+    [HttpDelete("{id}/permanent")]
+    public async Task<IActionResult> DeleteUserPermanently(Guid id)
+    {
+        try
+        {
+            var result = await _userService.PermanentDeleteUserAsync(id);
+            if (!result)
+                return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "User permanently deleted"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
+        }
+    }
+
+    [HttpGet("{id}/status")]
+    public async Task<IActionResult> GetUserStatus(Guid id)
+    {
+        try
+        {
+            var status = await _userService.GetUserStatusAsync(id);
+            if (status == null)
+                return NotFound(ApiResponse<UserStatusDTO>.Fail("User not found"));
+
+            return Ok(ApiResponse<UserStatusDTO>.Ok(status, "User status retrieved"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
+        }
     }
     
 }

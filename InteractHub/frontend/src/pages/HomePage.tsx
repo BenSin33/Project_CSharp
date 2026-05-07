@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import StoryBar from "../components/story/StoryBar";
 import StoryViewer from "../components/story/StoryViewer";
-import CreateStoryModal from "../components/story/Createstorymodal";
+import CreateStoryModal from "../components/story/CreateStoryModal";
 import PostCard from "../components/post/PostCard";
 import type { CommentItem } from "../services/commentService";
 import { mapDetailToItem, addComment, getCommentsByPost } from "../services/commentService";

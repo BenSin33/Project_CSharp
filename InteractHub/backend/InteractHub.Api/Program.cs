@@ -127,6 +127,7 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAdminPostService, AdminPostService>();
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
 builder.Services.AddHostedService<MediaCleanupService>();
 

@@ -23,6 +23,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<PostReport> PostReports { get; set; }
     public DbSet<Story> Stories { get; set; }
+    public DbSet<ActivityLog> ActivityLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -68,6 +69,19 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
         builder.Entity<Post>()
             .HasMany(p => p.HashTags)
             .WithMany();
+
+        // 4b. Cấu hình ActivityLog relationships
+        builder.Entity<ActivityLog>()
+            .HasOne(al => al.Admin)
+            .WithMany(u => u.ActivityLogs)
+            .HasForeignKey(al => al.AdminId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ActivityLog>()
+            .HasOne(al => al.TargetUser)
+            .WithMany()
+            .HasForeignKey(al => al.TargetUserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // 5. Khởi tạo dữ liệu Role mẫu (Role Seeding - Requirement B3)
         // Đổi từ Guid.NewGuid() sang Guid.Parse() với các giá trị cố định

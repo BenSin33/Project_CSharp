@@ -27,12 +27,12 @@ async function login(payload: LoginPayload): Promise<AuthResponse> {
   })
   const data = resp.data
 
-  if (!data?.success || !data?.token) {
-    throw new Error(data?.message ?? "Login failed")
+  if (!data?.success || !data?.data?.token) {
+    throw new Error(data?.message ?? data?.data?.message ?? "Login failed")
   }
 
   // Lưu token vào localStorage TRƯỚC khi gọi getMe
-  localStorage.setItem("token", data.token)
+  localStorage.setItem("token", data.data.token)
 
   // Lấy profile đầy đủ
   let user: AuthUser
@@ -49,7 +49,7 @@ async function login(payload: LoginPayload): Promise<AuthResponse> {
   }
 
   localStorage.setItem("user", JSON.stringify(user))
-  return { token: data.token, user }
+  return { token: data.data.token, user }
 }
 
 async function register(payload: RegisterPayload): Promise<AuthResponse> {
@@ -63,7 +63,7 @@ async function register(payload: RegisterPayload): Promise<AuthResponse> {
   const data = resp.data
 
   if (!data?.success) {
-    throw new Error(data?.message ?? "Registration failed")
+    throw new Error(data?.message ?? data?.data?.message ?? "Registration failed")
   }
 
   // Backend register không trả token, chỉ trả success
@@ -80,7 +80,7 @@ async function register(payload: RegisterPayload): Promise<AuthResponse> {
 
 async function getMe(): Promise<AuthUser> {
   const resp = await api.get("/api/auth/profile")
-  const d = resp.data
+  const d = resp.data?.data || resp.data
   const fullName = d?.fullName ?? d?.FullName ?? d?.name ?? d?.Name ?? ""
   const email = d?.email ?? d?.Email ?? ""
   const username = d?.username ?? d?.Username ?? (email ? email.split("@")[0] : "")
