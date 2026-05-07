@@ -142,6 +142,89 @@ public class UserService : IUserService
         return true; // user already has the role, consider it a success
     }
 
+    // New status management methods
+    public async Task<bool> BanUserAsync(Guid id, string reason)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if(user == null) return false;
+
+        user.Status = UserStatus.Banned;
+        user.BanReason = reason;
+        user.BannedAt = DateTime.UtcNow;
+
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded;
+    }
+
+    public async Task<bool> UnbanUserAsync(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if(user == null) return false;
+
+        user.Status = UserStatus.Active;
+        user.BanReason = null;
+        user.BannedAt = null;
+
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded;
+    }
+
+    public async Task<bool> SuspendUserAsync(Guid id, int daysUntilExpiry, string reason)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if(user == null) return false;
+
+        user.Status = UserStatus.Suspended;
+        user.SuspendedUntil = DateTime.UtcNow.AddDays(daysUntilExpiry);
+        user.SuspensionReason = reason;
+
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded;
+    }
+
+    public async Task<bool> UnsuspendUserAsync(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if(user == null) return false;
+
+        user.Status = UserStatus.Active;
+        user.SuspendedUntil = null;
+        user.SuspensionReason = null;
+
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded;
+    }
+
+    public async Task<bool> PermanentDeleteUserAsync(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if(user == null) return false;
+
+        // Hard delete user and all associated data
+        var result = await _userManager.DeleteAsync(user);
+        return result.Succeeded;
+    }
+
+    public async Task<UserStatusDTO?> GetUserStatusAsync(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if(user == null) return null;
+
+        var isLocked = await _userManager.IsLockedOutAsync(user);
+
+        return new UserStatusDTO
+        {
+            Id = user.Id,
+            Email = user.Email ?? "",
+            FullName = user.FullName,
+            Status = user.Status.ToString(),
+            SuspendedUntil = user.SuspendedUntil,
+            SuspensionReason = user.SuspensionReason,
+            BanReason = user.BanReason,
+            BannedAt = user.BannedAt,
+            IsLockedOut = isLocked
+        };
+    }
 
     // Helper Function to map User to UserResponseDTO
     private async Task<UserResponseDTO> MapToResponseDtoAsync(User user)

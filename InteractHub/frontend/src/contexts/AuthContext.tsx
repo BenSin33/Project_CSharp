@@ -39,32 +39,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Có token → set ngay để axios interceptor dùng được
     setToken(savedToken)
 
-    // Dùng cached user ngay lập tức để tránh flash
-    const savedUser = localStorage.getItem("user")
-    if (savedUser) {
-      try { setUser(JSON.parse(savedUser)) } catch { /* ignore */ }
-    }
-
-    // Thử refresh profile từ backend (không block render)
+    // LUÔN validate token trước với backend, không tin cached user ngay
     authService.getMe()
       .then((profile) => {
         setUser(profile)
         localStorage.setItem("user", JSON.stringify(profile))
       })
       .catch((err) => {
-        // Nếu 401 → token hết hạn thật sự
+        // Nếu 401 → token hết hạn, xóa ngay
         if (err?.response?.status === 401) {
-          // Chỉ logout nếu không có cached user (chế độ offline)
-          const cached = localStorage.getItem("user")
-          if (!cached) {
-            localStorage.removeItem("token")
-            localStorage.removeItem("user")
-            setToken(null)
-            setUser(null)
-          }
-          // Nếu có cached user → vẫn giữ session, để server request thất bại tự nhiên
+          localStorage.removeItem("token")
+          localStorage.removeItem("user")
+          setToken(null)
+          setUser(null)
         }
         // Lỗi network / 500 → giữ session, dùng cached user
+        const cached = localStorage.getItem("user")
+        if (cached) {
+          try { setUser(JSON.parse(cached)) } catch { /* ignore */ }
+        }
       })
       .finally(() => {
         setIsLoading(false)

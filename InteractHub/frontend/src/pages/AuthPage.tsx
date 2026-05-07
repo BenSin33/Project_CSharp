@@ -54,6 +54,9 @@ export default function AuthPage() {
       // Dùng AuthContext.login → token được lưu vào cả localStorage VÀ React state
       // → các API call sau đó sẽ có token hợp lệ
       await login({ email: data.email, password: data.password });
+      setSuccessMsg("Đăng nhập thành công!");
+      
+      // Check user từ localStorage sau login
       const cachedUser = localStorage.getItem("user");
       let isAdmin = false;
       if (cachedUser) {
@@ -64,7 +67,8 @@ export default function AuthPage() {
           isAdmin = false;
         }
       }
-      navigate(isAdmin ? "/admin" : "/");
+      
+      navigate(isAdmin ? "/admin" : "/", { replace: true });
     } catch (err: any) {
       const msg = toFriendlyAuthError(err, "Email hoặc mật khẩu không đúng.");
       setServerError(msg);

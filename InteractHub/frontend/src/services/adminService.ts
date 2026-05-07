@@ -118,6 +118,59 @@ export interface AdminUserItem {
   location?: string
   roles?: string[]
   isLockedOut?: boolean
+  status?: string
+  suspendedUntil?: string
+  createdAt?: string
+  bannedAt?: string
+  banReason?: string
+}
+
+export interface ActivityLogItem {
+  id: string
+  adminId: string
+  adminName: string
+  adminEmail: string
+  action: string
+  actionCategory: string
+  severity: string
+  targetUserId?: string
+  targetUserName?: string
+  targetUserEmail?: string
+  targetPostId?: string
+  targetReportId?: string
+  reason?: string
+  oldValue?: string
+  newValue?: string
+  ipAddress?: string
+  createdAt: string
+  admin?: {
+    id: string
+    fullName?: string
+    name?: string
+    email?: string
+  }
+  targetUser?: {
+    id: string
+    fullName?: string
+    email?: string
+  }
+}
+
+export interface ActivityLogResponse {
+  data: ActivityLogItem[]
+  total: number
+  skip: number
+  take: number
+}
+
+export interface ActivityLogStats {
+  totalLogs: number
+  criticalLogs: number
+  warningLogs: number
+  userActionLogs: number
+  postActionLogs: number
+  reportActionLogs: number
+  actionCategory?: Record<string, number>
 }
 
 export interface UpdateReportStatusPayload {
@@ -169,7 +222,63 @@ async function getReports(skip = 0, take = 10, status?: ReportStatus | "all"): P
   const params: Record<string, unknown> = { skip, take }
   if (status && status !== "all") params.status = status
   const resp = await api.get("/api/report", { params })
-  return unwrapList<AdminReportsResponse>(resp)
+  // Backend returns ReportsListResponseDTO with shape { Reports: ReportResponseDTO[], Total, Skip, Take, ... }
+  const raw = unwrap<any>(resp) ?? resp.data
+  const dto = raw ?? {}
+  const reportsArray = Array.isArray(dto?.Reports) ? dto.Reports : []
+
+  const mapped: AdminReportsResponse = {
+    data: reportsArray.map((r: any) => ({
+      id: r.id,
+      postId: r.postId,
+      reason: r.reason,
+      reportType: r.reportType?.toString?.() ?? String(r.reportType ?? ""),
+      status: r.status?.toString?.() ?? String(r.status ?? ""),
+      adminNotes: r.adminNotes,
+      createdAt: r.createdAt,
+      reporter: r.reporterId
+        ? {
+            id: r.reporterId,
+            fullName: r.reporterName,
+            name: r.reporterName,
+            email: r.reporterEmail,
+          }
+        : r.reporter
+        ? {
+            id: r.reporter.id,
+            fullName: r.reporter.fullName ?? r.reporter.name,
+            name: r.reporter.name ?? r.reporter.fullName,
+            email: r.reporter.email,
+          }
+        : undefined,
+      post: r.postId
+        ? {
+            id: r.postId,
+            content: r.postContent,
+            author: {
+              id: r.postAuthorId,
+              fullName: r.postAuthorName,
+              name: r.postAuthorName,
+              email: undefined,
+            },
+          }
+        : r.post
+        ? {
+            id: r.post.id,
+            content: r.post.content,
+            author: r.post.author,
+          }
+        : undefined,
+    })),
+    total: dto?.Total ?? dto?.total ?? 0,
+    skip: dto?.Skip ?? dto?.skip ?? skip,
+    take: dto?.Take ?? dto?.take ?? take,
+    pendingCount: dto?.Pending ?? dto?.pending ?? undefined,
+    reviewedCount: dto?.Reviewed ?? dto?.reviewed ?? undefined,
+    resolvedCount: dto?.Resolved ?? dto?.resolved ?? undefined,
+  }
+
+  return mapped
 }
 
 async function updateReportStatus(reportId: string, payload: UpdateReportStatusPayload): Promise<boolean> {
@@ -261,6 +370,62 @@ async function updatePostStatus(postId: string, payload: UpdatePostStatusPayload
   return raw?.success ?? resp.data?.success ?? true
 }
 
+async function getActivityLogs(
+  skip = 0,
+  take = 20,
+  category?: string,
+  action?: string,
+  severity?: string
+): Promise<ActivityLogResponse> {
+  const params: Record<string, unknown> = { skip, take }
+  if (category) params.category = category
+  if (action) params.action = action
+  if (severity) params.severity = severity
+  const resp = await api.get("/api/admin/activity-logs", { params })
+  return unwrapList<ActivityLogResponse>(resp)
+}
+
+async function getActivityStats(): Promise<ActivityLogStats> {
+  const resp = await api.get("/api/admin/activity-logs/stats")
+  return unwrapList<ActivityLogStats>(resp)
+}
+
+async function getUserActivityLogs(userId: string, take = 10): Promise<ActivityLogItem[]> {
+  const resp = await api.get(`/api/admin/activity-logs/user/${userId}`, { params: { take } })
+  const raw = unwrapList<any>(resp)
+  return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
+}
+
+async function banUser(userId: string, reason: string): Promise<boolean> {
+  const resp = await api.post(`/api/user/${userId}/ban`, { reason })
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function unbanUser(userId: string): Promise<boolean> {
+  const resp = await api.post(`/api/user/${userId}/unban`)
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function suspendUser(userId: string, daysUntilExpiry: number, reason: string): Promise<boolean> {
+  const resp = await api.post(`/api/user/${userId}/suspend`, { daysUntilExpiry, reason })
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function unsuspendUser(userId: string): Promise<boolean> {
+  const resp = await api.post(`/api/user/${userId}/unsuspend`)
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
+async function deleteUserPermanently(userId: string): Promise<boolean> {
+  const resp = await api.delete(`/api/user/${userId}/permanent`)
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
 export const adminService = {
   getDashboard,
   getRecentActivities,
@@ -279,4 +444,12 @@ export const adminService = {
   deletePost,
   updatePostVisibility,
   updatePostStatus,
+  getActivityLogs,
+  getActivityStats,
+  getUserActivityLogs,
+  banUser,
+  unbanUser,
+  suspendUser,
+  unsuspendUser,
+  deleteUserPermanently,
 }

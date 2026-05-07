@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/HomePage";
 import MainLayout from "./layouts/MainLayout";
+import AdminLayout from "./layouts/AdminLayout";
 import ProfilePage from "./pages/ProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import FriendsPage from "./pages/Friends";
@@ -33,6 +34,22 @@ function App() {
     <Routes>
       <Route path="login" element={<AuthPage />} />
       <Route path="auth"  element={<AuthPage />} />
+      
+      {/* Admin Routes */}
+      <Route path="admin" element={
+        <RequireAuth>
+          <RequireAdmin>
+            <AdminLayout />
+          </RequireAdmin>
+        </RequireAuth>
+      }>
+        <Route index element={<AdminPage />} />
+        <Route path="reports" element={<AdminPage />} />
+        <Route path="users" element={<AdminPage />} />
+        <Route path="logs" element={<AdminPage />} />
+      </Route>
+
+      {/* User Routes */}
       <Route path="/" element={
         <RequireAuth>
           <MainLayout />
@@ -47,8 +64,8 @@ function App() {
         <Route path="bookmarks"   element={<BookMarkPage />} />
         <Route path="settings"    element={<SettingsPage />} />
         <Route path="search"      element={<SearchPage />} />
-        <Route path="admin/*"     element={<RequireAdmin><AdminPage /></RequireAdmin>} />
       </Route>
+      
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
