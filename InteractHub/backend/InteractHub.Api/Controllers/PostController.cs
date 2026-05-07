@@ -36,8 +36,25 @@ public class PostController : ControllerBase
         return userId;
     }
 
+    [HttpGet("trending")]
+    public async Task<IActionResult> GetTrendingPosts([FromQuery] int skip = 0, [FromQuery] int take = 6)
+    {
+        if (skip < 0 || take <= 0)
+            return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Skip must be >= 0 and Take must be > 0"));
+
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            var posts = await _postService.GetTrendingPostsAsync(skip, take, currentUserId);
+            return Ok(ApiResponse<PaginatedResponse<PostResponseDto>>.Ok(posts, "Trending posts retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Server error: " + ex.Message));
+        }
+    }
+
     [HttpGet]
-   [HttpGet]
 public async Task<IActionResult> GetAllPosts([FromQuery] int skip = 0, [FromQuery] int take = 20)
 {
     if (skip < 0 || take <= 0)
