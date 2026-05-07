@@ -36,6 +36,24 @@ public class PostController : ControllerBase
         return userId;
     }
 
+    [HttpGet("reels")]
+    public async Task<IActionResult> GetReelPosts([FromQuery] int skip = 0, [FromQuery] int take = 6)
+    {
+        if (skip < 0 || take <= 0)
+            return BadRequest(ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Skip must be >= 0 and Take must be > 0"));
+
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            var posts = await _postService.GetReelPostsAsync(skip, take, currentUserId);
+            return Ok(ApiResponse<PaginatedResponse<PostResponseDto>>.Ok(posts, "Reel posts retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<PaginatedResponse<PostResponseDto>>.Fail("Server error: " + ex.Message));
+        }
+    }
+
     [HttpGet("trending")]
     public async Task<IActionResult> GetTrendingPosts([FromQuery] int skip = 0, [FromQuery] int take = 6)
     {

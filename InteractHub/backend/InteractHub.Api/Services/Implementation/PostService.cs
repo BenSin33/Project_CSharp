@@ -269,7 +269,65 @@ public class PostService : IPostService
             await _context.SaveChangesAsync();
         }
 
+        // Parse và lưu HashTags từ content
+        if (!string.IsNullOrWhiteSpace(request.Content))
+        {
+            var parsedTags = ExtractHashtags(request.Content);
+            if (parsedTags.Any())
+            {
+                // Load lại post có navigation property
+                var postWithTags = await _context.Posts
+                    .Include(p => p.HashTags)
+                    .FirstOrDefaultAsync(p => p.Id == post.Id);
+
+                if (postWithTags != null)
+                {
+                    foreach (var tagName in parsedTags)
+                    {
+                        // Tìm hashtag đã tồn tại hoặc tạo mới
+                        var existing = await _context.HashTags
+                            .FirstOrDefaultAsync(h => h.HashTagName == tagName && h.DeletedAt == null);
+
+                        if (existing == null)
+                        {
+                            existing = new HashTag
+                            {
+                                Id = Guid.NewGuid(),
+                                HashTagName = tagName,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
+                            _context.HashTags.Add(existing);
+                            await _context.SaveChangesAsync();
+                        }
+
+                        postWithTags.HashTags.Add(existing);
+                    }
+                    await _context.SaveChangesAsync();
+                    post = postWithTags;
+                }
+            }
+        }
+
         return MapToResponseDto(post, null, false);
+    }
+
+    /// <summary>
+    /// Extract hashtags từ content (e.g. "#travel #food" → ["travel", "food"])
+    /// </summary>
+    private static List<string> ExtractHashtags(string content)
+    {
+        var matches = System.Text.RegularExpressions.Regex.Matches(
+            content,
+            @"#([a-zA-Z0-9_\u00C0-\u024F\u1E00-\u1EFF]+)",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        return matches
+            .Select(m => m.Groups[1].Value.ToLower())
+            .Where(t => t.Length <= 50)
+            .Distinct()
+            .ToList();
     }
 
     public async Task<PostResponseDto?> UpdatePostAsync(Guid id, UpdatePostDto request)
@@ -343,6 +401,51 @@ public class PostService : IPostService
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Get reel posts: posts có video, sorted by like count descending
+    /// </summary>
+    public async Task<PaginatedResponse<PostResponseDto>> GetReelPostsAsync(int skip, int take, Guid? currentUserId = null)
+    {
+        var query = _context.Posts
+            .Where(p => p.Status == Status.active && p.PostMedias.Any(m => m.MediaType == MediaType.video))
+            .Include(p => p.User)
+            .Include(p => p.PostMedias)
+            .Include(p => p.HashTags)
+            .Include(p => p.Comments).ThenInclude(c => c.User)
+            .Include(p => p.Likes).ThenInclude(l => l.User)
+            .Include(p => p.Shares)
+            .AsNoTracking();
+
+        var total = await query.CountAsync();
+        var posts = await query
+            .OrderByDescending(p => p.Likes.Count)
+            .ThenByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
+
+        var savedPostIds = new HashSet<Guid>();
+        if (currentUserId.HasValue)
+        {
+            var postIds = posts.Select(p => p.Id).ToList();
+            if (postIds.Any())
+            {
+                savedPostIds = (await _context.SavedPosts
+                    .Where(sp => sp.UserId == currentUserId.Value && postIds.Contains(sp.PostId))
+                    .Select(sp => sp.PostId)
+                    .ToListAsync()).ToHashSet();
+            }
+        }
+
+        return new PaginatedResponse<PostResponseDto>
+        {
+            Data = posts.Select(p => MapToResponseDto(p, currentUserId, savedPostIds.Contains(p.Id))).ToList(),
+            Total = total,
+            Skip = skip,
+            Take = take
+        };
     }
 
     /// <summary>
