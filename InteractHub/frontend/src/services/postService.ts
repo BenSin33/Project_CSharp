@@ -269,6 +269,31 @@ export async function getPostsByUser(userId: string, skip = 0, take = 20): Promi
  * GET /api/post/trending?skip=&take=
  * Trending posts: sorted by likes, with images only
  */
+/**
+ * GET /api/post/reels?skip=&take=
+ * Reel posts: video posts sorted by likes
+ */
+export async function getReelPosts(skip = 0, take = 6): Promise<PaginatedResponse<PostDto>> {
+  const resp = await api.get("/api/post/reels", { params: { skip, take } })
+  const outer = resp?.data
+  const inner = outer?.data
+  if (!inner) return { data: [], total: 0, skip, take, totalPages: 0, hasNextPage: false }
+  if (!Array.isArray(inner) && Array.isArray(inner?.data)) {
+    return {
+      data: inner.data.map(mapFromBackend),
+      total: inner.total ?? inner.data.length,
+      skip: inner.skip ?? skip,
+      take: inner.take ?? take,
+      totalPages: inner.totalPages ?? 1,
+      hasNextPage: inner.hasNextPage ?? false,
+    }
+  }
+  if (Array.isArray(inner)) {
+    return { data: inner.map(mapFromBackend), total: inner.length, skip: 0, take: inner.length, totalPages: 1, hasNextPage: false }
+  }
+  return { data: [], total: 0, skip, take, totalPages: 0, hasNextPage: false }
+}
+
 export async function getTrendingPosts(skip = 0, take = 6): Promise<PaginatedResponse<PostDto>> {
   const resp = await api.get("/api/post/trending", { params: { skip, take } })
   const outer = resp?.data
