@@ -276,7 +276,15 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
         </div>
       </div>
 
-      {postContent && <div className="px-4 pb-3 text-sm text-gray-800 leading-relaxed">{postContent}</div>}
+      {postContent && (
+        <div className="px-4 pb-3 text-sm text-gray-800 leading-relaxed">
+          {postContent.split(/(\s+)/).map((word, i) =>
+            /^#[^\s#]+$/.test(word)
+              ? <strong key={i} className="font-bold text-indigo-600">{word}</strong>
+              : <span key={i}>{word}</span>
+          )}
+        </div>
+      )}
       {post.imageUrl && <img src={post.imageUrl} alt="post" className="w-full object-cover max-h-96"/>}
 
       <div className="flex items-center justify-between px-4 py-2 text-xs text-gray-400 border-t border-gray-50">

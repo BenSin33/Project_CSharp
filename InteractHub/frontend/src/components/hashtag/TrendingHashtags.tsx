@@ -1,4 +1,3 @@
-import { MOCK_HASHTAGS } from "../../constants/mock";
 import { formatCount } from "../../utils/format";
 import type { HashtagItem } from "../../types";
 
@@ -15,12 +14,14 @@ interface TrendingHashtagsProps {
   hashtags?:        HashtagItem[];
   onHashtagClick?:  (tag: string) => void;
   isLoading?:       boolean;
+  emptyMessage?:    string;
 }
 
 export default function TrendingHashtags({
-  hashtags = MOCK_HASHTAGS,
+  hashtags = [],
   onHashtagClick,
   isLoading = false,
+  emptyMessage = "Hiện chưa có hashtags nào.",
 }: TrendingHashtagsProps) {
   return (
     <section className="bg-white rounded-xl border border-gray-200 px-4 py-4 w-full max-w-[280px]">
@@ -28,6 +29,8 @@ export default function TrendingHashtags({
       <ul className="divide-y divide-gray-100">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => <li key={i}><HashtagSkeleton /></li>)
+          : hashtags.length === 0
+          ? <li className="py-3 text-sm text-gray-400">{emptyMessage}</li>
           : hashtags.map((item) => (
               <li key={item.id}>
                 <button onClick={() => onHashtagClick?.(item.tag)} className="w-full text-left py-3 group">

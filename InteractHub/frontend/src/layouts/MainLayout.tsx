@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/layout/Navbar";
@@ -12,12 +12,38 @@ import { useNotifications } from "../hooks/useNotification";
 import { useAuth } from "../contexts/AuthContext";
 import { createPost } from "../services/postService";
 import api from "../services/api";
+import { getAllHashtags, type HashTagDto } from "../services/HashtagService";
+import type { HashtagItem } from "../types";
 
 function MainLayout() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const [showPostModal, setShowPostModal] = useState(false);
     const { notifications, isOpen: showNotif, setIsOpen: setShowNotif, unreadCount, markAllRead } = useNotifications();
+
+    // Trending hashtags state
+    const [trendingHashtags, setTrendingHashtags] = useState<HashtagItem[]>([]);
+    const [hashtagsLoading, setHashtagsLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const data: HashTagDto[] = await getAllHashtags();
+                if (!cancelled) {
+                    setTrendingHashtags(
+                        data.map((h) => ({ id: h.id, tag: h.name.replace(/^#/, ""), postCount: h.postCount }))
+                    );
+                }
+            } catch {
+                if (!cancelled) setTrendingHashtags([]);
+            } finally {
+                if (!cancelled) setHashtagsLoading(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
+
     const handleLogout = () => {
         logout();
         navigate("/login");
@@ -69,7 +95,11 @@ function MainLayout() {
                 <aside className="sticky top-20"><Sidebar currentUser={user ?? undefined} /></aside>
                 <main className="flex flex-col gap-4 min-w-0"><Outlet /></main>
                 <aside className="sticky top-20 flex flex-col gap-4">
-                    <TrendingHashtags />
+                    <TrendingHashtags
+                        hashtags={trendingHashtags}
+                        isLoading={hashtagsLoading}
+                        onHashtagClick={(tag) => navigate(`/search?q=%23${tag}`)}
+                    />
                     <SuggestionPanel />
                 </aside>
             </div>
