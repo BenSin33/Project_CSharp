@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { MOCK_STORIES } from "../../constants/mock";
 import type { Story } from "../../types";
 
 interface StoryBarProps {
@@ -7,6 +6,7 @@ interface StoryBarProps {
   currentUserAvatarUrl?:  string;
   onAddStory?:            () => void;
   onViewStory?:           (story: Story) => void;
+  emptyMessage?:          string;
 }
 
 const ChevronIcon = ({ dir }: { dir: "left" | "right" }) => (
@@ -83,7 +83,7 @@ function StoryItem({ story, onClick }: { story: Story; onClick?: (s: Story) => v
   );
 }
 
-export default function StoryBar({ stories = MOCK_STORIES, currentUserAvatarUrl, onAddStory, onViewStory }: StoryBarProps) {
+export default function StoryBar({ stories = [], currentUserAvatarUrl, onAddStory, onViewStory, emptyMessage = "Hiện chưa có dữ liệu story." }: StoryBarProps) {
   const scrollRef                   = useRef<HTMLDivElement>(null);
   const [canScrollLeft,  setLeft]   = useState(false);
   const [canScrollRight, setRight]  = useState(true);
@@ -115,7 +115,10 @@ export default function StoryBar({ stories = MOCK_STORIES, currentUserAvatarUrl,
           style={{ scrollbarWidth: "none", msOverflowStyle: "none", padding: "4px 24px 4px" }}>
           <style>{`div::-webkit-scrollbar { display: none; }`}</style>
           <AddStoryItem avatarUrl={currentUserAvatarUrl} onClick={onAddStory} />
-          {stories.map((story) => <StoryItem key={story.id} story={story} onClick={onViewStory} />)}
+          {stories.length === 0
+            ? <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", color: "#9ca3af", display: "flex", alignItems: "center", paddingLeft: "8px" }}>{emptyMessage}</span>
+            : stories.map((story) => <StoryItem key={story.id} story={story} onClick={onViewStory} />)
+          }
         </div>
       </div>
     </>

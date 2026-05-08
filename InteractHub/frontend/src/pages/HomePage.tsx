@@ -12,7 +12,9 @@ import { toggleLike, LikeType } from "../services/likeService";
 import { toggleSavePost } from "../services/savedPostService";
 import { shareService } from "../services/shareService";
 import { useAuth } from "../contexts/AuthContext";
-import { MOCK_STORIES } from "../constants/mock";
+import { storyService, type StoryResponseDTO } from "../services/storyService";
+import { userService } from "../services/userService";
+import type { Story } from "../types";
 
 function toUiPost(p: PostDto): Post & { _topComments: CommentItem[] } {
   return {
@@ -33,16 +35,52 @@ function toUiPost(p: PostDto): Post & { _topComments: CommentItem[] } {
 type UiPost = Post & { _topComments: CommentItem[] }
 
 function Home() {
-  const { isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading, user } = useAuth();
   const [posts, setPosts]     = useState<UiPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
 
-  // Story viewer state
+  // Story state
+  const [stories, setStories]         = useState<Story[]>([]);
   const [storyViewerOpen,  setStoryViewerOpen]  = useState(false);
   const [storyStartIndex,  setStoryStartIndex]  = useState(0);
-  // Create story modal
   const [createStoryOpen, setCreateStoryOpen]   = useState(false);
+
+  // Fetch stories từ API
+  const fetchStories = useCallback(async () => {
+    try {
+      const raw: StoryResponseDTO[] = await storyService.getActiveStories();
+      if (!raw || raw.length === 0) {
+        setStories([]);
+        return;
+      }
+      // Map StoryResponseDTO → Story (UI type), cần lấy thêm thông tin user
+      const mapped: Story[] = await Promise.all(
+        raw.map(async (s): Promise<Story> => {
+          let username = s.userId;
+          let avatarUrl: string | undefined;
+          try {
+            const profile = await userService.getProfile(s.userId);
+            username = profile.name;
+            avatarUrl = profile.avatarUrl;
+          } catch { /* dùng userId làm username nếu không lấy được */ }
+          return {
+            id: s.id,
+            userId: s.userId,
+            username,
+            avatarUrl,
+            imageUrl: s.mediaUrl,
+            viewed: false,
+            active: true,
+            expiresAt: s.expireAt,
+          };
+        })
+      );
+      setStories(mapped);
+    } catch {
+      setStories([]);
+    }
+  }, []);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -69,8 +107,11 @@ function Home() {
 
   // Chờ auth restore xong mới fetch
   useEffect(() => {
-    if (!authLoading) fetchPosts();
-  }, [authLoading, fetchPosts]);
+    if (!authLoading) {
+      fetchPosts();
+      fetchStories();
+    }
+  }, [authLoading, fetchPosts, fetchStories]);
 
   const handleLike = useCallback(async (postId: string) => {
     try {
@@ -137,18 +178,20 @@ function Home() {
   return (
     <div>
       <StoryBar
-        stories={MOCK_STORIES}
+        stories={stories}
+        currentUserAvatarUrl={user?.avatarUrl}
         onAddStory={() => setCreateStoryOpen(true)}
         onViewStory={(s) => {
-          const idx = MOCK_STORIES.findIndex(ms => ms.id === s.id);
+          const idx = stories.findIndex(st => st.id === s.id);
           setStoryStartIndex(idx >= 0 ? idx : 0);
           setStoryViewerOpen(true);
         }}
+        emptyMessage="Hiện chưa có dữ liệu story."
       />
 
-      {storyViewerOpen && (
+      {storyViewerOpen && stories.length > 0 && (
         <StoryViewer
-          stories={MOCK_STORIES}
+          stories={stories}
           startIndex={storyStartIndex}
           onClose={() => setStoryViewerOpen(false)}
         />
