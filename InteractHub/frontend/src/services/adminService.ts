@@ -3,28 +3,26 @@ import api, { unwrap } from "./api"
 export type ReportStatus = "Pending" | "Reviewed" | "Resolved"
 
 export interface DashboardStats {
-  userStats?: {
-    totalUsers?: number
-    newUsersThisMonth?: number
-    activeUsersThisMonth?: number
-    lockedUsers?: number
-  }
-  postStats?: {
-    totalPosts?: number
-    newPostsThisMonth?: number
-    deletedPostsThisMonth?: number
-    hiddenPostsThisMonth?: number
-  }
-  reportStats?: {
-    pendingReports?: number
-    reviewedReports?: number
-    resolvedReports?: number
-  }
-  engagementStats?: {
-    totalComments?: number
-    totalLikes?: number
-    totalShares?: number
-  }
+  totalUsers?: number
+  newUsersThisMonth?: number
+  activeUsersThisMonth?: number
+  lockedUsers?: number
+
+  totalPosts?: number
+  newPostsThisMonth?: number
+  deletedPosts?: number
+  hiddenPosts?: number
+
+  pendingReports?: number
+  reviewedReports?: number
+  resolvedReports?: number
+  totalReports?: number
+
+  totalComments?: number
+  totalLikes?: number
+  totalShares?: number
+
+  generatedAt?: string
 }
 
 export interface RecentActivity {
@@ -45,7 +43,7 @@ export interface PendingAction {
 
 export interface AdminDashboard {
   stats?: DashboardStats
-  recentActivities?: RecentActivity[]
+  recentActivity?: RecentActivity[]
   pendingActions?: PendingAction[]
 }
 
@@ -225,15 +223,20 @@ async function getReports(skip = 0, take = 10, status?: ReportStatus | "all"): P
   // Backend returns ReportsListResponseDTO with shape { Reports: ReportResponseDTO[], Total, Skip, Take, ... }
   const raw = unwrap<any>(resp) ?? resp.data
   const dto = raw ?? {}
-  const reportsArray = Array.isArray(dto?.Reports) ? dto.Reports : []
+  const reportsArray = Array.isArray(dto?.Reports) ? dto.Reports : (Array.isArray(dto?.reports) ? dto.reports : [])
 
   const mapped: AdminReportsResponse = {
-    data: reportsArray.map((r: any) => ({
+    data: reportsArray.map((r: any) => {
+      const statusMapRev: Record<string, string> = { "0": "Pending", "1": "Reviewed", "2": "Resolved", "Pending": "Pending", "Reviewed": "Reviewed", "Resolved": "Resolved" }
+      const statusStr = r.status?.toString?.() ?? String(r.status ?? "")
+      const mappedStatus = statusMapRev[statusStr] ?? statusStr
+
+      return {
       id: r.id,
       postId: r.postId,
       reason: r.reason,
       reportType: r.reportType?.toString?.() ?? String(r.reportType ?? ""),
-      status: r.status?.toString?.() ?? String(r.status ?? ""),
+      status: mappedStatus,
       adminNotes: r.adminNotes,
       createdAt: r.createdAt,
       reporter: r.reporterId
@@ -266,10 +269,10 @@ async function getReports(skip = 0, take = 10, status?: ReportStatus | "all"): P
         ? {
             id: r.post.id,
             content: r.post.content,
-            author: r.post.author,
           }
         : undefined,
-    })),
+      }
+    }),
     total: dto?.Total ?? dto?.total ?? 0,
     skip: dto?.Skip ?? dto?.skip ?? skip,
     take: dto?.Take ?? dto?.take ?? take,
@@ -282,8 +285,10 @@ async function getReports(skip = 0, take = 10, status?: ReportStatus | "all"): P
 }
 
 async function updateReportStatus(reportId: string, payload: UpdateReportStatusPayload): Promise<boolean> {
+  const statusMap: Record<string, number> = { "Pending": 0, "Reviewed": 1, "Resolved": 2 }
+  const statusVal = typeof payload.status === "string" ? statusMap[payload.status] ?? 0 : payload.status
   const resp = await api.put(`/api/report/${reportId}/status`, {
-    status: payload.status,
+    status: statusVal,
     adminNotes: payload.adminNotes,
   })
   const raw = unwrap<any>(resp)

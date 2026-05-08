@@ -57,6 +57,7 @@ function PostMenu({ postId, isOwner, onClose, onDelete, onEdit }: {
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [reportReason, setReportReason] = useState("");
+  const [reportType, setReportType] = useState(3);
   const [showReport, setShowReport] = useState(false);
   const [reportSent, setReportSent] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
@@ -73,7 +74,7 @@ function PostMenu({ postId, isOwner, onClose, onDelete, onEdit }: {
     if (!reportReason.trim()) return;
     setReportLoading(true);
     try {
-      await api.post("/api/post/report", { postId, reason: reportReason, reportType: 3 });
+      await api.post("/api/post/report", { postId, reason: reportReason, reportType });
       setReportSent(true);
       setTimeout(onClose, 1500);
     } catch {
@@ -100,10 +101,20 @@ function PostMenu({ postId, isOwner, onClose, onDelete, onEdit }: {
             <p className="text-sm text-green-600 font-medium">✅ Đã báo cáo thành công!</p>
           ) : (
             <>
-              <p className="text-xs text-gray-600 mb-2 font-medium">Lý do báo cáo:</p>
+              <p className="text-xs text-gray-600 mb-1 font-medium">Loại báo cáo:</p>
+              <select 
+                className="w-full border border-gray-200 rounded-lg text-xs px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-200 mb-2"
+                value={reportType} onChange={e => setReportType(Number(e.target.value))}
+              >
+                <option value={0}>Spam</option>
+                <option value={1}>Nội dung không hợp lệ</option>
+                <option value={2}>Quấy rối / Bạo lực</option>
+                <option value={3}>Khác</option>
+              </select>
+              <p className="text-xs text-gray-600 mb-1 font-medium">Lý do báo cáo:</p>
               <textarea
                 className="w-full border border-gray-200 rounded-lg text-xs px-2 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-red-200"
-                rows={3} placeholder="Nhập lý do..."
+                rows={3} placeholder="Nhập lý do chi tiết..."
                 value={reportReason} onChange={e => setReportReason(e.target.value)}
               />
               <div className="flex gap-2 mt-2">

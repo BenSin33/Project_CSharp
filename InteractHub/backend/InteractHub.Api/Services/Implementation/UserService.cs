@@ -243,8 +243,10 @@ public class UserService : IUserService
             DateOfBirth = user.DateOfBirth,
             Gender = user.Gender.ToString(),
             Roles = roles,
-            IsLockedOut = isLocked
-
+            IsLockedOut = isLocked,
+            Status = user.Status.ToString(),
+            SuspendedUntil = user.SuspendedUntil,
+            BannedAt = user.BannedAt
         };
     }
 
