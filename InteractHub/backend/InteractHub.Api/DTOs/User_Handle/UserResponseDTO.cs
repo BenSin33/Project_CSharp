@@ -13,5 +13,8 @@ namespace InteractHub.Api.DTOs.User_Handle
         public string Gender {get;set;} = null!;
         public IList<string> Roles {get;set;} = new List<string>();
         public bool IsLockedOut {get;set;}  // Status of the user account
+        public string Status { get; set; } = "Active";
+        public DateTime? SuspendedUntil { get; set; }
+        public DateTime? BannedAt { get; set; }
     }
 }

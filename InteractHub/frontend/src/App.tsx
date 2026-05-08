@@ -12,7 +12,11 @@ import SettingsPage from "./pages/Settings";
 import AuthPage from "./pages/AuthPage";
 import SearchPage from "./pages/SearchPage";
 import { useAuth } from "./contexts/AuthContext";
-import AdminPage from "./pages/AdminPage";
+import DashboardPage from "./pages/admin/DashboardPage";
+import ReportManagementPage from "./pages/admin/ReportManagementPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
+import ContentModerationPage from "./pages/admin/ContentModerationPage";
+import SettingsLogsPage from "./pages/admin/SettingsLogsPage";
 
 // Guard route: chỉ cho vào nếu đã login
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -43,10 +47,11 @@ function App() {
           </RequireAdmin>
         </RequireAuth>
       }>
-        <Route index element={<AdminPage />} />
-        <Route path="reports" element={<AdminPage />} />
-        <Route path="users" element={<AdminPage />} />
-        <Route path="logs" element={<AdminPage />} />
+        <Route index element={<DashboardPage />} />
+        <Route path="reports" element={<ReportManagementPage />} />
+        <Route path="users" element={<UserManagementPage />} />
+        <Route path="content" element={<ContentModerationPage />} />
+        <Route path="logs" element={<SettingsLogsPage />} />
       </Route>
 
       {/* User Routes */}
