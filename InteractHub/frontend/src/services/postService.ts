@@ -214,7 +214,7 @@ export interface CreatePostPayload {
   userId: string
   content?: string
   visibility?: number   // 0=Public, 1=Friends, 2=Private
-  mediaItems?: Array<{ url: string; mediaType?: string }>
+  mediaItems?: Array<{ url: string; mediaType?: number }>
 }
 
 export async function createPost(payload: CreatePostPayload): Promise<PostDto> {

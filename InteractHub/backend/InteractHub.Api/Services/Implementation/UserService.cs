@@ -245,6 +245,7 @@ public class UserService : IUserService
             Roles = roles,
             IsLockedOut = isLocked,
             Status = user.Status.ToString(),
+            CreatedAt = user.CreatedAt,
             SuspendedUntil = user.SuspendedUntil,
             BannedAt = user.BannedAt
         };

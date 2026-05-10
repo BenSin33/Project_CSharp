@@ -17,6 +17,7 @@ export default function ReportManagementPage() {
   const [reports, setReports] = useState<AdminReportItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"Pending" | "Reviewed" | "Resolved" | "All">("All")
+  const [globalStats, setGlobalStats] = useState({ pending: 0, reviewed: 0, resolved: 0, total: 0 })
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const loadData = async () => {
@@ -24,6 +25,12 @@ export default function ReportManagementPage() {
     try {
       const resp = await adminService.getReports(0, 50, "all")
       setReports(resp.data || [])
+      setGlobalStats({
+        pending: resp.pendingCount ?? 0,
+        reviewed: resp.reviewedCount ?? 0,
+        resolved: resp.resolvedCount ?? 0,
+        total: resp.total ?? 0
+      })
     } catch (error) {
       console.error("Failed to load reports:", error)
     } finally {
@@ -41,14 +48,17 @@ export default function ReportManagementPage() {
   }, [reports, filter])
 
   const stats = useMemo(() => {
-    const pending = reports.filter(r => (r.status || "Pending") === "Pending").length
-    const reviewed = reports.filter(r => r.status === "Reviewed").length
-    const resolved = reports.filter(r => r.status === "Resolved").length
-    // We mock High Priority as a percentage or specific type since backend doesn't have it explicitly
+    // High Priority as a percentage or specific type since backend doesn't have it explicitly
     const highPriority = reports.filter(r => (r.reportType || "").toLowerCase().includes("spam") || (r.reason || "").toLowerCase().includes("harassment")).length
     
-    return { pending, reviewed, resolved, highPriority, all: reports.length }
-  }, [reports])
+    return { 
+      pending: globalStats.pending, 
+      reviewed: globalStats.reviewed, 
+      resolved: globalStats.resolved, 
+      highPriority, 
+      all: globalStats.total 
+    }
+  }, [reports, globalStats])
 
   const handleApproveRemove = async (reportId: string, postId?: string) => {
     setActionLoading(reportId)

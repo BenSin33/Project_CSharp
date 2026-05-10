@@ -4,6 +4,7 @@ using InteractHub.Api.Services.Interface;
 using InteractHub.Api.DTOs.Post_Interactions;
 using InteractHub.Api.Models;
 using System.Security.Claims;
+using InteractHub.Api.DTOs.Common;
 
 namespace InteractHub.Api.Controllers;
 
@@ -31,6 +32,13 @@ public class LikeController : ControllerBase
         }
         var summary = await _likeService.GetLikeSummaryAsync(postId, currentUserId);
         return Ok(ApiResponse<LikeSummaryDTO>.Ok(summary));
+    }
+
+    [HttpGet("post/{postId}/users")]
+    public async Task<IActionResult> GetPostLikers(Guid postId, [FromQuery] int skip = 0, [FromQuery] int take = 50)
+    {
+        var users = await _likeService.GetLikersAsync(postId, skip, take);
+        return Ok(ApiResponse<List<LikeDetailDto>>.Ok(users, "Likers retrieved successfully"));
     }
 
     [HttpPost("toggle")]

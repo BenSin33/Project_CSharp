@@ -112,6 +112,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IPostService, PostService>(); // BỔ SUNG DÒNG NÀY
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IFileUploadService, FileUploadService>(); 
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
@@ -147,6 +148,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 // KÍCH HOẠT CORS (Lưu ý: Bắt buộc phải đặt TRƯỚC UseAuthentication)
 app.UseCors("ReactCorsPolicy");

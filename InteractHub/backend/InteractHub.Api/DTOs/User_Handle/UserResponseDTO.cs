@@ -14,6 +14,7 @@ namespace InteractHub.Api.DTOs.User_Handle
         public IList<string> Roles {get;set;} = new List<string>();
         public bool IsLockedOut {get;set;}  // Status of the user account
         public string Status { get; set; } = "Active";
+        public DateTime CreatedAt { get; set; }
         public DateTime? SuspendedUntil { get; set; }
         public DateTime? BannedAt { get; set; }
     }

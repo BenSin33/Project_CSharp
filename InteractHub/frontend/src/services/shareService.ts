@@ -16,4 +16,9 @@ export async function sharePost(payload: CreateShareDTO): Promise<boolean> {
   return unwrap<boolean>(resp) ?? false
 }
 
-export const shareService = { getShareCount, sharePost }
+export async function getPostSharers(postId: string, skip = 0, take = 50) {
+  const resp = await api.get(`/api/share/post/${postId}/users`, { params: { skip, take } });
+  return unwrap<any[]>(resp) ?? [];
+}
+
+export const shareService = { getShareCount, sharePost, getPostSharers }

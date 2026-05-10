@@ -82,7 +82,7 @@ public class AuthController : ControllerBase
         }
 
         var roles = await _userManager.GetRolesAsync(user);
-        var profile = new { user.Id, user.Email, user.FullName, user.AvatarUrl, roles };
+        var profile = new { user.Id, user.Email, user.FullName, user.AvatarUrl, user.Bio, user.Location, user.CreatedAt, roles };
         return Ok(ApiResponse<object>.Ok(profile, "Profile retrieved successfully"));
     }
 

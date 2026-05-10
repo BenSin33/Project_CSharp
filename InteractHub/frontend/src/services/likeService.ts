@@ -3,7 +3,7 @@ import api, { unwrap } from "./api";
 export interface LikeSummaryDTO {
   totalLikes: number;
   reactionCounts: Record<string, number>;
-  currentUserReaction?: number | null; // enum LikeType: 0=LIKE,1=LOVE,2=HAHA,3=WOW,4=SAD,5=ANGRY
+  currentUserReaction?: number | null; // enum LikeType: 0=LIKE, 1=LOVE, 2=HAHA, 3=WOW, 4=SAD, 5=ANGRY
 }
 
 // Enum khớp với LikeType backend
@@ -35,3 +35,10 @@ export async function toggleLike(payload: ToggleLikeDTO) {
   });
   return unwrap<boolean>(resp);
 }
+
+export async function getPostLikers(postId: string, skip = 0, take = 50) {
+  const resp = await api.get(`/api/like/post/${postId}/users`, { params: { skip, take } });
+  return unwrap<any[]>(resp) ?? [];
+}
+
+export const likeService = { getLikeSummary, toggleLike, getPostLikers };

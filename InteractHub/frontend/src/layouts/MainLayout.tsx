@@ -30,10 +30,10 @@ function MainLayout() {
         if (image) {
             const form = new FormData();
             form.append("file", image);
-            // KHÔNG set Content-Type thủ công — axios tự thêm boundary vào multipart/form-data
+            // Axios sẽ tự động phát hiện FormData và set Content-Type phù hợp (multipart/form-data)
             const uploadResp = await api.post("/api/media/upload", form);
-            // MediaController trả { success, message, url } — không có .data wrapper
-            imageUrl = uploadResp.data?.url ?? uploadResp.data?.data?.url;
+            // MediaController trả về ApiResponse<string> nên URL nằm ở uploadResp.data.data
+            imageUrl = uploadResp.data?.data;
             if (!imageUrl) {
                 console.error("[handlePost] Upload failed, response:", uploadResp.data);
                 throw new Error("Tải ảnh lên thất bại");
@@ -44,7 +44,7 @@ function MainLayout() {
             userId: user.id,
             content: content,
             visibility: 0,
-            mediaItems: imageUrl ? [{ url: imageUrl, mediaType: "image" }] : [],
+            mediaItems: imageUrl ? [{ url: imageUrl, mediaType: 0 }] : [],
         });
 
         window.dispatchEvent(new Event("post-created"));

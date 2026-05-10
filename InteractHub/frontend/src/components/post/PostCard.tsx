@@ -5,6 +5,10 @@ import type { CommentItem } from "../../services/commentService";
 import Avatar from "../common/Avatar";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
+import InteractionModal from "./InteractionModal";
+import ReactionPicker, { REACTION_OPTIONS } from "./ReactionPicker";
+import { likeService, LikeType } from "../../services/likeService";
+import { shareService } from "../../services/shareService";
 
 const HeartIcon = ({ filled }: { filled?: boolean }) => (
   <svg width="20" height="20" viewBox="0 0 24 24"
@@ -185,7 +189,7 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
   const [postContent, setPostContent] = useState(post.content);
 
   const [commentText, setCommentText]       = useState("");
-  const [loadingLike, setLoadingLike]       = useState(false);
+  const [loadingLike]                       = useState(false);
   const [loadingComment, setLoadingComment] = useState(false);
   const [loadingSave, setLoadingSave]       = useState(false);
   const [loadingShare, setLoadingShare]     = useState(false);
@@ -199,6 +203,22 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
 
   const [showMenu, setShowMenu]         = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // Interaction Modal state
+  const [interactionModal, setInteractionModal] = useState<{ isOpen: boolean; title: string; users: any[]; loading: boolean }>({
+    isOpen: false,
+    title: "",
+    users: [],
+    loading: false
+  });
+
+  // Reaction Picker state
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const reactionTimeoutRef = useRef<any>(null);
+  const [currentReaction, setCurrentReaction] = useState<LikeType | null>(
+    post.likeSummary?.currentUserReaction !== null && post.likeSummary?.currentUserReaction !== undefined
+    ? (post.likeSummary.currentUserReaction as LikeType) : (post.isLiked ? LikeType.LIKE : null)
+  );
 
   const isOwner = !!(currentUser?.id && post.author?.id && String(currentUser.id) === String(post.author.id));
 
@@ -215,13 +235,52 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
     }
   };
 
-  const handleLike = async () => {
-    const next = !liked; setLiked(next); setLikes(c => next ? c + 1 : c - 1);
+  const handleLike = async (type: LikeType = LikeType.LIKE) => {
+    // If clicking same reaction, toggle off (unlike)
+    const isRemoving = liked && currentReaction === type;
+    
+    const prevLiked = liked;
+    const prevReaction = currentReaction;
+    const prevLikes = likes;
+
+    setLiked(!isRemoving);
+    setCurrentReaction(isRemoving ? null : type);
+    setLikes(c => isRemoving ? c - 1 : (prevLiked ? c : c + 1));
+    setShowReactionPicker(false);
+
     if (!onLike) return;
-    setLoadingLike(true);
-    try { await onLike(post.id); }
-    catch { setLiked(!next); setLikes(c => next ? c - 1 : c + 1); showError("Like failed"); }
-    finally { setLoadingLike(false); }
+    try {
+      await likeService.toggleLike({ postId: post.id, type });
+    } catch {
+      setLiked(prevLiked);
+      setCurrentReaction(prevReaction);
+      setLikes(prevLikes);
+      showError("Action failed");
+    }
+  };
+
+  const showLikers = async () => {
+    setInteractionModal({ isOpen: true, title: "Likes", users: [], loading: true });
+    try {
+      const data = await likeService.getPostLikers(post.id);
+      // Map from LikeDetailDto[] to UserBasicDto[]
+      const users = data.map((item: any) => item.user).filter((u: any) => u !== null);
+      setInteractionModal(prev => ({ ...prev, users, loading: false }));
+    } catch {
+      setInteractionModal(prev => ({ ...prev, loading: false }));
+      showError("Could not load likers");
+    }
+  };
+
+  const showSharers = async () => {
+    setInteractionModal({ isOpen: true, title: "Shares", users: [], loading: true });
+    try {
+      const users = await shareService.getPostSharers(post.id);
+      setInteractionModal(prev => ({ ...prev, users, loading: false }));
+    } catch {
+      setInteractionModal(prev => ({ ...prev, loading: false }));
+      showError("Could not load sharers");
+    }
   };
 
   const handleSave = async () => {
@@ -291,16 +350,61 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
       {post.imageUrl && <img src={post.imageUrl} alt="post" className="w-full object-cover max-h-96"/>}
 
       <div className="flex items-center justify-between px-4 py-2 text-xs text-gray-400 border-t border-gray-50">
-        <span>{likes > 0 ? `${likes} like${likes !== 1 ? "s" : ""}` : ""}</span>
-        <span>{shares > 0 ? `${shares} share${shares !== 1 ? "s" : ""}` : ""}</span>
+        <button 
+          onClick={showLikers}
+          className="hover:underline hover:text-blue-500 transition-colors"
+        >
+          {likes > 0 ? `${likes} like${likes !== 1 ? "s" : ""}` : ""}
+        </button>
+        <button 
+          onClick={showSharers}
+          className="hover:underline hover:text-blue-500 transition-colors"
+        >
+          {shares > 0 ? `${shares} share${shares !== 1 ? "s" : ""}` : ""}
+        </button>
       </div>
 
       <div className="flex items-center justify-between px-2 py-1 border-t border-gray-100">
         <div className="flex">
-          <button onClick={handleLike} disabled={loadingLike} aria-label="like"
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${liked ? "text-red-500" : "text-gray-500 hover:text-red-400 hover:bg-red-50"}`}>
-            <HeartIcon filled={liked}/><span className="hidden sm:inline">{liked ? "Liked" : "Like"}</span>
-          </button>
+          <div 
+            className="relative"
+            onMouseEnter={() => {
+              reactionTimeoutRef.current = setTimeout(() => setShowReactionPicker(true), 500);
+            }}
+            onMouseLeave={() => {
+              if (reactionTimeoutRef.current) clearTimeout(reactionTimeoutRef.current);
+              // Small delay before hiding to allow moving mouse to picker
+              setTimeout(() => {
+                if (!document.querySelector(".reaction-picker:hover")) {
+                  setShowReactionPicker(false);
+                }
+              }, 300);
+            }}
+          >
+            <ReactionPicker 
+              isVisible={showReactionPicker} 
+              onSelect={handleLike} 
+            />
+            <button 
+              onClick={() => handleLike(currentReaction ?? LikeType.LIKE)} 
+              disabled={loadingLike} 
+              aria-label="like"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all transform active:scale-90 ${
+                liked 
+                  ? REACTION_OPTIONS[currentReaction ?? 0].color 
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              {liked ? (
+                <span className="text-lg">{REACTION_OPTIONS[currentReaction ?? 0].emoji}</span>
+              ) : (
+                <HeartIcon />
+              )}
+              <span className="hidden sm:inline">
+                {liked ? REACTION_OPTIONS[currentReaction ?? 0].label : "Like"}
+              </span>
+            </button>
+          </div>
           <button onClick={handleToggleComments} aria-label="comment"
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
             <CommentIcon/><span className="hidden sm:inline">Comment</span>
@@ -365,6 +469,14 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
         <EditPostModal postId={post.id} initialContent={postContent} onClose={() => setShowEditModal(false)}
           onSaved={newContent => { setPostContent(newContent); onPostUpdated?.(post.id, newContent); }} />
       )}
+
+      <InteractionModal 
+        isOpen={interactionModal.isOpen}
+        title={interactionModal.title}
+        users={interactionModal.users}
+        loading={interactionModal.loading}
+        onClose={() => setInteractionModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </article>
   );
 }

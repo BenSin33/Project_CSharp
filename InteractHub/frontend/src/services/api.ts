@@ -4,7 +4,6 @@ const DEFAULT_BASE = ""
 
 const api = axios.create({
   baseURL: DEFAULT_BASE,
-  headers: { "Content-Type": "application/json" },
   withCredentials: false,
   timeout: 15_000,
 })

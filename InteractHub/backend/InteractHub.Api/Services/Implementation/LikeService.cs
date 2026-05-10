@@ -1,29 +1,51 @@
 using InteractHub.Api.Models;
 using InteractHub.Api.Repositories;
 using InteractHub.Api.DTOs.Post_Interactions;
+using InteractHub.Api.DTOs.Common;
 using InteractHub.Api.Services.Interface;
+using InteractHub.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace InteractHub.Api.Services.Implementation;
 public class LikeService : ILikeService
 {
     private readonly IGenericRepository<Like> _likeRepo;
     private readonly IGenericRepository<Post> _postRepo;
+    private readonly ApplicationDbContext _context;
 
-    public LikeService(IGenericRepository<Like> likeRepo, IGenericRepository<Post> postRepo)
+    public LikeService(IGenericRepository<Like> likeRepo, IGenericRepository<Post> postRepo, ApplicationDbContext context)
     {
         _likeRepo = likeRepo;
         _postRepo = postRepo;
+        _context = context;
     }
 
     public async Task<LikeSummaryDTO> GetLikeSummaryAsync(Guid postId, Guid? currentUserId = null)
     {
-        var allLikes = await _likeRepo.GetAllAsync();
-        var postLikes = allLikes.Where(l => l.PostId == postId).ToList();
+        var postLikes = await _context.Likes
+            .Where(l => l.PostId == postId)
+            .Include(l => l.User)
+            .OrderByDescending(l => l.CreatedAt)
+            .ToListAsync();
 
         var summary = new LikeSummaryDTO
         {
             TotalLikes = postLikes.Count,
-            ReactionCounts = postLikes.GroupBy(l => l.Type).ToDictionary(g => g.Key.ToString(), g => g.Count())
+            ReactionCounts = postLikes.GroupBy(l => l.Type).ToDictionary(g => g.Key.ToString(), g => g.Count()),
+            TopLikes = postLikes.Take(10).Select(l => new LikePreviewDto
+            {
+                Id = l.Id,
+                ReactionType = l.Type.ToString(),
+                CreatedAt = l.CreatedAt,
+                User = l.User != null ? new UserBasicDto
+                {
+                    Id = l.User.Id,
+                    FullName = l.User.FullName,
+                    Email = l.User.Email ?? "",
+                    AvatarUrl = l.User.AvatarUrl,
+                    Bio = l.User.Bio
+                } : null
+            }).ToList()
         };
 
         if (currentUserId.HasValue)
@@ -77,4 +99,29 @@ public class LikeService : ILikeService
         return true;
     }
 
+    public async Task<List<LikeDetailDto>> GetLikersAsync(Guid postId, int skip, int take)
+    {
+        return await _context.Likes
+            .Where(l => l.PostId == postId)
+            .Include(l => l.User)
+            .OrderByDescending(l => l.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .Select(l => new LikeDetailDto
+            {
+                Id = l.Id,
+                PostId = l.PostId,
+                ReactionType = l.Type.ToString(),
+                CreatedAt = l.CreatedAt,
+                User = l.User != null ? new UserBasicDto
+                {
+                    Id = l.User.Id,
+                    FullName = l.User.FullName,
+                    Email = l.User.Email ?? "",
+                    AvatarUrl = l.User.AvatarUrl,
+                    Bio = l.User.Bio
+                } : null
+            })
+            .ToListAsync();
+    }
 }

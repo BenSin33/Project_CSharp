@@ -11,7 +11,7 @@ namespace InteractHub.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -40,6 +40,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllUsers()
     {
         var users = await _userService.GetAllUsersAsync();
@@ -85,6 +86,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("{id}/lock")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> LockUser(Guid id, [FromBody] int days = 7)
     {
         var result = await _userService.LockUserAsync(id, days);
@@ -94,6 +96,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("{id}/unlock")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UnLockUser (Guid id)
     {
         var result = await _userService.UnLockUserAsync(id);
@@ -104,6 +107,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("{id}/roles")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AssignRoles (Guid id, [FromBody] AssignRoleDTO request)
     {
         
@@ -125,6 +129,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("{id}/ban")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> BanUser(Guid id, [FromBody] BanUserDTO request)
     {
         if (!ModelState.IsValid)
@@ -148,6 +153,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("{id}/unban")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UnbanUser(Guid id)
     {
         try
@@ -165,6 +171,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("{id}/suspend")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> SuspendUser(Guid id, [FromBody] SuspendUserDTO request)
     {
         if (!ModelState.IsValid)
@@ -188,6 +195,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("{id}/unsuspend")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UnsuspendUser(Guid id)
     {
         try
@@ -205,6 +213,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete("{id}/permanent")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteUserPermanently(Guid id)
     {
         try

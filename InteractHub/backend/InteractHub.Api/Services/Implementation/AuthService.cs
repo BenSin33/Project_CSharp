@@ -49,8 +49,22 @@ public class AuthService : IAuthService
     public async Task<AuthResponseDTO> LoginAsync (LoginDTO model)
     {
         var user = await _userManager.FindByEmailAsync(model.Email);
+        
         if(user != null && await _userManager.CheckPasswordAsync(user, model.Password))
         {
+            // Check if user is banned
+            if (user.Status == Models.UserStatus.Banned)
+            {
+                return new AuthResponseDTO(false, "Tài khoản của bạn đã bị khóa vĩnh viễn. Lý do: " + (user.BanReason ?? "Vi phạm chính sách"));
+            }
+
+            // Check if user is suspended/locked out
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                var lockoutEnd = user.LockoutEnd?.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+                return new AuthResponseDTO(false, $"Tài khoản của bạn đang bị tạm khóa đến {lockoutEnd}. Lý do: " + (user.SuspensionReason ?? "Vi phạm chính sách"));
+            }
+
             var token = await GenerateJwtTokenAsync(user);
             return new AuthResponseDTO(true,"Login successful",token);
         }
