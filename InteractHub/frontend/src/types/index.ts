@@ -16,6 +16,8 @@ export interface PostAuthor {
   avatarUrl?: string;
 }
 
+import type { LikeSummaryDto } from "../services/postService";
+
 export interface Post {
   id: string;
   author: PostAuthor;
@@ -27,6 +29,7 @@ export interface Post {
   createdAt: string;
   isLiked?: boolean;
   isSaved?: boolean;
+  likeSummary?: LikeSummaryDto;
 }
 
 // ─── Notification ─────────────────────────────────────────────────────────────

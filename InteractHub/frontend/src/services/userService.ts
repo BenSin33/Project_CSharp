@@ -46,14 +46,14 @@ export interface UserProfileDto {
 function mapFromBackend(d: UserResponseDTO): UserProfileDto {
   return {
     id:             String(d.id),
-    name:           d.fullName,
+    name:           d.fullName ?? (d as any).FullName,
     username:       d.email.split("@")[0],
     email:          d.email,
-    avatarUrl:      d.avatarUrl,
-    bio:            d.bio,
-    location:       d.location,
-    roles:          d.roles ?? d.roles,
-    joinedAt:       "",
+    avatarUrl:      d.avatarUrl ?? (d as any).AvatarUrl,
+    bio:            d.bio ?? (d as any).Bio,
+    location:       d.location ?? (d as any).Location,
+    roles:          d.roles ?? (d as any).Roles ?? [],
+    joinedAt:       (d as any).createdAt ?? (d as any).CreatedAt ?? "",
     followingCount: 0,
     followersCount: 0,
     postsCount:     0,
@@ -98,17 +98,17 @@ async function getProfile(userId: string): Promise<UserProfileDto> {
 async function getMyProfile(): Promise<UserProfileDto> {
   try {
     const resp = await api.get("/api/auth/profile")
-    const d    = resp.data
+    const d    = resp.data?.data ?? resp.data // Mở hộp data từ ApiResponse
     return {
-      id:             String(d?.id ?? ""),
+      id:             String(d?.id ?? d?.Id ?? ""),
       name:           d?.fullName ?? d?.FullName ?? "",
       username:       (d?.email ?? "").split("@")[0],
       email:          d?.email ?? "",
       avatarUrl:      d?.avatarUrl ?? d?.AvatarUrl,
-      bio:            undefined,
-      location:       undefined,
+      bio:            d?.bio ?? d?.Bio,
+      location:       d?.location ?? d?.Location,
       roles:          d?.roles ?? d?.Roles ?? [],
-      joinedAt:       "",
+      joinedAt:       d?.createdAt ?? d?.CreatedAt ?? "",
       followingCount: 0,
       followersCount: 0,
       postsCount:     0,
@@ -165,10 +165,9 @@ async function updateProfile(userId: string, payload: UpdateProfileDto): Promise
 async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
   const form = new FormData()
   form.append("file", file)
-  const resp = await api.post("/api/media/upload", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  })
-  const url = resp.data?.url ?? ""
+  const resp = await api.post("/api/media/upload", form)
+  // MediaController trả về ApiResponse<string> nên URL nằm ở resp.data.data
+  const url = resp.data?.data ?? ""
   return { avatarUrl: url }
 }
 

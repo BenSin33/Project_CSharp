@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 import { Outlet, useNavigate, useLocation } from "react-router-dom"
-import { LogOut, Shield, BarChart3, FileWarning, Users, Activity } from "lucide-react"
+import { LogOut, Shield, BarChart3, FileWarning, Users, Activity, Layout } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 
 type AdminMenuTab = "dashboard" | "reports" | "users" | "content" | "logs"
@@ -24,6 +24,10 @@ export default function AdminLayout() {
     { id: "content", label: "Content Moderation", icon: <Shield size={18} />, path: "/admin/content" },
     { id: "logs", label: "Settings Logs", icon: <Activity size={18} />, path: "/admin/logs" },
   ]
+
+  const handleBackToApp = () => {
+    navigate("/")
+  }
 
   const isActive = (path: string) => {
     if (path === "/admin") {
@@ -60,6 +64,16 @@ export default function AdminLayout() {
               <div className="truncate text-[11px] text-blue-200">Administrator</div>
             </div>
           </div>
+        </div>
+        {/* Back to App Switcher */}
+        <div className="mb-4 px-3">
+          <button
+            onClick={handleBackToApp}
+            className="flex w-full items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-[14px] font-semibold text-white transition-all hover:bg-white/20"
+          >
+            <Layout size={18} />
+            Switch to App UI
+          </button>
         </div>
 
         {/* Menu */}

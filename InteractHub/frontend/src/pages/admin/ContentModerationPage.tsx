@@ -1,178 +1,183 @@
 import { useEffect, useState, useMemo } from "react"
-import { AlertTriangle, XCircle, CheckCircle2, Eye } from "lucide-react"
-import { adminService, type AdminReportItem } from "../../services/adminService"
+import { Search, ShieldAlert, Trash2, EyeOff, CheckCircle, ExternalLink } from "lucide-react"
+import { getAllPosts, deletePost, type PostDto } from "../../services/postService"
+import { adminService } from "../../services/adminService"
+import Avatar from "../../components/common/Avatar"
 
 export default function ContentModerationPage() {
-  const [reports, setReports] = useState<AdminReportItem[]>([])
+  const [posts, setPosts] = useState<PostDto[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<"Pending" | "Reviewed">("Pending")
+  const [searchTerm, setSearchTerm] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ text: string, type: "success" | "error" } | null>(null)
 
-  const loadData = async () => {
+  const loadPosts = async () => {
     setLoading(true)
     try {
-      const resp = await adminService.getReports(0, 50, "all")
-      setReports(resp.data || [])
+      const resp = await getAllPosts(0, 100)
+      setPosts(resp.data || [])
     } catch (error) {
-      console.error("Failed to load reports:", error)
+      console.error("Failed to load posts:", error)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    loadData()
+    loadPosts()
   }, [])
 
-  const filteredReports = useMemo(() => {
-    return reports.filter(r => (r.status || "Pending") === tab)
-  }, [reports, tab])
+  const filteredPosts = useMemo(() => {
+    if (!searchTerm.trim()) return posts
+    const s = searchTerm.toLowerCase()
+    return posts.filter(p => 
+      p.content.toLowerCase().includes(s) || 
+      p.author.name.toLowerCase().includes(s)
+    )
+  }, [posts, searchTerm])
 
-  const pendingCount = useMemo(() => reports.filter(r => (r.status || "Pending") === "Pending").length, [reports])
-
-  const handleRemoveContent = async (reportId: string, postId?: string) => {
-    setActionLoading(reportId)
+  const handleHidePost = async (postId: string) => {
+    if (!window.confirm("Bạn có chắc muốn ẩn bài viết này khỏi bảng tin công cộng?")) return
+    setActionLoading(postId)
     try {
-      if (postId) {
-        try {
-          await adminService.hidePost(postId, "Vi phạm nội dung (Moderation)")
-        } catch (e) {
-          console.error("hidePost failed:", e)
-        }
-      }
-      await adminService.updateReportStatus(reportId, { status: "Resolved", adminNotes: "Đã gỡ nội dung" })
-      await loadData()
+      await adminService.hidePost(postId, "Vi phạm quy tắc cộng đồng (Moderated by Admin)")
+      setMessage({ text: "Đã ẩn bài viết thành công", type: "success" })
+      loadPosts()
     } catch (e) {
-      console.error(e)
+      setMessage({ text: "Lỗi khi ẩn bài viết", type: "error" })
     } finally {
       setActionLoading(null)
+      setTimeout(() => setMessage(null), 3000)
     }
   }
 
-  const handleKeepContent = async (reportId: string) => {
-    setActionLoading(reportId)
+  const handleDeletePost = async (postId: string) => {
+    if (!window.confirm("CẢNH BÁO: Hành động này sẽ xóa vĩnh viễn bài viết. Bạn có chắc chắn?")) return
+    setActionLoading(postId)
     try {
-      await adminService.updateReportStatus(reportId, { status: "Reviewed", adminNotes: "Nội dung hợp lệ" })
-      await loadData()
+      await deletePost(postId)
+      setMessage({ text: "Đã xóa bài viết vĩnh viễn", type: "success" })
+      loadPosts()
     } catch (e) {
-      console.error(e)
+      setMessage({ text: "Lỗi khi xóa bài viết", type: "error" })
     } finally {
       setActionLoading(null)
+      setTimeout(() => setMessage(null), 3000)
     }
   }
 
   return (
     <div className="p-8">
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-8 flex items-end justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-[28px] font-bold text-slate-900">
-            <AlertTriangle className="text-orange-500" size={32} />
+            <ShieldAlert className="text-blue-600" size={32} />
             Content Moderation
           </h1>
-          <p className="mt-1 text-[15px] text-slate-500">Review and moderate reported content</p>
+          <p className="mt-1 text-[15px] text-slate-500">Chủ động kiểm soát và xử lý tất cả bài viết trên hệ thống</p>
         </div>
-        {pendingCount > 0 && (
-          <div className="rounded-lg bg-red-600 px-4 py-2 text-[14px] font-semibold text-white">
-            {pendingCount} Pending
-          </div>
-        )}
+        
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input 
+            type="text"
+            placeholder="Tìm kiếm nội dung hoặc tác giả..."
+            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-[14px] outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex border-b border-slate-200">
-          <button
-            onClick={() => setTab("Pending")}
-            className={`flex flex-1 items-center justify-center gap-2 py-4 text-[14px] font-semibold transition-all ${
-              tab === "Pending" ? "border-b-2 border-red-500 text-red-600" : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Pending Reports
-            {pendingCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[11px] text-white">
-                {pendingCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setTab("Reviewed")}
-            className={`flex flex-1 items-center justify-center gap-2 py-4 text-[14px] font-semibold transition-all ${
-              tab === "Reviewed" ? "border-b-2 border-slate-900 text-slate-900" : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Reviewed Reports
-          </button>
+      {message && (
+        <div className={`mb-6 rounded-xl p-4 text-sm font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2 ${
+          message.type === "success" ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-700 border border-red-100"
+        }`}>
+          {message.type === "success" ? <CheckCircle size={18} /> : <ShieldAlert size={18} />}
+          {message.text}
         </div>
+      )}
 
-        <div className="p-6">
-          {loading ? (
-            <div className="py-8 text-center text-slate-500">Loading content...</div>
-          ) : (
-            <div className="space-y-6">
-              {filteredReports.map((report) => (
-                <div key={report.id} className="rounded-xl border border-slate-200 p-5">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${report.reporter?.fullName || "User"}&background=random`}
-                        alt="avatar"
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <div className="text-[15px] font-semibold text-slate-900">{report.reporter?.fullName || "Anonymous"}</div>
-                        <div className="text-[13px] text-slate-500">Reported a {report.reportType?.toLowerCase() || "post"}</div>
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-6 py-4 text-[13px] font-bold uppercase tracking-wider text-slate-500">Tác giả</th>
+                <th className="px-6 py-4 text-[13px] font-bold uppercase tracking-wider text-slate-500">Nội dung bài viết</th>
+                <th className="px-6 py-4 text-[13px] font-bold uppercase tracking-wider text-slate-500">Ngày đăng</th>
+                <th className="px-6 py-4 text-[13px] font-bold uppercase tracking-wider text-slate-500 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+                      Đang tải danh sách bài viết...
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredPosts.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    Không tìm thấy bài viết nào phù hợp.
+                  </td>
+                </tr>
+              ) : (
+                filteredPosts.map((post) => (
+                  <tr key={post.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={post.author.name} avatarUrl={post.author.avatarUrl} size={36} />
+                        <div>
+                          <div className="text-[14px] font-bold text-slate-900">{post.author.name}</div>
+                          <div className="text-[12px] text-slate-500">ID: {post.author.id.slice(0, 8)}...</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="rounded-md bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
-                      {report.reportType || "post"}
-                    </div>
-                  </div>
-
-                  <div className="my-5 space-y-4">
-                    <div>
-                      <div className="text-[13px] font-medium text-slate-500">Reason</div>
-                      <div className="mt-1 text-[14px] font-medium text-slate-900">{report.reason || "No reason provided"}</div>
-                    </div>
-
-                    <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
-                      <div className="mb-2 flex items-center gap-2 text-[12px] font-semibold text-slate-700">
-                        <Eye size={14} /> Reported Content Preview
+                    </td>
+                    <td className="px-6 py-4 max-w-md">
+                      <div className="line-clamp-2 text-[14px] text-slate-700">
+                        {post.content || <span className="italic text-slate-400">(Không có nội dung văn bản)</span>}
                       </div>
-                      <div className="text-[13px] text-slate-600">
-                        <span className="font-medium">Content ID:</span> {report.postId || "Unknown"}
+                      {post.imageUrl && (
+                        <div className="mt-1 flex items-center gap-1 text-[11px] text-blue-600 font-medium">
+                          <ExternalLink size={12} /> Có kèm hình ảnh
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-[13px] text-slate-500">
+                      {new Date(post.createdAt).toLocaleDateString("vi-VN")}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => handleHidePost(post.id)}
+                          disabled={actionLoading === post.id}
+                          className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
+                          title="Ẩn bài viết"
+                        >
+                          <EyeOff size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeletePost(post.id)}
+                          disabled={actionLoading === post.id}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          title="Xóa vĩnh viễn"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
-                      <div className="mt-2 text-[14px] text-slate-800">
-                        {report.post?.content || "[Preview would show actual content here]"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {tab === "Pending" && (
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleRemoveContent(report.id, report.postId)}
-                        disabled={actionLoading === report.id}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#E11D48] py-3 text-[14px] font-semibold text-white transition-all hover:bg-rose-700 disabled:opacity-50"
-                      >
-                        <XCircle size={18} /> Remove Content
-                      </button>
-                      <button
-                        onClick={() => handleKeepContent(report.id)}
-                        disabled={actionLoading === report.id}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-[14px] font-semibold text-slate-700 transition-all hover:bg-slate-50 disabled:opacity-50"
-                      >
-                        <CheckCircle2 size={18} /> Keep Content
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {filteredReports.length === 0 && (
-                <div className="py-8 text-center text-slate-500">No {tab.toLowerCase()} reports.</div>
+                    </td>
+                  </tr>
+                ))
               )}
-            </div>
-          )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   )
 }
+

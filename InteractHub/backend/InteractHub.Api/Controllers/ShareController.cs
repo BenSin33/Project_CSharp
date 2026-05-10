@@ -4,6 +4,7 @@ using InteractHub.Api.Services.Interface;
 using InteractHub.Api.DTOs.Post_Interactions;
 using InteractHub.Api.Models;
 using System.Security.Claims;
+using InteractHub.Api.DTOs.Common;
 
 namespace InteractHub.Api.Controllers;
 
@@ -25,6 +26,13 @@ public class ShareController : ControllerBase
     {
         var count = await _shareService.GetShareCountAsync(postId);
         return Ok(ApiResponse<int>.Ok(count));   
+    }
+
+    [HttpGet("post/{postId}/users")]
+    public async Task<IActionResult> GetPostSharers(Guid postId, [FromQuery] int skip = 0, [FromQuery] int take = 50)
+    {
+        var users = await _shareService.GetSharersAsync(postId, skip, take);
+        return Ok(ApiResponse<List<UserBasicDto>>.Ok(users, "Sharers retrieved successfully"));
     }
 
     [HttpPost]

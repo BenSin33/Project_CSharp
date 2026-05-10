@@ -6,4 +6,5 @@ public interface ILikeService
 {
     Task<LikeSummaryDTO> GetLikeSummaryAsync(Guid postId, Guid? currentUserId = null);
     Task<bool> ToggleLikeAsync (Guid userId, ToggleLikeDTO request);
+    Task<List<LikeDetailDto>> GetLikersAsync(Guid postId, int skip, int take);
 }
