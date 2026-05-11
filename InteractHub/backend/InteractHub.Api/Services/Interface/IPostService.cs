@@ -13,4 +13,7 @@ public interface IPostService
     Task<bool> DeletePostAsync(Guid id);
     Task<PaginatedResponse<PostResponseDto>> SearchPostsAsync(string query, int skip, int take, Guid? currentUserId = null);
     Task<PaginatedResponse<PostResponseDto>> GetPostsByUserAsync(Guid userId, int skip, int take, Guid? currentUserId = null);
+    Task<PaginatedResponse<PostResponseDto>> GetTrendingPostsAsync(int skip, int take, Guid? currentUserId = null);
+    Task<PaginatedResponse<PostResponseDto>> GetReelPostsAsync(int skip, int take, Guid? currentUserId = null);
+   
 }
