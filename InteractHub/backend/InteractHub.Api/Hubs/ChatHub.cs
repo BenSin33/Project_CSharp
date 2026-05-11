@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using InteractHub.Api.DTOs;
+using InteractHub.Api.DTOs.Notifications;
+using InteractHub.Api.Models;
 using InteractHub.Api.Services.Interface;
 
 namespace InteractHub.Api.Hubs;
@@ -10,10 +12,12 @@ namespace InteractHub.Api.Hubs;
 public class ChatHub : Hub
 {
     private readonly IMessageService _messageService;
+    private readonly INotificationService _notificationService;
 
-    public ChatHub(IMessageService messageService)
+    public ChatHub(IMessageService messageService, INotificationService notificationService)
     {
         _messageService = messageService;
+        _notificationService = notificationService;
     }
 
     public override async Task OnConnectedAsync()
@@ -54,8 +58,7 @@ public class ChatHub : Hub
 
         try
         {
-           var createDto = new CreateMessageDTO(messageContent, receiverGuid);
-
+            var createDto = new CreateMessageDTO(messageContent, receiverGuid);
             var saved = await _messageService.SendMessageAsync(createDto, senderId);
 
             // Push đến receiver
@@ -63,6 +66,19 @@ public class ChatHub : Hub
 
             // Echo lại cho sender
             await Clients.Caller.SendAsync("MessageSent", saved);
+
+            // Create notification for receiver
+            try
+            {
+                await _notificationService.CreateNotificationAsync(new CreateNotificationDTO
+                {
+                    Content = $"{saved.SenderName} đã nhắn tin cho bạn",
+                    Type = NotificationType.Message,
+                    UserId = receiverGuid,
+                    ActorId = senderId
+                });
+            }
+            catch { /* notification failure should not block message */ }
         }
         catch (ArgumentException ex)
         {

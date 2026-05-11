@@ -17,9 +17,9 @@ import type { HashtagItem } from "../types";
 
 function MainLayout() {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, token } = useAuth();
     const [showPostModal, setShowPostModal] = useState(false);
-    const { notifications, isOpen: showNotif, setIsOpen: setShowNotif, unreadCount, markAllRead } = useNotifications();
+    const { notifications, isOpen: showNotif, setIsOpen: setShowNotif, unreadCount, markAllRead } = useNotifications(token);
 
     // Trending hashtags state
     const [trendingHashtags, setTrendingHashtags] = useState<HashtagItem[]>([]);

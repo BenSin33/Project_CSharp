@@ -3,10 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using InteractHub.Api.DTOs.Post;
 using InteractHub.Api.DTOs.Common;
 using InteractHub.Api.DTOs.Post_Interactions;
+using InteractHub.Api.DTOs.Notifications;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Models;
 using System.Runtime.ExceptionServices;
 using System.Security.Claims;
+using InteractHub.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace InteractHub.Api.Controllers;
 
@@ -16,11 +19,15 @@ public class PostController : ControllerBase
 {
     private readonly IPostService _postService;
     private readonly ISavedPostService _savedPostService;
+    private readonly INotificationService _notificationService;
+    private readonly ApplicationDbContext _context;
 
-    public PostController(IPostService postService, ISavedPostService savedPostService)
+    public PostController(IPostService postService, ISavedPostService savedPostService, INotificationService notificationService, ApplicationDbContext context)
     {
         _postService = postService;
         _savedPostService = savedPostService;
+        _notificationService = notificationService;
+        _context = context;
     }
 
     /// <summary>
@@ -161,6 +168,25 @@ public async Task<IActionResult> GetAllPosts([FromQuery] int skip = 0, [FromQuer
         {
             return NotFound(ApiResponse<SavedPostResponseDto>.Fail($"Post with ID {id} not found"));
         }
+
+        // Create notification for post owner
+        try
+        {
+            var post = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id && p.Status != Status.deleted);
+            if (post != null && post.UserId != currentUserId.Value)
+            {
+                var actor = await _context.Users.FindAsync(currentUserId.Value);
+                var actorName = actor?.FullName ?? "Someone";
+                await _notificationService.CreateNotificationAsync(new CreateNotificationDTO
+                {
+                    Content = $"{actorName} đã lưu bài viết của bạn",
+                    Type = NotificationType.FriendPost,
+                    UserId = post.UserId,
+                    ActorId = currentUserId.Value
+                });
+            }
+        }
+        catch { /* notification failure should not block save */ }
 
         return Ok(ApiResponse<SavedPostResponseDto>.Ok(savedPost, "Post saved successfully."));
     }

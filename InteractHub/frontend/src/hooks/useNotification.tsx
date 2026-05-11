@@ -1,101 +1,126 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import * as signalR from "@microsoft/signalr";
 import type { Notification } from "../types";
+import { notificationService } from "../services/notificationService";
 
-// Rich mock data — hiển thị khi backend không kết nối được
-const FALLBACK_NOTIFICATIONS: Notification[] = [
-  {
-    id: "1",
-    type: "like",
-    actor: { name: "Sarah Johnson", avatarUrl: "https://i.pravatar.cc/150?img=47" },
-    message: "liked your post",
-    timeAgo: "4 days ago",
-    isRead: false,
-  },
-  {
-    id: "2",
-    type: "comment",
-    actor: { name: "Michael Chen", avatarUrl: "https://i.pravatar.cc/150?img=12" },
-    message: "commented on your post",
-    timeAgo: "4 days ago",
-    isRead: false,
-  },
-  {
-    id: "3",
-    type: "friend_request",
-    actor: { name: "Emma Davis", avatarUrl: "https://i.pravatar.cc/150?img=9" },
-    message: "sent you a friend request",
-    timeAgo: "5 days ago",
-    isRead: false,
-  },
-  {
-    id: "4",
-    type: "share",
-    actor: { name: "David Williams", avatarUrl: "https://i.pravatar.cc/150?img=53" },
-    message: "shared your post",
-    timeAgo: "5 days ago",
-    isRead: true,
-  },
-  {
-    id: "5",
-    type: "mention",
-    actor: { name: "Olivia Smith", avatarUrl: "https://i.pravatar.cc/150?img=21" },
-    message: "mentioned you in a comment",
-    timeAgo: "6 days ago",
-    isRead: true,
-  },
-  {
-    id: "6",
-    type: "like",
-    actor: { name: "James Wilson", avatarUrl: "https://i.pravatar.cc/150?img=33" },
-    message: "liked your photo",
-    timeAgo: "1 week ago",
-    isRead: true,
-  },
-];
+const HUB_URL = "http://localhost:5073/hubs/notifications";
 
-export function useNotifications() {
+function mapBackendToNotification(n: any): Notification {
+  const TYPE_MAP: Record<number, Notification["type"]> = {
+    0: "like",
+    1: "comment",
+    2: "share",
+    3: "mention",    // Message — map to mention for icon fallback
+    4: "friend_request",
+    5: "friend_request",
+    6: "mention",
+    7: "mention",
+    8: "mention",
+  };
+
+  const typeKey = typeof n.type === "number" ? n.type : 0;
+  return {
+    id: String(n.id),
+    type: TYPE_MAP[typeKey] ?? "mention",
+    actor: {
+      name: n.actorName ?? n.actor?.name ?? "Someone",
+      avatarUrl: n.actorAvatarUrl ?? n.actor?.avatarUrl,
+    },
+    message: n.content ?? n.message ?? "",
+    timeAgo: n.createdAt
+      ? (() => {
+          const diff = Date.now() - new Date(n.createdAt).getTime();
+          const mins = Math.floor(diff / 60000);
+          if (mins < 1) return "vừa xong";
+          if (mins < 60) return `${mins} phút trước`;
+          const hours = Math.floor(mins / 60);
+          if (hours < 24) return `${hours} giờ trước`;
+          const days = Math.floor(hours / 24);
+          return `${days} ngày trước`;
+        })()
+      : "",
+    isRead: !!n.isRead,
+  };
+}
+
+export function useNotifications(token: string | null) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
-      const api = (await import("../services/api")).default;
-      const resp = await api.get(`/api/notifications?skip=0&take=20`);
-      const data = resp?.data?.data ?? resp?.data ?? [];
-      const mapped: Notification[] = (Array.isArray(data) ? data : []).map((n: any) => ({
-        id: String(n.id),
-        type: (n.type ?? "like") as any,
-        actor: { name: n.actorName ?? n.actor?.name ?? "User", avatarUrl: n.actorAvatarUrl ?? n.actor?.avatarUrl },
-        message: n.content ?? n.message ?? "",
-        timeAgo: n.createdAt ? new Date(n.createdAt).toLocaleDateString("vi-VN") : "",
-        isRead: !!n.isRead,
-      }));
-      // Nếu backend trả mảng rỗng → dùng mock để UI không trống
-      setNotifications(mapped.length > 0 ? mapped : FALLBACK_NOTIFICATIONS);
+      const dtos = await notificationService.getNotifications(0, 30);
+      setNotifications(
+        dtos.map((d) => mapBackendToNotification({
+          id: d.id,
+          type: d.raw?.type ?? 0,
+          content: d.message,
+          actorName: d.actor.name,
+          actorAvatarUrl: d.actor.avatarUrl,
+          createdAt: d.raw?.createdAt,
+          isRead: d.isRead,
+        }))
+      );
     } catch (err) {
-      console.warn("Failed to load notifications — using mock data", err);
-      setNotifications(FALLBACK_NOTIFICATIONS);
+      console.warn("Failed to load notifications", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchNotifications(); }, []);
+  // Initial fetch
+  useEffect(() => {
+    if (token) fetchNotifications();
+  }, [token, fetchNotifications]);
+
+  // SignalR real-time connection
+  useEffect(() => {
+    if (!token) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(HUB_URL, {
+        accessTokenFactory: () => token,
+        transport:
+          signalR.HttpTransportType.WebSockets |
+          signalR.HttpTransportType.LongPolling,
+      })
+      .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Warning)
+      .build();
+
+    connection.on("ReceiveNotification", (n: any) => {
+      const mapped = mapBackendToNotification(n);
+      setNotifications((prev) => [mapped, ...prev]);
+    });
+
+    connection
+      .start()
+      .then(() => console.log("[SignalR Notifications] Connected"))
+      .catch((err: any) =>
+        console.warn("[SignalR Notifications] Connection failed:", err)
+      );
+
+    connectionRef.current = connection;
+
+    return () => {
+      connection.stop();
+      connectionRef.current = null;
+    };
+  }, [token]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const markAllRead = async () => {
-    // Cập nhật UI ngay lập tức (optimistic)
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     try {
-      const api = (await import("../services/api")).default;
-      await api.put(`/api/notifications/mark-all-read`);
+      await notificationService.markAllRead();
     } catch (err) {
       console.warn("mark all read failed", err);
     }
   };
 
-  return { notifications, isOpen, setIsOpen, unreadCount, markAllRead, loading };
+  return { notifications, isOpen, setIsOpen, unreadCount, markAllRead, loading, fetchNotifications };
 }

@@ -77,7 +77,9 @@ function Home() {
         })
       );
       setStories(mapped);
-    } catch {
+    } catch (err: any) {
+      // Chỉ log lỗi, không dùng mock data — stories sẽ trống
+      console.warn("[HomePage] fetchStories failed:", err?.message ?? err);
       setStories([]);
     }
   }, []);

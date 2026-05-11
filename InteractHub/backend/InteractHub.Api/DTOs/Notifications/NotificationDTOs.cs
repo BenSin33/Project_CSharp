@@ -14,6 +14,8 @@ public class CreateNotificationDTO
 
     [Required(ErrorMessage = "UserId is required.")]
     public Guid UserId { get; set; }
+
+    public Guid? ActorId { get; set; }      // thêm mới
 }
 
 public class NotificationResponseDTO
@@ -23,6 +25,9 @@ public class NotificationResponseDTO
     public NotificationType Type { get; set; }
     public bool IsRead { get; set; }
     public Guid UserId { get; set; }
+    public Guid? ActorId { get; set; }          // thêm mới
+    public string? ActorName { get; set; }      // thêm mới
+    public string? ActorAvatarUrl { get; set; } // thêm mới
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
