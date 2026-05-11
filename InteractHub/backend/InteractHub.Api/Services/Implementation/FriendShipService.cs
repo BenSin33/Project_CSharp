@@ -158,5 +158,26 @@ namespace InteractHub.Api.Services.Implementation
             return friendship.RequesterId == userId1 ? "Sent" : "Received";
         }
 
+        public async Task<IEnumerable<UserFriendDTO>> GetFriendSuggestionsAsync(Guid userId)
+        {
+            var allUsers = await _userREpository.GetAllAsync();
+            var allFriendships = await _friendshipRepository.GetAllAsync();
+            var relatedUserIds = allFriendships
+                .Where(f => f.DeletedAt == null && (f.RequesterId == userId || f.ReceiverId == userId))
+                .Select(f => f.RequesterId == userId ? f.ReceiverId : f.RequesterId)
+                .ToList();
+            relatedUserIds.Add(userId);
+            return allUsers
+                .Where(u => !relatedUserIds.Contains(u.Id))
+                .Take(10)
+                .Select(u => new UserFriendDTO
+                {
+                    Id = u.Id,
+                    FullName = u.FullName,
+                    AvatarUrl = u.AvatarUrl ?? "",
+                    Bio = u.Bio ?? ""
+                });
+        }
+
     }
 }

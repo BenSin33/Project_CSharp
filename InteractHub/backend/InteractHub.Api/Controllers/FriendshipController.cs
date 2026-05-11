@@ -80,5 +80,12 @@ namespace InteractHub.Api.Controllers
             var status = await _friendshipService.CheckFriendshipStatusAsync(user1, user2);
             return Ok(ApiResponse<string>.Ok(status, "Friendship status retrieved."));
         }
+
+        [HttpGet("suggestions/{userId}")]
+        public async Task<IActionResult> GetSuggestions(Guid userId)
+        {
+            var suggestions = await _friendshipService.GetFriendSuggestionsAsync(userId);
+            return Ok(ApiResponse<IEnumerable<UserFriendDTO>>.Ok(suggestions, "Suggestions retrieved"));
+        }
     }
 }

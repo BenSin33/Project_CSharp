@@ -14,6 +14,7 @@ namespace InteractHub.Api.Services.Interface
         Task<IEnumerable<UserFriendDTO>> GetFriendListAsync(Guid userId);
         Task<bool> RemoveFriendAsync(Guid friendshipId, Guid userId);
         Task<string> CheckFriendshipStatusAsync(Guid userId1, Guid userId2);
+        Task<IEnumerable<UserFriendDTO>> GetFriendSuggestionsAsync(Guid userId);
 
     }
 }

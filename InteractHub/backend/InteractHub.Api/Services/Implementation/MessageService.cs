@@ -17,6 +17,9 @@ public class MessageService : IMessageService
 
     public async Task<MessageResponseDTO> SendMessageAsync(CreateMessageDTO createMessageDto, Guid senderId)
     {
+        if (createMessageDto.ReceiverId == senderId)
+            throw new ArgumentException("You cannot send a message to yourself.");
+
         // Kiểm tra user nhận có tồn tại không
         var receiver = await _context.Users.FindAsync(createMessageDto.ReceiverId);
         if (receiver == null)
@@ -83,7 +86,7 @@ public class MessageService : IMessageService
     public async Task<List<ConversationDTO>> GetConversationsAsync(Guid userId)
     {
         var conversations = await _context.Messages
-            .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+            .Where(m => (m.SenderId == userId || m.ReceiverId == userId) && m.SenderId != m.ReceiverId)
             .Include(m => m.Sender)
             .Include(m => m.Receiver)
             .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
