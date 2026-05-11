@@ -6,6 +6,7 @@ import DangerZone from "../components/settings/DangerZone";
 import AvatarUpload from "../components/settings/AvatarUpload";
 import { useAuth } from "../contexts/AuthContext";
 import { userService } from "../services/userService";
+import { authService } from "../services/authService";
 
 const PREF_ITEMS = [
   { key: "likes",    label: "Likes",           desc: "When someone likes your post" },
@@ -16,7 +17,7 @@ const PREF_ITEMS = [
 ];
 
 export default function SettingsPage() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, } = useAuth();
   const [tab, setTab] = useState<SettingsTab>("profile");
 
   // Profile — seeded from current user
@@ -66,6 +67,17 @@ export default function SettingsPage() {
         bio:       profile.bio,
         avatarUrl: profile.avatarUrl,
       });
+      // Refresh AuthContext so Navbar/avatar updates immediately
+      try {
+        const updated = await authService.getMe();
+        const cached = localStorage.getItem("user");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          localStorage.setItem("user", JSON.stringify({ ...parsed, ...updated }));
+        }
+        // Trigger re-render by dispatching event
+        window.dispatchEvent(new CustomEvent("profile-updated", { detail: updated }));
+      } catch { /* ignore */ }
       setProfileMsg({ type: "success", text: "✅ Thông tin cá nhân đã được cập nhật!" });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra";

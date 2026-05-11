@@ -25,6 +25,9 @@ export interface NotificationResponseDTO {
   type: number      // NotificationType enum (số nguyên)
   isRead: boolean
   userId: string
+  actorId?: string
+  actorName?: string
+  actorAvatarUrl?: string
   createdAt: string
   updatedAt: string
 }
@@ -52,9 +55,23 @@ function mapFromBackend(n: NotificationResponseDTO): NotificationDto {
   return {
     id: String(n.id),
     type: NOTIF_TYPE_MAP[typeKey] ?? "mention",
-    actor: { name: "System" },  // backend chưa trả actor — để mặc định
+    actor: {
+      name: (n as any).actorName ?? "System",
+      avatarUrl: (n as any).actorAvatarUrl ?? undefined,
+    },
     message: n.content,
-    timeAgo: n.createdAt ? new Date(n.createdAt).toLocaleDateString("vi-VN") : "",
+    timeAgo: n.createdAt
+      ? (() => {
+          const diff = Date.now() - new Date(n.createdAt).getTime()
+          const mins = Math.floor(diff / 60000)
+          if (mins < 1) return "vừa xong"
+          if (mins < 60) return `${mins} phút trước`
+          const hours = Math.floor(mins / 60)
+          if (hours < 24) return `${hours} giờ trước`
+          const days = Math.floor(hours / 24)
+          return `${days} ngày trước`
+        })()
+      : "",
     isRead: n.isRead,
     raw: n,
   }

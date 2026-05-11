@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import * as signalR from "@microsoft/signalr";
 import type { MessageResponseDTO } from "../services/messageService";
 
-const HUB_URL = "/hubs/chat";
+const HUB_URL = "http://localhost:5073/hubs/chat";
 
 export function useChatSignalR(
   token: string | null,

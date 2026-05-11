@@ -270,6 +270,9 @@ namespace InteractHub.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ActorId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -294,6 +297,8 @@ namespace InteractHub.Api.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
 
                     b.HasIndex("UserId");
 
@@ -867,11 +872,17 @@ namespace InteractHub.Api.Migrations
 
             modelBuilder.Entity("InteractHub.Api.Models.Notification", b =>
                 {
+                    b.HasOne("InteractHub.Api.Models.User", "Actor")
+                        .WithMany()
+                        .HasForeignKey("ActorId");
+
                     b.HasOne("InteractHub.Api.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Actor");
 
                     b.Navigation("User");
                 });
