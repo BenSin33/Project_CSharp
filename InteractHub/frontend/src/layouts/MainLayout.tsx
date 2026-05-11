@@ -91,10 +91,16 @@ function MainLayout() {
                 onNotificationsClick={() => setShowNotif(v => !v)}
             />
 
-            <div className="max-w-6xl mx-auto px-6 py-6 grid grid-cols-[220px_1fr_280px] gap-6 items-start">
-                <aside className="sticky top-20"><Sidebar currentUser={user ?? undefined} /></aside>
-                <main className="flex flex-col gap-4 min-w-0"><Outlet /></main>
-                <aside className="sticky top-20 flex flex-col gap-4">
+            <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-[64px_1fr] lg:grid-cols-[240px_1fr_300px] gap-4 md:gap-6 items-start">
+                <aside className="sticky top-20">
+                    <Sidebar currentUser={user ?? undefined} />
+                </aside>
+                
+                <main className="flex flex-col gap-4 min-w-0">
+                    <Outlet />
+                </main>
+
+                <aside className="sticky top-20 hidden lg:flex flex-col gap-4">
                     <TrendingHashtags
                         hashtags={trendingHashtags}
                         isLoading={hashtagsLoading}

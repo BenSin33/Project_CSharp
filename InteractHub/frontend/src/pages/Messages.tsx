@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import { Search } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import ConversationItem, { type Conversation } from "../components/messages/ConversationItem";
@@ -9,6 +10,7 @@ import {
   getConversations,
   getConversation,
   sendMessage,
+  normalizeMessage,
   type ConversationDTO,
   type MessageResponseDTO,
 } from "../services/messageService";
@@ -54,17 +56,21 @@ export default function MessagesPage() {
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [sending, setSending] = useState(false);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // Load conversations on mount
   const loadConversations = useCallback(async () => {
+    if (!user) return;
     try {
-      const data = await getConversations();
+      const allData = await getConversations();
+      const data = allData.filter(c => String(c.userId) !== String(user.id));
       setConversations(data.map(toConversation));
-      // If no activeId yet, default to first conversation
+      // If no activeId yet, default to first conversation (that is not self)
       if (!activeId && !locationState?.openUserId && data.length > 0) {
-        setActiveId(String(data[0].userId));
+        const firstOther = data.find(c => String(c.userId) !== String(user.id));
+        if (firstOther) {
+          setActiveId(String(firstOther.userId));
+        }
       }
       // If we navigated here with a target user, ensure they appear in conversation list
       if (locationState?.openUserId) {
@@ -120,22 +126,92 @@ export default function MessagesPage() {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Poll for new messages every 3 seconds
+  const activeIdRef = useRef<string | null>(activeId);
   useEffect(() => {
-    if (!activeId || !user) return;
-    pollRef.current = setInterval(async () => {
-      try {
-        const data = await getConversation(activeId);
-        setMessages(data.map(m => toMessage(m, user.id)));
-      } catch { /* silent */ }
-    }, 3000);
+    activeIdRef.current = activeId;
+  }, [activeId]);
+
+  const [connection, setConnection] = useState<HubConnection | null>(null);
+
+  // Initialize SignalR connection
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const newConnection = new HubConnectionBuilder()
+      .withUrl("/hubs/chat", {
+        accessTokenFactory: () => token,
+      })
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.Information)
+      .build();
+
+    setConnection(newConnection);
+    
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      newConnection.stop();
     };
-  }, [activeId, user]);
+  }, []);
+
+  // Register listeners once
+  useEffect(() => {
+    if (!connection || !user) return;
+
+    const startConnection = async () => {
+      try {
+        if (connection.state === "Disconnected") {
+          await connection.start();
+          console.log("[SignalR] Connected to ChatHub");
+        }
+
+        connection.on("ReceiveMessage", (rawMessage: any) => {
+          const normalized = normalizeMessage(rawMessage);
+          const msg = toMessage(normalized, user.id);
+          const currentActiveId = activeIdRef.current;
+          
+          // Check if message belongs to current conversation
+          const isFromActive = String(normalized.senderId) === currentActiveId;
+          const isToActive = String(normalized.receiverId) === currentActiveId;
+
+          if (isFromActive || isToActive) {
+            setMessages((prev) => {
+              const exists = prev.some(m => m.id === msg.id);
+              if (exists) return prev;
+              return [...prev, msg];
+            });
+          }
+
+          loadConversations();
+        });
+
+        connection.on("MessageSent", (rawMessage: any) => {
+          const msg = toMessage(normalizeMessage(rawMessage), user.id);
+          setMessages((prev) => {
+             const exists = prev.some(m => m.id === msg.id || m.id.startsWith("opt-"));
+             if (exists) {
+                return prev.map(m => (m.id.startsWith("opt-") && m.text === msg.text) ? msg : m);
+             }
+             return [...prev, msg];
+          });
+          loadConversations();
+        });
+
+      } catch (err) {
+        console.error("[SignalR] Connection failed: ", err);
+      }
+    };
+
+    startConnection();
+
+    return () => {
+      connection.off("ReceiveMessage");
+      connection.off("MessageSent");
+    };
+  }, [connection, user, loadConversations]);
 
   const handleSend = async (text: string) => {
     if (!activeId || !user || sending) return;
+    if (activeId === String(user.id)) return;
     setSending(true);
 
     // Optimistic update

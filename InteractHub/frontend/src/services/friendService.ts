@@ -9,6 +9,13 @@ export interface FriendshipResponseDTO {
   createdAt: string
 }
 
+export interface UserFriendDTO {
+  id: string
+  fullName?: string
+  avatarUrl?: string
+  bio?: string
+}
+
 export interface FriendDto {
   id: string
   name: string
@@ -25,19 +32,7 @@ export interface SuggestionDto extends FriendDto {
   label: string
 }
 
-// ─── Mock fallback ────────────────────────────────────────────────────────────
-const MOCK_REQUESTS: FriendRequestDto[] = [
-  { id: "1", friendshipId: "f1", name: "Sarah Johnson", username: "sarahj", timeAgo: "4 days ago" },
-  { id: "2", friendshipId: "f2", name: "Michael Chen",  username: "mchen",  timeAgo: "5 days ago" },
-]
-const MOCK_FRIENDS: FriendDto[] = [
-  { id: "1", name: "David Williams", username: "dwilliams" },
-  { id: "2", name: "Emma Davis",     username: "emmad"    },
-]
-const MOCK_SUGGESTIONS: SuggestionDto[] = [
-  { id: "1", name: "Alex Turner",  username: "aturner", label: "Suggested for you" },
-  { id: "2", name: "James Wilson", username: "jwilson", label: "Suggested for you" },
-]
+// ─── Mapping helpers ────────────────────────────────────────────────────────────
 
 function mapFriendshipToRequest(f: FriendshipResponseDTO, currentUserId: string): FriendRequestDto {
   // Người gửi request là requester
@@ -52,13 +47,12 @@ function mapFriendshipToRequest(f: FriendshipResponseDTO, currentUserId: string)
   }
 }
 
-function mapFriendshipToFriend(f: FriendshipResponseDTO, currentUserId: string): FriendDto {
-  const other = f.requester.id !== currentUserId ? f.requester : f.receiver
+function mapUserFriendToFriend(u: UserFriendDTO): FriendDto {
   return {
-    id: String(other.id),
-    name: other.fullName ?? "",
-    username: "",
-    avatarUrl: other.avatarUrl,
+    id: String(u.id),
+    name: u.fullName ?? "",
+    username: (u.fullName ?? "").toLowerCase().replace(/\s/g, ""),
+    avatarUrl: u.avatarUrl,
   }
 }
 
@@ -69,7 +63,7 @@ async function getPendingRequests(userId: string): Promise<FriendRequestDto[]> {
     const raw = unwrap<FriendshipResponseDTO[]>(resp) ?? []
     return raw.map((f) => mapFriendshipToRequest(f, userId))
   } catch (err: any) {
-    if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) return MOCK_REQUESTS
+    console.error("getPendingRequests error:", err)
     throw err
   }
 }
@@ -78,10 +72,10 @@ async function getPendingRequests(userId: string): Promise<FriendRequestDto[]> {
 async function getFriendList(userId: string): Promise<FriendDto[]> {
   try {
     const resp = await api.get(`/api/friendships/list/${userId}`)
-    const raw = unwrap<FriendshipResponseDTO[]>(resp) ?? []
-    return raw.map((f) => mapFriendshipToFriend(f, userId))
+    const raw = unwrap<UserFriendDTO[]>(resp) ?? []
+    return raw.map(mapUserFriendToFriend)
   } catch (err: any) {
-    if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) return MOCK_FRIENDS
+    console.error("getFriendList error:", err)
     throw err
   }
 }
@@ -121,9 +115,20 @@ async function checkFriendshipStatus(user1: string, user2: string): Promise<stri
   return data?.status ?? "none"
 }
 
-// Backend chưa có endpoint suggestions — dùng mock
-async function getSuggestions(): Promise<SuggestionDto[]> {
-  return MOCK_SUGGESTIONS
+// GET /api/friendships/suggestions/{userId}
+async function getSuggestions(userId?: string): Promise<SuggestionDto[]> {
+  if (!userId) return []
+  try {
+    const resp = await api.get(`/api/friendships/suggestions/${userId}`)
+    const raw = unwrap<UserFriendDTO[]>(resp) ?? []
+    return raw.map((u) => ({
+      ...mapUserFriendToFriend(u),
+      label: "Suggested for you",
+    }))
+  } catch (err) {
+    console.error("getSuggestions error:", err)
+    return []
+  }
 }
 
 export const friendService = {

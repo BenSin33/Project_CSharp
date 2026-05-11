@@ -43,15 +43,16 @@ export default function Sidebar({ currentUser }: SidebarProps) {
       {navItems.map(({ id, label, path, icon }) => (
         <NavLink key={id} to={path}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium transition-colors ${
+            `flex items-center gap-3 p-3 lg:px-4 lg:py-3 rounded-xl text-[15px] font-medium transition-colors justify-center lg:justify-start ${
               isActive ? "bg-blue-50 text-blue-600" : "text-gray-800 hover:bg-gray-100"
             }`
           }
+          title={label}
         >
           {({ isActive }) => (
             <>
               <span className={isActive ? "text-blue-600" : "text-gray-800"}>{icon}</span>
-              <span>{label}</span>
+              <span className="hidden lg:inline">{label}</span>
             </>
           )}
         </NavLink>
