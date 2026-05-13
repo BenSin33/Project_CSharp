@@ -53,7 +53,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactCorsPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174") 
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000") 
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();  // Required for SignalR
@@ -175,12 +175,32 @@ using (var scope = app.Services.CreateScope())
                 ADD [CreatedAt] datetime2 NOT NULL
                     CONSTRAINT [DF_AspNetUsers_CreatedAt] DEFAULT SYSUTCDATETIME();
             END
+
+            IF COL_LENGTH('Notifications', 'ActorId') IS NULL
+            BEGIN
+                ALTER TABLE [Notifications] ADD [ActorId] uniqueidentifier NULL;
+            END
+
+            IF COL_LENGTH('Stories', 'ExpireAt') IS NULL
+            BEGIN
+                ALTER TABLE [Stories] ADD [ExpireAt] datetime2 NOT NULL DEFAULT DATEADD(hour, 24, GETUTCDATE());
+            END
+
+            IF COL_LENGTH('Stories', 'StoryContent') IS NULL
+            BEGIN
+                ALTER TABLE [Stories] ADD [StoryContent] nvarchar(500) NULL;
+            END
+
+            IF COL_LENGTH('Posts', 'OriginalPostId') IS NULL
+            BEGIN
+                ALTER TABLE [Posts] ADD [OriginalPostId] uniqueidentifier NULL;
+            END
         ");
 
         await DataSeeder.SeedUserAsync(services);
-        await DataSeeder.SeedPostsAsync(services);
-        await DataSeeder.SeedNotificationsAsync(services);
-        await DataSeeder.SeedStoriesAsync(services);
+        // await DataSeeder.SeedPostsAsync(services);
+        // await DataSeeder.SeedNotificationsAsync(services);
+        // await DataSeeder.SeedStoriesAsync(services);
     }
     catch (Exception ex)
     {

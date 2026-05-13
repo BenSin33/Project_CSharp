@@ -1,3 +1,5 @@
+import Avatar from "../common/Avatar";
+
 interface Conversation {
   id: string;
   name: string;
@@ -15,10 +17,6 @@ interface Props {
   onClick: () => void;
 }
 
-function initials(name: string) {
-  return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
-}
-
 export default function ConversationItem({ conversation: c, isActive, onClick }: Props) {
   return (
     <div
@@ -27,17 +25,9 @@ export default function ConversationItem({ conversation: c, isActive, onClick }:
         isActive ? "bg-blue-50" : "hover:bg-gray-50"
       }`}
     >
-      <div
-        className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-medium flex-shrink-0"
-        style={{ background: c.avatarColor ?? "#e5e7eb", color: c.avatarTextColor ?? "#4b5563" }}
-      >
-        {c.avatarUrl
-          ? <img src={c.avatarUrl} alt={c.name} className="w-full h-full object-cover rounded-full" />
-          : initials(c.name)
-        }
-      </div>
+      <Avatar name={c.name} avatarUrl={c.avatarUrl} size={44} />
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 hidden sm:block">
         <div className="flex justify-between items-baseline gap-1 mb-0.5">
           <span className="text-[14px] font-medium text-gray-900 truncate">{c.name}</span>
           <span className="text-[11px] text-gray-400 flex-shrink-0">{c.time}</span>

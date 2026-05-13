@@ -28,6 +28,11 @@ public interface IAdminDashboardService
     /// Get top reported posts
     /// </summary>
     Task<List<TopReportedPostDTO>> GetTopReportedPostsAsync(int count = 10);
+    
+    /// <summary>
+    /// Get top users by activity/friends
+    /// </summary>
+    Task<List<TopUserDTO>> GetTopUsersAsync(int count = 5);
 
     /// <summary>
     /// Get user activity summary

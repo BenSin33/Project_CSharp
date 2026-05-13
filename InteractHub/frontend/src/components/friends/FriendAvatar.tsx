@@ -11,7 +11,7 @@ export default function FriendAvatar({ name, avatarUrl, size = 48 }: Props) {
       style={{ width: size, height: size }}
     >
       {avatarUrl
-        ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+        ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
         : <span className="text-gray-500 font-medium" style={{ fontSize: size * 0.3 }}>{initials}</span>
       }
     </div>

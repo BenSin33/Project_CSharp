@@ -53,6 +53,7 @@ public class AdminDashboardDTO
     public DashboardStatsDTO Stats { get; set; } = new();
     public List<RecentActivityDTO> RecentActivity { get; set; } = new();
     public List<PendingActionDTO> PendingActions { get; set; } = new();
+    public List<TopUserDTO> TopUsers { get; set; } = new();
 }
 
 /// <summary>
@@ -92,4 +93,17 @@ public class UserActivitySummaryDTO
     public int PostsCreatedThisWeek { get; set; }
     public int PostsCreatedThisMonth { get; set; }
     public double AveragePostsPerUser { get; set; }
+}
+
+/// <summary>
+/// Top users by activity
+/// </summary>
+public class TopUserDTO
+{
+    public Guid Id { get; set; }
+    public string FullName { get; set; } = null!;
+    public string? AvatarUrl { get; set; }
+    public int PostCount { get; set; }
+    public int FriendCount { get; set; }
+    public string Status { get; set; } = "active";
 }

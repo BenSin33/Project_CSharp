@@ -5,17 +5,25 @@ using InteractHub.Api.DTOs.User_Handle;
 using InteractHub.Api.DTOs.Common;
 using InteractHub.Api.Services.Interface;
 
+using Microsoft.AspNetCore.SignalR;
+using InteractHub.Api.Hubs;
+
 namespace InteractHub.Api.Services.Implementation;
 
 public class UserService : IUserService
 {
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public UserService(UserManager<User> userManager, RoleManager<IdentityRole<Guid>> roleManager)
+    public UserService(
+        UserManager<User> userManager, 
+        RoleManager<IdentityRole<Guid>> roleManager,
+        IHubContext<NotificationHub> hubContext)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        _hubContext = hubContext;
     }
 
     public async Task<IEnumerable<UserResponseDTO>> GetAllUsersAsync()
@@ -86,9 +94,31 @@ public class UserService : IUserService
 
         var result = await _userManager.UpdateAsync(user);
         if(!result.Succeeded) throw new Exception(
-            string.Join(",", result.Errors.Select(e => e.Description))); // throw exception if update failed
+            string.Join(",", result.Errors.Select(e => e.Description)));
 
-        return await MapToResponseDtoAsync(user);
+        var dto = await MapToResponseDtoAsync(user);
+
+        // Broadcast real-time to all users
+        await _hubContext.Clients.All.SendAsync("UserUpdated", dto);
+
+        return dto;
+    }
+
+    public async Task<bool> UpdateUserSettingsAsync(Guid id, UpdateUserSettingsDTO request)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null) return false;
+
+        if (request.EmailNotifications.HasValue) user.EmailNotifications = request.EmailNotifications.Value;
+        if (request.PushNotifications.HasValue) user.PushNotifications = request.PushNotifications.Value;
+        if (request.PrivateAccount.HasValue) user.PrivateAccount = request.PrivateAccount.Value;
+        if (request.ShowOnlineStatus.HasValue) user.ShowOnlineStatus = request.ShowOnlineStatus.Value;
+        if (!string.IsNullOrEmpty(request.WhoCanComment)) user.WhoCanComment = request.WhoCanComment;
+        if (!string.IsNullOrEmpty(request.WhoCanSendFriendRequest)) user.WhoCanSendFriendRequest = request.WhoCanSendFriendRequest;
+        if (!string.IsNullOrEmpty(request.WhoCanSeeFriendsList)) user.WhoCanSeeFriendsList = request.WhoCanSeeFriendsList;
+
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded;
     }
 
     public async Task<bool> DeleteUserAsync(Guid id)
@@ -140,6 +170,20 @@ public class UserService : IUserService
         }
 
         return true; // user already has the role, consider it a success
+    }
+
+    public async Task<bool> RemoveRoleAsync(Guid id, string roleName)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null) return false;
+
+        if (await _userManager.IsInRoleAsync(user, roleName))
+        {
+            var result = await _userManager.RemoveFromRoleAsync(user, roleName);
+            return result.Succeeded;
+        }
+
+        return true;
     }
 
     // New status management methods
@@ -232,13 +276,19 @@ public class UserService : IUserService
         var roles = await _userManager.GetRolesAsync(user);
         var isLocked = await _userManager.IsLockedOutAsync(user);
 
+        var avatarUrl = user.AvatarUrl;
+        if (!string.IsNullOrEmpty(avatarUrl) && avatarUrl.Contains("?"))
+        {
+            avatarUrl = avatarUrl.Substring(0, avatarUrl.IndexOf("?"));
+        }
+
         return new UserResponseDTO
         {
             Id = user.Id,
             Email = user.Email!,
             FullName = user.FullName,
             Location = user.Location,
-            AvatarUrl = user.AvatarUrl,
+            AvatarUrl = avatarUrl,
             Bio = user.Bio,
             DateOfBirth = user.DateOfBirth,
             Gender = user.Gender.ToString(),
@@ -247,7 +297,14 @@ public class UserService : IUserService
             Status = user.Status.ToString(),
             CreatedAt = user.CreatedAt,
             SuspendedUntil = user.SuspendedUntil,
-            BannedAt = user.BannedAt
+            BannedAt = user.BannedAt,
+            EmailNotifications = user.EmailNotifications,
+            PushNotifications = user.PushNotifications,
+            PrivateAccount = user.PrivateAccount,
+            ShowOnlineStatus = user.ShowOnlineStatus,
+            WhoCanComment = user.WhoCanComment,
+            WhoCanSendFriendRequest = user.WhoCanSendFriendRequest,
+            WhoCanSeeFriendsList = user.WhoCanSeeFriendsList
         };
     }
 

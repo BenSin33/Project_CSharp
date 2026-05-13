@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
-import type { Story } from "../../types";
+import type { StoryGroup } from "../../types";
 
 interface StoryBarProps {
-  stories?:               Story[];
+  groups?:                StoryGroup[];
   currentUserAvatarUrl?:  string;
   onAddStory?:            () => void;
-  onViewStory?:           (story: Story) => void;
+  onViewStory?:           (group: StoryGroup) => void;
   emptyMessage?:          string;
 }
 
@@ -18,6 +18,8 @@ const ChevronIcon = ({ dir }: { dir: "left" | "right" }) => (
 );
 
 function AddStoryItem({ avatarUrl, onClick }: { avatarUrl?: string; onClick?: () => void }) {
+  const [imgErr, setImgErr] = useState(false);
+  const showImg = !!avatarUrl && !imgErr;
   return (
     <button onClick={onClick}
       className="flex flex-col items-center gap-2 group cursor-pointer bg-transparent border-none p-0"
@@ -25,8 +27,8 @@ function AddStoryItem({ avatarUrl, onClick }: { avatarUrl?: string; onClick?: ()
       <div className="relative">
         <div className="w-16 h-16 rounded-full overflow-hidden"
           style={{ border: "2.5px solid #e5e7eb", boxShadow: "0 2px 8px rgba(0,0,0,0.10)" }}>
-          {avatarUrl
-            ? <img src={avatarUrl} alt="Your story" className="w-full h-full object-cover" />
+          {showImg
+            ? <img src={avatarUrl} alt="Your story" className="w-full h-full object-cover" onError={() => setImgErr(true)} />
             : <div className="w-full h-full" style={{ background: "linear-gradient(135deg,#818cf8,#6366f1)" }} />
           }
         </div>
@@ -44,29 +46,32 @@ function AddStoryItem({ avatarUrl, onClick }: { avatarUrl?: string; onClick?: ()
   );
 }
 
-function StoryItem({ story, onClick }: { story: Story; onClick?: (s: Story) => void }) {
+function StoryItem({ group, onClick }: { group: StoryGroup; onClick?: (g: StoryGroup) => void }) {
   const [pressed, setPressed] = useState(false);
-  const isActive = story.active && !story.viewed;
+  const [imgErr, setImgErr] = useState(false);
+  const isActive = group.stories.some(s => s.active && !s.viewed);
+  const viewedAll = group.stories.every(s => s.viewed);
+  const showImg = !!group.avatarUrl && !imgErr;
 
   const ringStyle: React.CSSProperties = isActive
     ? { background: "linear-gradient(135deg,#ec4899 0%,#a855f7 50%,#6366f1 100%)", padding: "2.5px", borderRadius: "9999px" }
     : { background: "#d1d5db", padding: "2px", borderRadius: "9999px" };
 
   return (
-    <button onClick={() => onClick?.(story)}
+    <button onClick={() => onClick?.(group)}
       onMouseDown={() => setPressed(true)} onMouseUp={() => setPressed(false)} onMouseLeave={() => setPressed(false)}
       className="flex flex-col items-center gap-2 bg-transparent border-none p-0 cursor-pointer"
       style={{ transform: pressed ? "scale(0.94)" : "scale(1)", transition: "transform 0.12s ease" }}
-      aria-label={`View ${story.username}'s story`}>
+      aria-label={`View ${group.username}'s story`}>
       <div style={ringStyle}>
         <div style={{ background: "#fff", borderRadius: "9999px", padding: "2px" }}>
           <div className="w-14 h-14 rounded-full overflow-hidden"
-            style={{ filter: story.viewed ? "grayscale(30%) brightness(0.9)" : "none", transition: "filter 0.2s" }}>
-            {story.avatarUrl
-              ? <img src={story.avatarUrl} alt={story.username} className="w-full h-full object-cover" />
+            style={{ filter: viewedAll ? "grayscale(30%) brightness(0.9)" : "none", transition: "filter 0.2s" }}>
+            {showImg
+              ? <img src={group.avatarUrl} alt={group.username} className="w-full h-full object-cover" onError={() => setImgErr(true)} />
               : <div className="w-full h-full flex items-center justify-center"
                   style={{ background: "linear-gradient(135deg,#818cf8,#6366f1)", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: "18px" }}>
-                  {story.username[0].toUpperCase()}
+                  {group.username[0].toUpperCase()}
                 </div>
             }
           </div>
@@ -77,13 +82,13 @@ function StoryItem({ story, onClick }: { story: Story; onClick?: (s: Story) => v
         fontWeight: isActive ? 600 : 400, color: isActive ? "#111827" : "#6b7280",
         maxWidth: "72px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>
-        {story.username}
+        {group.username}
       </span>
     </button>
   );
 }
 
-export default function StoryBar({ stories = [], currentUserAvatarUrl, onAddStory, onViewStory, emptyMessage = "Hiện chưa có dữ liệu story." }: StoryBarProps) {
+export default function StoryBar({ groups = [], currentUserAvatarUrl, onAddStory, onViewStory, emptyMessage = "Hiện chưa có dữ liệu story." }: StoryBarProps) {
   const scrollRef                   = useRef<HTMLDivElement>(null);
   const [canScrollLeft,  setLeft]   = useState(false);
   const [canScrollRight, setRight]  = useState(true);
@@ -115,9 +120,9 @@ export default function StoryBar({ stories = [], currentUserAvatarUrl, onAddStor
           style={{ scrollbarWidth: "none", msOverflowStyle: "none", padding: "4px 24px 4px" }}>
           <style>{`div::-webkit-scrollbar { display: none; }`}</style>
           <AddStoryItem avatarUrl={currentUserAvatarUrl} onClick={onAddStory} />
-          {stories.length === 0
+          {groups.length === 0
             ? <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", color: "#9ca3af", display: "flex", alignItems: "center", paddingLeft: "8px" }}>{emptyMessage}</span>
-            : stories.map((story) => <StoryItem key={story.id} story={story} onClick={onViewStory} />)
+            : groups.map((group) => <StoryItem key={group.userId} group={group} onClick={onViewStory} />)
           }
         </div>
       </div>

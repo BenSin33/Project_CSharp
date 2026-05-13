@@ -58,6 +58,7 @@ export interface BackendPostDto {
   likeSummary?: LikeSummaryDto
   topComments?: CommentDetailDto[]
   hashTags?: string[]
+  originalPost?: BackendPostDto
 }
 
 /** Paginated wrapper mà backend trả về */
@@ -93,6 +94,8 @@ export interface PostDto {
   topComments: CommentDetailDto[]   // top 5 comments embedded in post
   likeSummary?: LikeSummaryDto
   hashTags?: string[]
+  status?: string
+  originalPost?: PostDto
 }
 
 // ─── Mapper ─────────────────────────────────────────────────────────────────
@@ -121,6 +124,8 @@ export function mapFromBackend(p: BackendPostDto): PostDto {
     topComments:   p.topComments ?? [],
     likeSummary:   p.likeSummary,
     hashTags:      p.hashTags ?? [],
+    status:        p.status,
+    originalPost:  p.originalPost ? mapFromBackend(p.originalPost) : undefined,
   }
 }
 
@@ -136,13 +141,9 @@ export async function getAllPosts(skip = 0, take = 20): Promise<PaginatedRespons
   // ── DEBUG: xem đúng cấu trúc backend trả về ──
   console.log("[postService] raw resp.data:", JSON.stringify(resp?.data, null, 2))
 
-  // Backend trả ApiResponse<PaginatedResponse<T>>:
-  // resp.data = { success, data: { data: [...], total, skip, take }, message }
-  // Nhưng nếu resp.data.data là array thẳng (không có .data bên trong)
-  // thì backend đang trả ApiResponse<List<T>> — cần handle cả 2 case
   const outer = resp?.data         // ApiResponse wrapper
   const inner = outer?.data        // PaginatedResponse hoặc array
-
+ 
   console.log("[postService] outer.success:", outer?.success)
   console.log("[postService] inner type:", Array.isArray(inner) ? "ARRAY" : typeof inner)
   if (inner && !Array.isArray(inner)) {

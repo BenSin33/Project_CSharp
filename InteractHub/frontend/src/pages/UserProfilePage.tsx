@@ -29,6 +29,7 @@ function toUiPost(p: PostDto): UiPost {
     createdAt: new Date(p.createdAt).toLocaleString("vi-VN"),
     isLiked: p.isLiked,
     isSaved: p.isSaved,
+    status: p.status,
     _topComments: (p.topComments ?? []).map(mapDetailToItem),
   };
 }

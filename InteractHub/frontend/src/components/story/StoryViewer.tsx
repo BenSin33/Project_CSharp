@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { Story } from "../../types";
+import { formatTimeAgo } from "../../utils/timeUtils";
 
 interface StoryViewerProps {
   stories: Story[];
@@ -176,7 +177,7 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
               flexShrink: 0,
             }}>
               {story.avatarUrl
-                ? <img src={story.avatarUrl} alt={story.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ? <img src={story.avatarUrl} alt={story.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 : <div style={{
                   width: "100%", height: "100%",
                   background: "linear-gradient(135deg,#818cf8,#6366f1)",
@@ -192,7 +193,7 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
                 {story.username}
               </p>
               <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "12px", margin: 0 }}>
-                27 days ago
+                {formatTimeAgo(story.createdAt)}
               </p>
             </div>
           </div>
@@ -227,6 +228,9 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
             <img
               src={story.imageUrl}
               alt={`${story.username}'s story`}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://placehold.co/400x700?text=Image+Not+Found";
+              }}
               style={{
                 width: "100%",
                 height: "100%",

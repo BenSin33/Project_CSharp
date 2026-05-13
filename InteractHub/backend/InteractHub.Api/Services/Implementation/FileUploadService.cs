@@ -1,4 +1,3 @@
-using System.Reflection.Metadata;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using InteractHub.Api.Services.Interface;
@@ -23,7 +22,14 @@ public class FileUploadService : IFileUploadService
         
         // reach container (folder on Azure Blob Storage), if not exist then create new one
         var containerClient = _blobServiceClient.GetBlobContainerClient(containerName); // reference to container
-        await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+        
+        // Ensure container exists and has public access
+        var result = await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
+        if (result == null)
+        {
+            // If container already exists, ensure it is set to public blob access
+            await containerClient.SetAccessPolicyAsync(PublicAccessType.Blob);
+        }
 
         // create unique file name to avoid conflicts
         var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
@@ -33,31 +39,33 @@ public class FileUploadService : IFileUploadService
         using var stream = file.OpenReadStream();
         await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = file.ContentType});
 
-        //return url of uploaded file
-        return blobClient.Uri.ToString();
-
+        //return url of uploaded file (stripping SAS token if present in connection string)
+        var finalUrl = blobClient.Uri.ToString();
+        var queryIndex = finalUrl.IndexOf('?');
+        return queryIndex >= 0 ? finalUrl.Substring(0, queryIndex) : finalUrl;
     }
 
     public async Task<bool> DeleteFileAsync(string fileUrl)
     {
         if(string.IsNullOrEmpty(fileUrl)) return false;
 
-        // try catch block to handle any potential errors during deletion (e.g. invalid URL, network issues, etc.)
         try
         {
             var uri = new Uri(fileUrl);
+            // URL format: https://account.blob.core.windows.net/container/blobname
             var containerName = uri.Segments[1].Trim('/');
             var blobName = string.Join("", uri.Segments.Skip(2));
+            
             var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             var blobClient = containerClient.GetBlobClient(blobName);
 
             var response = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
 
-            return response.Value; // returns true if deleted successfully, false if file not found or deletion failed
+            return response.Value;
         } 
         catch 
         {
-            return false; // log exception if needed
+            return false;
         }
     }
-}
+}

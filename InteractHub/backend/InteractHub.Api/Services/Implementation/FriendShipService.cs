@@ -13,11 +13,16 @@ namespace InteractHub.Api.Services.Implementation
     {
         private readonly IGenericRepository<FriendShip> _friendshipRepository;
         private readonly IGenericRepository<User> _userREpository;
+        private readonly INotificationService _notificationService;
 
-        public FriendshipService(IGenericRepository<FriendShip> friendshipRepository, IGenericRepository<User> userRepository)
+        public FriendshipService(
+            IGenericRepository<FriendShip> friendshipRepository, 
+            IGenericRepository<User> userRepository,
+            INotificationService notificationService)
         {
             _friendshipRepository = friendshipRepository;
             _userREpository = userRepository;
+            _notificationService = notificationService;
         }
 
         public async Task<FriendshipResponseDTO> SendFriendRequestAsync( Guid requesterId, Guid receiverId)
@@ -44,6 +49,23 @@ namespace InteractHub.Api.Services.Implementation
             await _friendshipRepository.AddAsync(newFriendship);
             await _friendshipRepository.SaveChangesAsync();
 
+            // Gửi thông báo cho người nhận
+            try
+            {
+                var sender = await _userREpository.GetByIdAsync(requesterId);
+                await _notificationService.CreateNotificationAsync(new DTOs.Notifications.CreateNotificationDTO
+                {
+                    UserId = receiverId,
+                    ActorId = requesterId,
+                    Content = $"{sender?.FullName ?? "Ai đó"} đã gửi lời mời kết bạn.",
+                    Type = NotificationType.FriendRequest
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[FriendshipService] Gửi thông báo thất bại: {ex.Message}");
+            }
+
             return new FriendshipResponseDTO
             {
                 Id = newFriendship.Id,
@@ -65,6 +87,24 @@ namespace InteractHub.Api.Services.Implementation
 
             _friendshipRepository.Update(friendship);
             await _friendshipRepository.SaveChangesAsync();
+
+            // Gửi thông báo cho người gửi (requester)
+            try
+            {
+                var acceptor = await _userREpository.GetByIdAsync(userId);
+                await _notificationService.CreateNotificationAsync(new DTOs.Notifications.CreateNotificationDTO
+                {
+                    UserId = friendship.RequesterId,
+                    ActorId = userId,
+                    Content = $"{acceptor?.FullName ?? "Ai đó"} đã chấp nhận lời mời kết bạn của bạn.",
+                    Type = NotificationType.FriendAccept
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[FriendshipService] Gửi thông báo thất bại: {ex.Message}");
+            }
+
             return true;
 
         }

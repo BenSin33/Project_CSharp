@@ -18,4 +18,15 @@ namespace InteractHub.Api.DTOs.User_Handle
         public DateTime DateOfBirth {get;set;}
         public Gender Gender {get;set;}
     }
+
+    public class UpdateUserSettingsDTO
+    {
+        public bool? EmailNotifications { get; set; }
+        public bool? PushNotifications { get; set; }
+        public bool? PrivateAccount { get; set; }
+        public bool? ShowOnlineStatus { get; set; }
+        public string? WhoCanComment { get; set; }
+        public string? WhoCanSendFriendRequest { get; set; }
+        public string? WhoCanSeeFriendsList { get; set; }
+    }
 }

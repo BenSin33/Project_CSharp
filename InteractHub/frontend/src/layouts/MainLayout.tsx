@@ -11,6 +11,8 @@ import NotificationPanel from "../components/notifications/NotificationPanel";
 import { useNotifications } from "../hooks/useNotification";
 import { useAuth } from "../contexts/AuthContext";
 import { createPost } from "../services/postService";
+import { messageService } from "../services/messageService";
+import { friendService } from "../services/friendService";
 import api from "../services/api";
 import { getAllHashtags, type HashTagDto } from "../services/HashtagService";
 import type { HashtagItem } from "../types";
@@ -20,6 +22,52 @@ function MainLayout() {
     const { user, logout, token } = useAuth();
     const [showPostModal, setShowPostModal] = useState(false);
     const { notifications, isOpen: showNotif, setIsOpen: setShowNotif, unreadCount, markAllRead } = useNotifications(token);
+
+    // Unread counts for sidebar
+    const [unreadMessages, setUnreadMessages] = useState(0);
+    const [pendingFriends, setPendingFriends] = useState(0);
+
+    // Initial fetch of unread counts
+    useEffect(() => {
+        if (!token || !user) return;
+        (async () => {
+            try {
+                const [msgCount, friends] = await Promise.all([
+                    messageService.getUnreadCount(),
+                    friendService.getPendingRequests(user.id)
+                ]);
+                setUnreadMessages(msgCount);
+                setPendingFriends(friends.length);
+            } catch (err) {
+                console.error("Error fetching unread counts", err);
+            }
+        })();
+    }, [token, user]);
+
+    // Update counts when notifications change (real-time via SignalR)
+    useEffect(() => {
+        if (notifications.length > 0) {
+            const latest = notifications[0];
+            if (!latest.isRead) {
+                if (latest.type === "message") {
+                    setUnreadMessages(prev => prev + 1);
+                } else if (latest.type === "friend_request") {
+                    setPendingFriends(prev => prev + 1);
+                }
+            } else {
+                // If notifications changed and latest is read, might mean user marked as read
+                // To be safe, we could re-fetch all counts
+                (async () => {
+                    const [msgCount, friends] = await Promise.all([
+                        messageService.getUnreadCount(),
+                        friendService.getPendingRequests(user?.id ?? "")
+                    ]);
+                    setUnreadMessages(msgCount);
+                    setPendingFriends(friends.length);
+                })();
+            }
+        }
+    }, [notifications, user?.id]);
 
     // Trending hashtags state
     const [trendingHashtags, setTrendingHashtags] = useState<HashtagItem[]>([]);
@@ -91,16 +139,20 @@ function MainLayout() {
                 onNotificationsClick={() => setShowNotif(v => !v)}
             />
 
-            <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-[64px_1fr] lg:grid-cols-[240px_1fr_300px] gap-4 md:gap-6 items-start">
+            <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-[64px_1fr] lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_300px] gap-4 md:gap-6 items-start">
                 <aside className="sticky top-20">
-                    <Sidebar currentUser={user ?? undefined} />
+                    <Sidebar 
+                        currentUser={user ?? undefined} 
+                        unreadMessages={unreadMessages}
+                        pendingFriends={pendingFriends}
+                    />
                 </aside>
                 
                 <main className="flex flex-col gap-4 min-w-0">
                     <Outlet />
                 </main>
 
-                <aside className="sticky top-20 hidden lg:flex flex-col gap-4">
+                <aside className="sticky top-20 hidden xl:flex flex-col gap-4">
                     <TrendingHashtags
                         hashtags={trendingHashtags}
                         isLoading={hashtagsLoading}

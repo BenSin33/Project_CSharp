@@ -11,7 +11,9 @@ const SettingsIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="22" h
 const ShieldIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V6l8-3 8 3z"/></svg>);
 
 interface SidebarProps {
-  currentUser?: Pick<User, "name" | "avatarUrl" | "roles">;
+  currentUser?: Pick<User, "name" | "avatarUrl" | "roles" | "id">;
+  unreadMessages?: number;
+  pendingFriends?: number;
 }
 
 interface NavItem {
@@ -19,17 +21,18 @@ interface NavItem {
   label: string;
   path:  string;
   icon:  React.ReactNode;
+  badge?: number;
 }
 
-export default function Sidebar({ currentUser }: SidebarProps) {
+export default function Sidebar({ currentUser, unreadMessages = 0, pendingFriends = 0 }: SidebarProps) {
   const navItems: NavItem[] = [
     { id: "home",      label: "Home",      path: "/",          icon: <HomeIcon /> },
     { id: "profile",   label: "Profile",   path: "/profile",   icon: currentUser
         ? <Avatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={22} />
         : null },
-    { id: "friends",   label: "Friends",   path: "/friends",   icon: <FriendsIcon /> },
+    { id: "friends",   label: "Friends",   path: "/friends",   icon: <FriendsIcon />, badge: pendingFriends },
     { id: "explore",   label: "Explore",   path: "/explore",   icon: <ExploreIcon /> },
-    { id: "messages",  label: "Messages",  path: "/messages",  icon: <MessagesIcon /> },
+    { id: "messages",  label: "Messages",  path: "/messages",  icon: <MessagesIcon />, badge: unreadMessages },
     { id: "bookmarks", label: "Bookmarks", path: "/bookmarks", icon: <BookmarksIcon /> },
     { id: "settings",  label: "Settings",  path: "/settings",  icon: <SettingsIcon /> },
   ];
@@ -40,10 +43,10 @@ export default function Sidebar({ currentUser }: SidebarProps) {
 
   return (
     <nav className="w-full bg-gray-50 py-2 px-1 flex flex-col gap-1">
-      {navItems.map(({ id, label, path, icon }) => (
+      {navItems.map(({ id, label, path, icon, badge }) => (
         <NavLink key={id} to={path}
           className={({ isActive }) =>
-            `flex items-center gap-3 p-3 lg:px-4 lg:py-3 rounded-xl text-[15px] font-medium transition-colors justify-center lg:justify-start ${
+            `flex items-center gap-3 p-3 lg:px-4 lg:py-3 rounded-xl text-[15px] font-medium transition-colors justify-center lg:justify-start group ${
               isActive ? "bg-blue-50 text-blue-600" : "text-gray-800 hover:bg-gray-100"
             }`
           }
@@ -51,8 +54,18 @@ export default function Sidebar({ currentUser }: SidebarProps) {
         >
           {({ isActive }) => (
             <>
-              <span className={isActive ? "text-blue-600" : "text-gray-800"}>{icon}</span>
-              <span className="hidden lg:inline">{label}</span>
+              <div className="relative">
+                <span className={isActive ? "text-blue-600" : "text-gray-800"}>{icon}</span>
+                {badge !== undefined && badge > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+                )}
+              </div>
+              <span className="hidden lg:inline flex-1">{label}</span>
+              {badge !== undefined && badge > 0 && (
+                <span className="hidden lg:flex items-center justify-center bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full px-1">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </>
           )}
         </NavLink>

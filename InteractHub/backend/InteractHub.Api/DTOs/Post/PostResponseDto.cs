@@ -29,4 +29,6 @@ public class PostResponseDto
 
     // Hashtags
     public List<string> HashTags { get; set; } = new List<string>();
+
+    public PostResponseDto? OriginalPost { get; set; }
 }

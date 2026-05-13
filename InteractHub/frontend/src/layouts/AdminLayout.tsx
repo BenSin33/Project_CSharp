@@ -1,7 +1,7 @@
-import { useCallback } from "react"
 import { Outlet, useNavigate, useLocation } from "react-router-dom"
 import { LogOut, Shield, BarChart3, FileWarning, Users, Activity, Layout } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
+import Avatar from "../components/common/Avatar"
 
 type AdminMenuTab = "dashboard" | "reports" | "users" | "content" | "logs"
 
@@ -10,12 +10,12 @@ export default function AdminLayout() {
   const location = useLocation()
   const { logout, user } = useAuth()
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = () => {
     if (window.confirm("Bạn chắc chắn muốn đăng xuất?")) {
-      await logout()
+      logout()
       navigate("/login")
     }
-  }, [logout, navigate])
+  }
 
   const menuItems: Array<{ id: AdminMenuTab; label: string; icon: React.ReactNode; path: string }> = [
     { id: "dashboard", label: "Dashboard", icon: <BarChart3 size={18} />, path: "/admin" },
@@ -54,10 +54,11 @@ export default function AdminLayout() {
         {/* User Info */}
         <div className="mb-6 px-6">
           <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3">
-            <img
-              src={user?.avatarUrl || "https://ui-avatars.com/api/?name=Admin&background=random"}
-              alt="Avatar"
-              className="h-10 w-10 shrink-0 rounded-full object-cover"
+            <Avatar
+              name={user?.name || "Admin"}
+              avatarUrl={user?.avatarUrl}
+              size={40}
+              variant="indigo"
             />
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold">You</div>

@@ -1,6 +1,7 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { X, Upload, ImageIcon, Film, Trash2, Loader2 } from "lucide-react";
 import { storyService } from "../../services/storyService";
+import { mediaService } from "../../services/mediaService";
 
 interface CreateStoryModalProps {
   isOpen:         boolean;
@@ -38,6 +39,16 @@ export default function CreateStoryModal({
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  // Auto-open file picker when modal opens for the first time
+  useEffect(() => {
+    if (isOpen && !preview && !file) {
+      const timer = setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 300); // Small delay to ensure modal is rendered
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, preview, file]);
 
   const handleClose = () => {
     reset();
@@ -81,13 +92,22 @@ export default function CreateStoryModal({
     setUploading(true);
     setError(null);
     try {
-      // Nếu là local file, dùng blob URL hoặc upload lên server
-      // Hiện tại: gửi mediaUrl là objectURL (local preview) hoặc URL thật nếu backend hỗ trợ upload
-      // Trong thực tế cần upload file lên storage trước rồi lấy URL
+      let finalMediaUrl = preview ?? "";
+
+      // Nếu có file local, upload lên server trước
+      if (file) {
+        finalMediaUrl = await mediaService.uploadFile(file);
+      }
+
+      if (!finalMediaUrl) {
+        throw new Error("Không thể tải lên file.");
+      }
+
       await storyService.createStory({
-        mediaUrl:     preview ?? "",
+        mediaUrl:     finalMediaUrl,
         storyContent: caption.trim() || undefined,
       });
+      window.dispatchEvent(new Event("story-created"));
       setSuccess(true);
       setTimeout(() => {
         reset();
@@ -95,14 +115,8 @@ export default function CreateStoryModal({
         onCreated?.();
       }, 1200);
     } catch (err: any) {
-      console.warn("createStory failed — simulating success for demo", err);
-      // Demo mode: nếu backend không kết nối thì vẫn hiện thành công
-      setSuccess(true);
-      setTimeout(() => {
-        reset();
-        onClose();
-        onCreated?.();
-      }, 1200);
+      console.error("createStory failed:", err);
+      setError(err?.message || "Đã xảy ra lỗi khi đăng story.");
     } finally {
       setUploading(false);
     }
@@ -134,7 +148,7 @@ export default function CreateStoryModal({
             {/* User avatar */}
             <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
               {userAvatarUrl
-                ? <img src={userAvatarUrl} alt={userName} className="w-full h-full object-cover" />
+                ? <img src={userAvatarUrl} alt={userName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 : <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold"
                     style={{ background: "linear-gradient(135deg,#818cf8,#6366f1)" }}>
                     {userName[0]?.toUpperCase()}

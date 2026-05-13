@@ -42,6 +42,22 @@ public class AuthController : ControllerBase
             : Unauthorized(ApiResponse<AuthResponseDTO>.Fail(result.Message ?? "Login failed"));
     }
 
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDTO model)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse<string>.Fail("Invalid token"));
+        }
+
+        var result = await _authService.ChangePasswordAsync(userId, model);
+        return result.Success
+            ? Ok(ApiResponse<bool>.Ok(true, result.Message))
+            : BadRequest(ApiResponse<bool>.Fail(result.Message));
+    }
+
     [HttpPost("refresh-token")]
     [Authorize]
     public async Task<IActionResult> RefreshToken()

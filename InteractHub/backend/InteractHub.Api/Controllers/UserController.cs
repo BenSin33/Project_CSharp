@@ -85,6 +85,24 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpPut("{id}/settings")]
+    [Authorize]
+    public async Task<IActionResult> UpdateSettings(Guid id, [FromBody] UpdateUserSettingsDTO request)
+    {
+        try
+        {
+            var result = await _userService.UpdateUserSettingsAsync(id, request);
+            if (!result)
+                return NotFound(ApiResponse<bool>.Fail("User not found or update failed"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "Settings updated successfully"));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
+        }
+    }
+
     [HttpPost("{id}/lock")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> LockUser(Guid id, [FromBody] int days = 7)
@@ -121,6 +139,25 @@ public class UserController : ControllerBase
 
             return Ok(ApiResponse<bool>.Ok(true, $"Role '{request.RoleName}' assigned successfully. "));
 
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse<string>.Fail(ex.Message));
+        }
+    }
+    [HttpDelete("{id}/roles")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RemoveRole(Guid id, [FromQuery] AssignRoleDTO request)
+    {
+        if (!ModelState.IsValid) return BadRequest(ApiResponse<string>.Fail("Invalid role data"));
+
+        try
+        {
+            var result = await _userService.RemoveRoleAsync(id, request.RoleName);
+            if (!result)
+                return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, $"Role '{request.RoleName}' removed successfully. "));
         }
         catch (Exception ex)
         {

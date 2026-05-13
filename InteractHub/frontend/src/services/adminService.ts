@@ -41,10 +41,20 @@ export interface PendingAction {
   description?: string
 }
 
+export interface AdminTopUserItem {
+  id: string
+  fullName: string
+  avatarUrl?: string
+  postCount: number
+  friendCount: number
+  status: string
+}
+
 export interface AdminDashboard {
   stats?: DashboardStats
   recentActivity?: RecentActivity[]
   pendingActions?: PendingAction[]
+  topUsers?: AdminTopUserItem[]
 }
 
 export interface AdminReportAuthor {
@@ -284,6 +294,23 @@ async function getReports(skip = 0, take = 10, status?: ReportStatus | "all"): P
   return mapped
 }
 
+async function getAllPosts(skip = 0, take = 20): Promise<AdminPostItem[]> {
+  const resp = await api.get("/api/admin/posts", { params: { skip, take } })
+  const raw = unwrapList<any>(resp)
+  const data = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : []
+  
+  return data.map((p: any) => ({
+    ...p,
+    author: {
+      id: p.authorId,
+      name: p.authorName,
+      fullName: p.authorName,
+      email: p.authorEmail,
+      avatarUrl: p.authorAvatarUrl
+    }
+  }))
+}
+
 async function updateReportStatus(reportId: string, payload: UpdateReportStatusPayload): Promise<boolean> {
   const statusMap: Record<string, number> = { "Pending": 0, "Reviewed": 1, "Resolved": 2 }
   const statusVal = typeof payload.status === "string" ? statusMap[payload.status] ?? 0 : payload.status
@@ -343,6 +370,12 @@ async function assignRole(userId: string, roleName: string): Promise<boolean> {
   return raw?.success ?? resp.data?.success ?? true
 }
 
+async function removeRole(userId: string, roleName: string): Promise<boolean> {
+  const resp = await api.delete(`/api/user/${userId}/roles`, { params: { roleName } })
+  const raw = unwrap<any>(resp)
+  return raw?.success ?? resp.data?.success ?? true
+}
+
 async function hidePost(postId: string, reason: string): Promise<boolean> {
   const resp = await api.post(`/api/admin/posts/${postId}/hide`, JSON.stringify(reason), {
     headers: { "Content-Type": "application/json" },
@@ -358,7 +391,7 @@ async function unhidePost(postId: string): Promise<boolean> {
 }
 
 async function deletePost(postId: string, payload: AdminDeletePostPayload): Promise<boolean> {
-  const resp = await api.delete(`/api/admin/posts/${postId}`, { data: payload })
+  const resp = await api.delete(`/api/admin/posts/${postId}`, { params: payload })
   const raw = unwrap<any>(resp)
   return raw?.success ?? resp.data?.success ?? true
 }
@@ -439,11 +472,13 @@ export const adminService = {
   updateReportStatus,
   getReportedPosts,
   getPostsPendingReview,
+  getAllPosts,
   getUsers,
   searchUsers,
   lockUser,
   unlockUser,
   assignRole,
+  removeRole,
   hidePost,
   unhidePost,
   deletePost,

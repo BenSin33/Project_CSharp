@@ -249,6 +249,11 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
     setShowReactionPicker(false);
 
     if (!onLike) return;
+    
+    // Set loading state to prevent double clicks
+    const btn = document.activeElement as HTMLButtonElement;
+    if (btn) btn.disabled = true;
+
     try {
       await likeService.toggleLike({ postId: post.id, type });
     } catch {
@@ -256,6 +261,8 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
       setCurrentReaction(prevReaction);
       setLikes(prevLikes);
       showError("Action failed");
+    } finally {
+      if (btn) btn.disabled = false;
     }
   };
 
@@ -333,7 +340,14 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
             <button onClick={goToAuthorProfile} className="font-semibold text-gray-900 text-sm hover:underline block text-left">
               {post.author.name}
             </button>
-            <p className="text-xs text-gray-400">{post.createdAt}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-gray-400">{post.createdAt}</p>
+              {post.status?.toLowerCase() === "hidden" && (
+                <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase">
+                  Hidden by Admin
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="relative">
@@ -355,6 +369,26 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
           )}
         </div>
       )}
+
+      {/* Shared Post content */}
+      {post.originalPost && (
+        <div className="mx-4 mb-3 border border-gray-100 rounded-xl overflow-hidden bg-gray-50/30">
+          <div className="flex gap-2 items-center p-3 border-b border-gray-50">
+            <Avatar name={post.originalPost.author.name} avatarUrl={post.originalPost.author.avatarUrl} size={24}/>
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-gray-900">{post.originalPost.author.name}</span>
+              <span className="text-[10px] text-gray-400">{post.originalPost.createdAt}</span>
+            </div>
+          </div>
+          <div className="p-3 text-xs text-gray-700 leading-relaxed">
+            {post.originalPost.content}
+          </div>
+          {post.originalPost.imageUrl && (
+            <img src={post.originalPost.imageUrl} alt="shared post" className="w-full object-cover max-h-60"/>
+          )}
+        </div>
+      )}
+
       {post.imageUrl && <img src={post.imageUrl} alt="post" className="w-full object-cover max-h-96"/>}
 
       <div className="flex items-center justify-between px-4 py-2 text-xs text-gray-400 border-t border-gray-50">
@@ -445,9 +479,7 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
             <div className="flex flex-col gap-0.5 px-3 py-2">
               {comments.map(c => (
                 <div key={c.id} className="flex gap-2.5 items-start py-1.5">
-                  <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-semibold shrink-0 overflow-hidden">
-                    {c.avatarUrl ? <img src={c.avatarUrl} alt={c.senderName ?? "U"} className="w-full h-full object-cover"/> : (c.senderName ?? "U")[0].toUpperCase()}
-                  </div>
+                  <Avatar name={c.senderName || "U"} avatarUrl={c.avatarUrl} size={28} />
                   <div className="bg-white rounded-xl px-3 py-2 text-sm text-gray-800 shadow-sm flex-1">
                     {c.senderName && <span className="font-semibold text-gray-900 mr-1.5">{c.senderName}</span>}
                     {c.content}

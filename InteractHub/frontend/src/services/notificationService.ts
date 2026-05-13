@@ -3,16 +3,16 @@ import api, { unwrap } from "./api"
 // Enum NotificationType khớp backend:
 // Like=0, Comment=1, Share=2, Message=3, FriendRequest=4, FriendAccept=5,
 // PostMention=6, CommentMention=7, FriendPost=8
-export type NotifType = "like" | "comment" | "friend_request" | "share" | "mention"
+export type NotifType = "like" | "comment" | "friend_request" | "friend_accept" | "share" | "mention" | "message"
 
 // Map enum số -> NotifType UI
 const NOTIF_TYPE_MAP: Record<number, NotifType> = {
   0: "like",
   1: "comment",
   2: "share",
-  3: "mention",
+  3: "message",
   4: "friend_request",
-  5: "friend_request",
+  5: "friend_accept",
   6: "mention",
   7: "mention",
   8: "mention",
@@ -77,23 +77,10 @@ function mapFromBackend(n: NotificationResponseDTO): NotificationDto {
   }
 }
 
-// Mock khi backend down
-const MOCK_NOTIFICATIONS: NotificationDto[] = [
-  { id:"1", type:"like",           actor:{ name:"Sarah Johnson"  }, message:"liked your post",           timeAgo:"4 days ago", isRead:false, raw: {} as any },
-  { id:"2", type:"comment",        actor:{ name:"Michael Chen"   }, message:"commented on your post",    timeAgo:"4 days ago", isRead:false, raw: {} as any },
-  { id:"3", type:"friend_request", actor:{ name:"Sarah Johnson"  }, message:"sent you a friend request", timeAgo:"5 days ago", isRead:false, raw: {} as any },
-]
-
-// GET /api/notifications?skip=0&take=10
 async function getNotifications(skip = 0, take = 10): Promise<NotificationDto[]> {
-  try {
-    const resp = await api.get("/api/notifications", { params: { skip, take } })
-    const raw = unwrap<NotificationResponseDTO[]>(resp) ?? []
-    return raw.map(mapFromBackend)
-  } catch (err: any) {
-    if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) return MOCK_NOTIFICATIONS
-    throw err
-  }
+  const resp = await api.get("/api/notifications", { params: { skip, take } })
+  const raw = unwrap<NotificationResponseDTO[]>(resp) ?? []
+  return raw.map(mapFromBackend)
 }
 
 // GET /api/notifications/{id}

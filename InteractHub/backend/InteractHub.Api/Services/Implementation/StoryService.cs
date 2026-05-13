@@ -3,15 +3,20 @@ using InteractHub.Api.Models;
 using InteractHub.Api.Repositories;
 using InteractHub.Api.Services.Interface;
 
+using Microsoft.AspNetCore.SignalR;
+using InteractHub.Api.Hubs;
+
 namespace InteractHub.Api.Services.Implementation;
 
 public class StoryService : IStoryService
 {
     private readonly IGenericRepository<Story> _storyRepo;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public StoryService(IGenericRepository<Story> storyRepo)
+    public StoryService(IGenericRepository<Story> storyRepo, IHubContext<NotificationHub> hubContext)
     {
         _storyRepo = storyRepo;
+        _hubContext = hubContext;
     }
 
     public async Task<IEnumerable<StoryResponseDTO>> GetActiveStoriesAsync()
@@ -52,7 +57,12 @@ public class StoryService : IStoryService
         await _storyRepo.AddAsync(story);
         await _storyRepo.SaveChangesAsync();
 
-        return MapToDTO(story);
+        var dto = MapToDTO(story);
+
+        // Broadcast real-time to all users
+        await _hubContext.Clients.All.SendAsync("ReceiveNewStory", dto);
+
+        return dto;
     }
 
     public async Task<bool> DeleteStoryAsync(Guid storyId, Guid userId)

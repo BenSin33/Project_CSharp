@@ -14,6 +14,10 @@ public class Post : BaseEntity
     public virtual ICollection<Comment> Comments {get;set;} = new List<Comment>();
     public virtual ICollection<Like> Likes {get;set;} = new List<Like>();
     public virtual ICollection<Share> Shares {get;set;} = new List<Share>();
+
+    // Support sharing as a new post
+    public Guid? OriginalPostId {get;set;}
+    public virtual Post? OriginalPost {get;set;}
 }
 
 public enum Status

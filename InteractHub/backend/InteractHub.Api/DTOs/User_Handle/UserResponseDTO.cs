@@ -17,5 +17,14 @@ namespace InteractHub.Api.DTOs.User_Handle
         public DateTime CreatedAt { get; set; }
         public DateTime? SuspendedUntil { get; set; }
         public DateTime? BannedAt { get; set; }
+
+        // Settings
+        public bool EmailNotifications { get; set; }
+        public bool PushNotifications { get; set; }
+        public bool PrivateAccount { get; set; }
+        public bool ShowOnlineStatus { get; set; }
+        public string WhoCanComment { get; set; } = "Everyone";
+        public string WhoCanSendFriendRequest { get; set; } = "Everyone";
+        public string WhoCanSeeFriendsList { get; set; } = "Everyone";
     }
 }

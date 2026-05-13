@@ -10,9 +10,9 @@ function mapBackendToNotification(n: any): Notification {
     0: "like",
     1: "comment",
     2: "share",
-    3: "mention",    // Message — map to mention for icon fallback
+    3: "message",    // Message
     4: "friend_request",
-    5: "friend_request",
+    5: "friend_accept",
     6: "mention",
     7: "mention",
     8: "mention",
@@ -94,6 +94,18 @@ export function useNotifications(token: string | null) {
     connection.on("ReceiveNotification", (n: any) => {
       const mapped = mapBackendToNotification(n);
       setNotifications((prev) => [mapped, ...prev]);
+    });
+
+    connection.on("ReceiveNewPost", (post: any) => {
+      window.dispatchEvent(new CustomEvent("post-created", { detail: post }));
+    });
+
+    connection.on("ReceiveNewStory", (story: any) => {
+      window.dispatchEvent(new CustomEvent("story-created", { detail: story }));
+    });
+
+    connection.on("UserUpdated", (user: any) => {
+      window.dispatchEvent(new CustomEvent("user-updated", { detail: user }));
     });
 
     connection

@@ -13,12 +13,18 @@ public class ShareService : IShareService
     private readonly IGenericRepository<Share> _shareRepo;
     private readonly IGenericRepository<Post> _postRepo;
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public ShareService (IGenericRepository<Share> shareRepo, IGenericRepository<Post> postRepo, ApplicationDbContext context)
+    public ShareService (
+        IGenericRepository<Share> shareRepo, 
+        IGenericRepository<Post> postRepo, 
+        ApplicationDbContext context,
+        INotificationService notificationService)
     {
         _shareRepo = shareRepo;
         _postRepo = postRepo;
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<int> GetShareCountAsync(Guid postId)
@@ -29,20 +35,52 @@ public class ShareService : IShareService
 
     public async Task<bool> SharePostAsync(Guid userId, CreateShareDTO request)
     {
-        var post = await _postRepo.GetByIdAsync(request.PostId);
-        if(post == null || post.Status == Status.deleted) throw new Exception("Post not found");
+        var originalPost = await _postRepo.GetByIdAsync(request.PostId);
+        if(originalPost == null || originalPost.Status == Status.deleted) throw new Exception("Post not found");
 
-        var share = new Share
+        // 1. Lưu bản ghi vào bảng Shares (để đếm số lượng share)
+        var shareRecord = new Share
         {
-            Id =Guid.NewGuid(),
+            Id = Guid.NewGuid(),
             PostId = request.PostId,
             UserId = userId,
-            CreatedAt = DateTime.UtcNow,
-            DeletedAt = null
+            CreatedAt = DateTime.UtcNow
         };
+        await _shareRepo.AddAsync(shareRecord);
 
-        await _shareRepo.AddAsync(share);
-        await _shareRepo.SaveChangesAsync();
+        // 2. Tạo một Post mới (Shared Post) để hiển thị trên Newfeed của bạn bè
+        var sharedPost = new Post
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Content = request.Content ?? "", // Lời nhắn khi share
+            Visibility = Visibility.Public,  // Mặc định share là Public hoặc lấy từ request
+            Status = Status.active,
+            OriginalPostId = request.PostId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        await _context.Posts.AddAsync(sharedPost);
+
+        await _context.SaveChangesAsync();
+
+        // 3. Gửi thông báo cho chủ bài viết gốc
+        try
+        {
+            var sender = await _context.Users.FindAsync(userId);
+            await _notificationService.CreateNotificationAsync(new DTOs.Notifications.CreateNotificationDTO
+            {
+                UserId = originalPost.UserId,
+                ActorId = userId,
+                Content = $"{sender?.FullName ?? "Ai đó"} đã chia sẻ bài viết của bạn.",
+                Type = NotificationType.Share
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ShareService] Gửi thông báo thất bại: {ex.Message}");
+        }
+
         return true;
     }
 

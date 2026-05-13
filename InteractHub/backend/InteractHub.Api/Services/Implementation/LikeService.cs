@@ -12,12 +12,18 @@ public class LikeService : ILikeService
     private readonly IGenericRepository<Like> _likeRepo;
     private readonly IGenericRepository<Post> _postRepo;
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public LikeService(IGenericRepository<Like> likeRepo, IGenericRepository<Post> postRepo, ApplicationDbContext context)
+    public LikeService(
+        IGenericRepository<Like> likeRepo, 
+        IGenericRepository<Post> postRepo, 
+        ApplicationDbContext context,
+        INotificationService notificationService)
     {
         _likeRepo = likeRepo;
         _postRepo = postRepo;
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<LikeSummaryDTO> GetLikeSummaryAsync(Guid postId, Guid? currentUserId = null)
@@ -65,8 +71,8 @@ public class LikeService : ILikeService
             throw new Exception ("Post not found or has been deleted.");
         }
 
-        var allLikes = await _likeRepo.GetAllAsync();
-        var existingLike = allLikes.FirstOrDefault(l => l.PostId == request.PostId && l.UserId == userId);
+        var existingLike = await _context.Likes
+            .FirstOrDefaultAsync(l => l.PostId == request.PostId && l.UserId == userId);
 
         if(existingLike != null)
         {
@@ -96,6 +102,29 @@ public class LikeService : ILikeService
         }
 
         await _likeRepo.SaveChangesAsync();
+
+        // Gửi thông báo cho chủ bài viết
+        // 1. Chỉ gửi khi tạo Like mới (existingLike == null)
+        // 2. Không gửi nếu tự like bài của chính mình
+        if (existingLike == null && post.UserId != userId)
+        {
+            try
+            {
+                var sender = await _context.Users.FindAsync(userId);
+                await _notificationService.CreateNotificationAsync(new DTOs.Notifications.CreateNotificationDTO
+                {
+                    UserId = post.UserId,
+                    ActorId = userId,
+                    Content = $"{sender?.FullName ?? "Ai đó"} đã thích bài viết của bạn.",
+                    Type = NotificationType.Like
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LikeService] Gửi thông báo thất bại: {ex.Message}");
+            }
+        }
+
         return true;
     }
 
