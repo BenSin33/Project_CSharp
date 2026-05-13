@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { X, Heart, MessageCircle, UserPlus, Share2, AtSign } from "lucide-react";
+import { X, Heart, MessageCircle, UserPlus, Share2, AtSign, UserCheck, Mail } from "lucide-react";
 import Avatar from "../common/Avatar";
 import type { Notification, NotifType } from "../../types";
 
@@ -14,8 +14,10 @@ const TYPE_CONFIG: Record<NotifType, { Icon: React.ElementType; color: string; b
   like:           { Icon: Heart,          color: "#e11d48", bg: "#fff1f2" },
   comment:        { Icon: MessageCircle,  color: "#2563eb", bg: "#eff6ff" },
   friend_request: { Icon: UserPlus,       color: "#16a34a", bg: "#f0fdf4" },
+  friend_accept:  { Icon: UserCheck,      color: "#0891b2", bg: "#ecfeff" },
   share:          { Icon: Share2,         color: "#7c3aed", bg: "#f5f3ff" },
   mention:        { Icon: AtSign,         color: "#ea580c", bg: "#fff7ed" },
+  message:        { Icon: Mail,           color: "#6366f1", bg: "#eef2ff" },
 };
 
 export default function NotificationPanel({

@@ -7,17 +7,25 @@ using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
+using Microsoft.AspNetCore.SignalR;
+using InteractHub.Api.Hubs;
+
 namespace InteractHub.Api.Services.Implementation;
 
 public class PostService : IPostService
 {
     private readonly IGenericRepository<Post> _postRepository;
     private readonly ApplicationDbContext _context;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public PostService(IGenericRepository<Post> postRepository, ApplicationDbContext context)
+    public PostService(
+        IGenericRepository<Post> postRepository, 
+        ApplicationDbContext context,
+        IHubContext<NotificationHub> hubContext)
     {
         _postRepository = postRepository;
         _context = context;
+        _hubContext = hubContext;
     }
 
     public async Task<IEnumerable<PostResponseDto>> GetAllActivePostsAsync()
@@ -31,14 +39,31 @@ public class PostService : IPostService
     /// </summary>
     public async Task<PaginatedResponse<PostResponseDto>> GetAllActivePostsAsync(int skip, int take, Guid? currentUserId = null)
     {
+        // Lấy danh sách friendIds của currentUserId nếu có
+        var friendIds = new List<Guid>();
+        if (currentUserId.HasValue)
+        {
+            friendIds = await _context.FriendShips
+                .Where(f => f.DeletedAt == null && f.IsAccepted == IsAccepted.Accepted && (f.RequesterId == currentUserId || f.ReceiverId == currentUserId))
+                .Select(f => f.RequesterId == currentUserId ? f.ReceiverId : f.RequesterId)
+                .ToListAsync();
+        }
+
         var query = _context.Posts
-            .Where(p => p.Status == Status.active)
+            .Where(p => p.Status == Status.active || (currentUserId.HasValue && p.Status == Status.hidden && p.UserId == currentUserId.Value))
+            .Where(p => 
+                p.Visibility == Visibility.Public || 
+                (currentUserId.HasValue && p.UserId == currentUserId) ||
+                (currentUserId.HasValue && p.Visibility == Visibility.Friends && friendIds.Contains(p.UserId))
+            )
             .Include(p => p.User)
             .Include(p => p.PostMedias)
             .Include(p => p.HashTags)
             .Include(p => p.Comments).ThenInclude(c => c.User)
             .Include(p => p.Likes).ThenInclude(l => l.User)
             .Include(p => p.Shares)
+            .Include(p => p.OriginalPost).ThenInclude(op => op!.User)
+            .Include(p => p.OriginalPost).ThenInclude(op => op!.PostMedias)
             .AsNoTracking();
 
         var total = await query.CountAsync();
@@ -53,8 +78,8 @@ public class PostService : IPostService
 
         if (currentUserId.HasValue)
         {
-            var postIds = posts.Select(p => p.Id).ToList(); // ← materialize trước
-            if (postIds.Any()) // ← guard: chỉ query khi có posts
+            var postIds = posts.Select(p => p.Id).ToList();
+            if (postIds.Any())
             {
                 savedPostIds = (await _context.SavedPosts
                     .Where(sp => sp.UserId == currentUserId.Value && postIds.Contains(sp.PostId))
@@ -80,7 +105,7 @@ public class PostService : IPostService
     public async Task<PostResponseDto?> GetPostByIdAsync(Guid id, Guid? currentUserId = null)
     {
         var post = await _context.Posts
-            .Where(p => p.Id == id && p.Status != Status.deleted)
+            .Where(p => p.Id == id && (p.Status == Status.active || (currentUserId.HasValue && p.Status == Status.hidden && p.UserId == currentUserId.Value)))
             .Include(p => p.User)
             .Include(p => p.PostMedias)
             .Include(p => p.HashTags)
@@ -154,7 +179,7 @@ public class PostService : IPostService
     public async Task<PaginatedResponse<PostResponseDto>> GetPostsByUserAsync(Guid userId, int skip, int take, Guid? currentUserId = null)
     {
         var query = _context.Posts
-            .Where(p => p.UserId == userId && p.Status == Status.active)
+            .Where(p => p.UserId == userId && (p.Status == Status.active || (currentUserId.HasValue && p.Status == Status.hidden && p.UserId == currentUserId.Value)))
             .Include(p => p.User)
             .Include(p => p.PostMedias)
             .Include(p => p.Comments).ThenInclude(c => c.User)
@@ -309,7 +334,15 @@ public class PostService : IPostService
             }
         }
 
-        return MapToResponseDto(post, null, false);
+        // Load user info for broadcast
+        await _context.Entry(post).Reference(p => p.User).LoadAsync();
+
+        var dto = MapToResponseDto(post, null, false);
+
+        // Broadcast real-time to all users
+        await _hubContext.Clients.All.SendAsync("ReceiveNewPost", dto);
+
+        return dto;
     }
 
     /// <summary>
@@ -537,7 +570,8 @@ public class PostService : IPostService
             IsSavedByCurrentUser = isSaved,
             LikeSummary = likeSummary,
             TopComments = topComments,
-            HashTags = post.HashTags?.Select(h => h.HashTagName ?? "").Where(h => !string.IsNullOrEmpty(h)).ToList() ?? new List<string>()
+            HashTags = post.HashTags?.Select(h => h.HashTagName ?? "").Where(h => !string.IsNullOrEmpty(h)).ToList() ?? new List<string>(),
+            OriginalPost = post.OriginalPost != null ? MapToResponseDto(post.OriginalPost, currentUserId, false) : null
         };
     }
 

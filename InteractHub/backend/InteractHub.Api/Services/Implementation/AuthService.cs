@@ -72,6 +72,21 @@ public class AuthService : IAuthService
 
     }
 
+    public async Task<AuthResponseDTO> ChangePasswordAsync(Guid userId, ChangePasswordDTO model)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user == null) return new AuthResponseDTO(false, "User not found");
+
+        var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("|", result.Errors.Select(e => e.Description));
+            return new AuthResponseDTO(false, $"Mật khẩu không hợp lệ: {errors}");
+        }
+
+        return new AuthResponseDTO(true, "Mật khẩu đã được thay đổi thành công.");
+    }
+
     public async Task<string> GenerateJwtTokenAsync(User user)
     {
         var claims = new List<Claim>

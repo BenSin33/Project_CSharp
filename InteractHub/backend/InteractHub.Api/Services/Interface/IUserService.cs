@@ -8,10 +8,12 @@ public interface IUserService
     Task<IEnumerable<UserResponseDTO>> GetAllUsersAsync();
     Task<UserResponseDTO?> GetUserByIdAsync(Guid id);
     Task<UserResponseDTO?> UpdateUserAsync(Guid id, UpdateUserDTO request);
+    Task<bool> UpdateUserSettingsAsync(Guid id, UpdateUserSettingsDTO request);
     Task<bool> DeleteUserAsync(Guid id);
     Task<bool> LockUserAsync(Guid id, int daysToLock);
     Task<bool> UnLockUserAsync(Guid id);
     Task<bool> AssignRoleAsync(Guid id, string roleName);
+    Task<bool> RemoveRoleAsync(Guid id, string roleName);
     Task<PaginatedResponse<UserResponseDTO>> SearchUsersAsync(string query, int skip, int take);
     
     // New status management methods

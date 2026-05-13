@@ -21,6 +21,21 @@ public class AdminPostController : ControllerBase
     }
 
     /// <summary>
+    /// Get all posts for admin moderation (Admin only)
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAllPosts([FromQuery] int skip = 0, [FromQuery] int take = 20)
+    {
+        if (skip < 0 || take <= 0)
+        {
+            return BadRequest(ApiResponse<PaginatedResponse<AdminPostDetailDTO>>.Fail("Skip must be >= 0 and Take must be > 0"));
+        }
+
+        var posts = await _postService.GetAllPostsAsync(skip, take);
+        return Ok(ApiResponse<PaginatedResponse<AdminPostDetailDTO>>.Ok(posts, "All posts retrieved for moderation"));
+    }
+
+    /// <summary>
     /// Get detailed admin view of a post (Admin only)
     /// </summary>
     [HttpGet("{id}")]
@@ -37,7 +52,7 @@ public class AdminPostController : ControllerBase
     /// Delete a post (Admin only)
     /// </summary>
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeletePost(Guid id, [FromBody] AdminDeletePostDTO request)
+    public async Task<IActionResult> DeletePost(Guid id, [FromQuery] AdminDeletePostDTO request)
     {
         if (!ModelState.IsValid)
         {

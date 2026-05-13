@@ -9,10 +9,12 @@ namespace InteractHub.Api.Services.Implementation;
 public class MessageService : IMessageService
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public MessageService(ApplicationDbContext context)
+    public MessageService(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<MessageResponseDTO> SendMessageAsync(CreateMessageDTO createMessageDto, Guid senderId)
@@ -42,6 +44,22 @@ public class MessageService : IMessageService
 
         _context.Messages.Add(message);
         await _context.SaveChangesAsync();
+
+        // Gửi thông báo cho người nhận
+        try
+        {
+            await _notificationService.CreateNotificationAsync(new DTOs.Notifications.CreateNotificationDTO
+            {
+                UserId = createMessageDto.ReceiverId,
+                ActorId = senderId,
+                Content = $"{sender.FullName} đã gửi cho bạn một tin nhắn: \"{(message.MessageContent.Length > 30 ? message.MessageContent.Substring(0, 30) + "..." : message.MessageContent)}\"",
+                Type = NotificationType.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MessageService] Gửi thông báo thất bại: {ex.Message}");
+        }
 
         return new MessageResponseDTO(
             message.Id,

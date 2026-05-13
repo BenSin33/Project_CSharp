@@ -5,5 +5,6 @@ namespace InteractHub.Api.DTOs;
 
 public record RegisterDTO (string FullName, string Email, string Password, DateTime DateOfBirth, Gender Gender);
 public record LoginDTO (string Email, string Password);
+public record ChangePasswordDTO (string CurrentPassword, string NewPassword);
 public record AuthResponseDTO (bool Success, string Message, string? Token = null);
 public record TokenRefreshDTO (string Token);

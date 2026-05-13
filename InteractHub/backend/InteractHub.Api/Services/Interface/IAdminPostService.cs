@@ -70,4 +70,9 @@ public interface IAdminPostService
     /// Get posts pending review
     /// </summary>
     Task<List<AdminPostDetailDTO>> GetPostsPendingReviewAsync();
+
+    /// <summary>
+    /// Get all posts for admin moderation
+    /// </summary>
+    Task<PaginatedResponse<AdminPostDetailDTO>> GetAllPostsAsync(int skip = 0, int take = 20);
 }

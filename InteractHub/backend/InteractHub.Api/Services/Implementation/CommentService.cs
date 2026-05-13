@@ -13,12 +13,18 @@ public class CommentService : ICommentService
     private readonly IGenericRepository<Comment> _commentRepo;
     private readonly IGenericRepository<Post> _postRepo;
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
     
-    public CommentService(IGenericRepository<Comment> commentRepo, IGenericRepository<Post> postRepo,ApplicationDbContext context)
+    public CommentService(
+        IGenericRepository<Comment> commentRepo, 
+        IGenericRepository<Post> postRepo,
+        ApplicationDbContext context,
+        INotificationService notificationService)
     {
         _commentRepo = commentRepo;
         _postRepo = postRepo;
         _context = context; 
+        _notificationService = notificationService;
     }
 
      public async Task<IEnumerable<CommentDetailDto>> GetCommentsByPostIdAsync(Guid postId)
@@ -61,6 +67,23 @@ public class CommentService : ICommentService
         };
         await _commentRepo.AddAsync(comment);
         await _commentRepo.SaveChangesAsync();
+
+        // Gửi thông báo cho chủ bài viết
+        try
+        {
+            var sender = await _context.Users.FindAsync(userId);
+            await _notificationService.CreateNotificationAsync(new DTOs.Notifications.CreateNotificationDTO
+            {
+                UserId = post.UserId,
+                ActorId = userId,
+                Content = $"{sender?.FullName ?? "Ai đó"} đã bình luận về bài viết của bạn: \"{request.Content}\"",
+                Type = NotificationType.Comment
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CommentService] Gửi thông báo thất bại: {ex.Message}");
+        }
 
         return new CommentResponseDTO
         {

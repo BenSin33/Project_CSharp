@@ -11,6 +11,7 @@ import { toggleSavePost } from "../services/savedPostService";
 import { shareService } from "../services/shareService";
 import { userService } from "../services/userService";
 import type { UserResponseDTO } from "../services/userService";
+import Avatar from "../components/common/Avatar";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 
@@ -58,27 +59,12 @@ function toUiPost(p: PostDto): UiPost {
 // ─── UserCard ────────────────────────────────────────────────────────────────
 
 function UserResultCard({ user, onClick }: { user: UserResponseDTO; onClick: () => void }) {
-  const initials = user.fullName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
   return (
     <div
       onClick={onClick}
       className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-4 cursor-pointer hover:border-indigo-200 hover:shadow-md transition-all"
     >
-      <div
-        className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
-        style={{ background: user.avatarUrl ? "transparent" : "linear-gradient(135deg,#818cf8,#6366f1)" }}
-      >
-        {user.avatarUrl
-          ? <img src={user.avatarUrl} alt={user.fullName} className="w-full h-full object-cover"/>
-          : <span className="text-white font-bold text-sm">{initials}</span>
-        }
-      </div>
+      <Avatar name={user.fullName} avatarUrl={user.avatarUrl} size={48} variant="indigo" />
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-gray-900 text-sm truncate">{user.fullName}</p>
         <p className="text-xs text-gray-400 truncate">{user.email}</p>

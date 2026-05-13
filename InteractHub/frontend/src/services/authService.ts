@@ -73,7 +73,7 @@ async function register(payload: RegisterPayload): Promise<AuthResponse> {
       id: "",
       name: payload.fullName,
       email: payload.email,
-      username: payload.email.split("@")[0],
+      username: payload.fullName,
     },
   }
 }
@@ -94,4 +94,14 @@ async function getMe(): Promise<AuthUser> {
   }
 }
 
-export const authService = { login, register, getMe }
+async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const resp = await api.post("/api/auth/change-password", {
+    currentPassword,
+    newPassword,
+  })
+  if (!resp.data?.success) {
+    throw new Error(resp.data?.message ?? "Change password failed")
+  }
+}
+
+export const authService = { login, register, getMe, changePassword }

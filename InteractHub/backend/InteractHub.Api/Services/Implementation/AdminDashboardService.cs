@@ -63,7 +63,8 @@ public class AdminDashboardService : IAdminDashboardService
         {
             Stats = await GetDashboardStatsAsync(),
             RecentActivity = await GetRecentActivityAsync(20),
-            PendingActions = await GetPendingActionsAsync()
+            PendingActions = await GetPendingActionsAsync(),
+            TopUsers = await GetTopUsersAsync(5)
         };
 
         return dashboard;
@@ -206,6 +207,27 @@ public class AdminDashboardService : IAdminDashboardService
         }
 
         return result;
+    }
+
+    public async Task<List<TopUserDTO>> GetTopUsersAsync(int count = 5)
+    {
+        var topUsers = await _context.Users
+            .Include(u => u.Posts)
+            .Include(u => u.Friendships)
+            .OrderByDescending(u => u.Posts.Count + u.Friendships.Count)
+            .Take(count)
+            .Select(u => new TopUserDTO
+            {
+                Id = u.Id,
+                FullName = u.FullName,
+                AvatarUrl = u.AvatarUrl,
+                PostCount = u.Posts.Count,
+                FriendCount = u.Friendships.Count,
+                Status = u.Status.ToString().ToLower()
+            })
+            .ToListAsync();
+
+        return topUsers;
     }
 
     public async Task<UserActivitySummaryDTO> GetUserActivitySummaryAsync()

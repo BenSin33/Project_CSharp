@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { getInitials } from "../../utils/format";
 
 export interface AvatarProps {
@@ -34,8 +35,16 @@ export default function Avatar({
   onClick,
   as: Tag = "div",
 }: AvatarProps) {
+  const [imgError, setImgError] = useState(false);
+
+  // Reset error state when URL changes (important for preview)
+  useEffect(() => {
+    setImgError(false);
+  }, [avatarUrl, name]);
+
   const initials  = getInitials(name);
   const fontSize  = Math.round(size * 0.35);
+  const showImage = !!avatarUrl && !imgError;
 
   const baseStyle: React.CSSProperties = {
     width: size,
@@ -47,14 +56,19 @@ export default function Avatar({
     alignItems: "center",
     justifyContent: "center",
     userSelect: "none",
-    background: avatarUrl ? "transparent" : GRADIENTS[variant],
+    background: showImage ? "transparent" : GRADIENTS[variant],
     cursor: onClick ? "pointer" : undefined,
     border: "none",
     padding: 0,
   };
 
-  const inner = avatarUrl ? (
-    <img src={avatarUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+  const inner = showImage ? (
+    <img
+      src={avatarUrl}
+      alt={name}
+      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      onError={() => setImgError(true)}
+    />
   ) : (
     <span style={{ color: TEXT_COLORS[variant], fontSize, fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
       {initials}

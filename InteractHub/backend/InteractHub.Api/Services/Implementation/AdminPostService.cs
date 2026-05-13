@@ -37,13 +37,14 @@ public class AdminPostService : IAdminPostService
         {
             Id = post.Id,
             Content = post.Content,
-            Visibility = post.Visibility,
-            Status = post.Status,
+            Visibility = post.Visibility.ToString(),
+            Status = post.Status.ToString(),
             CreatedAt = post.CreatedAt,
             UpdatedAt = post.UpdatedAt,
             AuthorId = post.UserId,
             AuthorName = post.User?.FullName,
             AuthorEmail = post.User?.Email,
+            AuthorAvatarUrl = post.User?.AvatarUrl,
             CommentCount = post.Comments.Count,
             LikeCount = post.Likes.Count,
             ShareCount = post.Shares.Count,
@@ -175,13 +176,14 @@ public class AdminPostService : IAdminPostService
             {
                 Id = post.Id,
                 Content = post.Content,
-                Visibility = post.Visibility,
-                Status = post.Status,
+                Visibility = post.Visibility.ToString(),
+                Status = post.Status.ToString(),
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
                 AuthorId = post.UserId,
                 AuthorName = post.User?.FullName,
                 AuthorEmail = post.User?.Email,
+                AuthorAvatarUrl = post.User?.AvatarUrl,
                 CommentCount = post.Comments.Count,
                 LikeCount = post.Likes.Count,
                 ShareCount = post.Shares.Count,
@@ -229,13 +231,14 @@ public class AdminPostService : IAdminPostService
             {
                 Id = post.Id,
                 Content = post.Content,
-                Visibility = post.Visibility,
-                Status = post.Status,
+                Visibility = post.Visibility.ToString(),
+                Status = post.Status.ToString(),
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
                 AuthorId = post.UserId,
                 AuthorName = post.User?.FullName,
                 AuthorEmail = post.User?.Email,
+                AuthorAvatarUrl = post.User?.AvatarUrl,
                 CommentCount = post.Comments.Count,
                 LikeCount = post.Likes.Count,
                 ShareCount = post.Shares.Count,
@@ -347,13 +350,14 @@ public class AdminPostService : IAdminPostService
             {
                 Id = post.Id,
                 Content = post.Content,
-                Visibility = post.Visibility,
-                Status = post.Status,
+                Visibility = post.Visibility.ToString(),
+                Status = post.Status.ToString(),
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
                 AuthorId = post.UserId,
                 AuthorName = post.User?.FullName,
                 AuthorEmail = post.User?.Email,
+                AuthorAvatarUrl = post.User?.AvatarUrl,
                 CommentCount = post.Comments.Count,
                 LikeCount = post.Likes.Count,
                 ShareCount = post.Shares.Count,
@@ -394,13 +398,14 @@ public class AdminPostService : IAdminPostService
             {
                 Id = post.Id,
                 Content = post.Content,
-                Visibility = post.Visibility,
-                Status = post.Status,
+                Visibility = post.Visibility.ToString(),
+                Status = post.Status.ToString(),
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
                 AuthorId = post.UserId,
                 AuthorName = post.User?.FullName,
                 AuthorEmail = post.User?.Email,
+                AuthorAvatarUrl = post.User?.AvatarUrl,
                 CommentCount = post.Comments.Count,
                 LikeCount = post.Likes.Count,
                 ShareCount = post.Shares.Count,
@@ -411,5 +416,55 @@ public class AdminPostService : IAdminPostService
         }
 
         return dtos;
+    }
+
+    public async Task<PaginatedResponse<AdminPostDetailDTO>> GetAllPostsAsync(int skip = 0, int take = 20)
+    {
+        var dbQuery = _context.Posts
+            .Include(p => p.User)
+            .Include(p => p.Comments)
+            .Include(p => p.Likes)
+            .Include(p => p.Shares)
+            .Where(p => p.Status != Status.deleted);
+
+        var total = await dbQuery.CountAsync();
+
+        var posts = await dbQuery
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
+
+        var dtos = new List<AdminPostDetailDTO>();
+        foreach (var post in posts)
+        {
+            var reportCount = await _context.PostReports.CountAsync(r => r.PostId == post.Id);
+            dtos.Add(new AdminPostDetailDTO
+            {
+                Id = post.Id,
+                Content = post.Content,
+                Visibility = post.Visibility.ToString(),
+                Status = post.Status.ToString(),
+                CreatedAt = post.CreatedAt,
+                UpdatedAt = post.UpdatedAt,
+                AuthorId = post.UserId,
+                AuthorName = post.User?.FullName,
+                AuthorEmail = post.User?.Email,
+                AuthorAvatarUrl = post.User?.AvatarUrl,
+                CommentCount = post.Comments.Count,
+                LikeCount = post.Likes.Count,
+                ShareCount = post.Shares.Count,
+                ReportCount = reportCount,
+                IsReported = reportCount > 0
+            });
+        }
+
+        return new PaginatedResponse<AdminPostDetailDTO>
+        {
+            Data = dtos,
+            Total = total,
+            Skip = skip,
+            Take = take
+        };
     }
 }

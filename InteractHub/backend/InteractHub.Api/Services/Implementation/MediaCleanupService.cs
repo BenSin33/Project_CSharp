@@ -42,30 +42,55 @@ public class MediaCleanupService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         
-        // Giả sử bạn đã đăng ký BlobServiceClient trong Program.cs
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var blobServiceClient = new BlobServiceClient(configuration.GetConnectionString("AzureBlobStorage"));
         var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
 
-        // 2. Lấy danh sách TOÀN BỘ URL đang được xài trong Database
-        var usedUrls = await dbContext.PostMedias.Select(m => m.Url).ToListAsync();
+        // 2. Lấy danh sách TOÀN BỘ URL đang được xài trong Database từ các nguồn khác nhau
+        var postMediaUrls = await dbContext.PostMedias
+            .Where(m => m.DeletedAt == null)
+            .Select(m => m.Url)
+            .ToListAsync();
+
+        var avatarUrls = await dbContext.Users
+            .Where(u => !string.IsNullOrEmpty(u.AvatarUrl))
+            .Select(u => u.AvatarUrl!)
+            .ToListAsync();
+
+        var storyUrls = await dbContext.Stories
+            .Where(s => s.DeletedAt == null)
+            .Select(s => s.MediaUrl)
+            .ToListAsync();
+
+        // Gộp tất cả các URL đang sử dụng vào một HashSet để tìm kiếm nhanh
+        var usedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        
+        foreach (var url in postMediaUrls) usedUrls.Add(CleanUrl(url));
+        foreach (var url in avatarUrls) usedUrls.Add(CleanUrl(url));
+        foreach (var url in storyUrls) usedUrls.Add(CleanUrl(url));
 
         // 3. Duyệt qua từng file đang nằm trên Azure
         await foreach (var blobItem in containerClient.GetBlobsAsync())
         {
-            // Nối lại thành URL hoàn chỉnh để so sánh
             var blobUrl = $"{containerClient.Uri}/{blobItem.Name}";
+            var cleanBlobUrl = CleanUrl(blobUrl);
 
-            // Lấy thời gian file được tạo
             var createdOn = blobItem.Properties.CreatedOn;
 
-            // ĐIỀU KIỆN XÓA: File KHÔNG có trong DB VÀ đã tồn tại hơn 24 giờ
-            if (!usedUrls.Contains(blobUrl) && createdOn < DateTimeOffset.UtcNow.AddHours(-24))
+            // ĐIỀU KIỆN XÓA: File KHÔNG có trong bất kỳ bảng nào VÀ đã tồn tại hơn 24 giờ
+            if (!usedUrls.Contains(cleanBlobUrl) && createdOn < DateTimeOffset.UtcNow.AddHours(-24))
             {
                 _logger.LogInformation($"Deleting orphaned file: {blobUrl}");
                 var blobClient = containerClient.GetBlobClient(blobItem.Name);
                 await blobClient.DeleteIfExistsAsync();
             }
         }
+    }
+
+    private string CleanUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return string.Empty;
+        var queryIndex = url.IndexOf('?');
+        return queryIndex >= 0 ? url.Substring(0, queryIndex) : url;
     }
 }

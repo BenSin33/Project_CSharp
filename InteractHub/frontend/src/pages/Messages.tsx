@@ -253,8 +253,8 @@ export default function MessagesPage() {
     <div className="flex h-[calc(100vh-88px)] bg-white border border-gray-100 rounded-xl overflow-hidden">
 
       {/* Sidebar */}
-      <aside className="w-[300px] flex-shrink-0 border-r border-gray-100 flex flex-col">
-        <div className="px-4 pt-5 pb-3 border-b border-gray-100">
+      <aside className="w-[80px] sm:w-[260px] lg:w-[300px] flex-shrink-0 border-r border-gray-100 flex flex-col transition-all duration-300">
+        <div className="px-4 pt-5 pb-3 border-b border-gray-100 hidden sm:block">
           <h1 className="text-[20px] font-semibold text-gray-900 mb-3">Messages</h1>
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

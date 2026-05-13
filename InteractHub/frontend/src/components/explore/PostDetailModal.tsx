@@ -146,6 +146,17 @@ export default function PostDetailModal({ post, onClose }: Props) {
               </p>
             )}
 
+            {/* Shared content in modal */}
+            {post.originalPost && (
+              <div className="mt-3 border border-gray-100 rounded-lg p-2 bg-gray-50/50">
+                <div className="flex items-center gap-2 mb-1">
+                  <Avatar name={post.originalPost.author.name} avatarUrl={post.originalPost.author.avatarUrl} size={20} />
+                  <span className="text-[10px] font-semibold">{post.originalPost.author.name}</span>
+                </div>
+                <p className="text-[11px] text-gray-600 line-clamp-2">{post.originalPost.content}</p>
+              </div>
+            )}
+
             {/* Hashtags */}
             {post.hashTags && post.hashTags.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">

@@ -6,7 +6,6 @@ import PostCard from "../components/post/PostCard";
 import type { CommentItem } from "../services/commentService";
 import { mapDetailToItem, addComment, getCommentsByPost } from "../services/commentService";
 import type { Post } from "../types";
-import type { PostDto } from "../services/postService";
 import { getAllPosts } from "../services/postService";
 import { toggleLike, LikeType } from "../services/likeService";
 import { toggleSavePost } from "../services/savedPostService";
@@ -14,20 +13,38 @@ import { shareService } from "../services/shareService";
 import { useAuth } from "../contexts/AuthContext";
 import { storyService, type StoryResponseDTO } from "../services/storyService";
 import { userService } from "../services/userService";
-import type { Story } from "../types";
+import type { Story, StoryGroup } from "../types";
 
-function toUiPost(p: PostDto): Post & { _topComments: CommentItem[] } {
+function toUiPost(p: any): UiPost {
+  // Handle differences between PostDto (camelCase/frontend) and SignalR broadcast (maybe different)
+  // Also handle backend names like LikeCount, CommentCount, ShareCount
+  const likes = p.likes ?? p.likeCount ?? p.LikeCount ?? 0;
+  const shares = p.shares ?? p.shareCount ?? p.ShareCount ?? 0;
+  const commentsCount = p.commentsCount ?? p.commentCount ?? p.CommentCount ?? 0;
+  
+  // Extract imageUrl from MediaItems if not directly present
+  let imageUrl = p.imageUrl;
+  if (!imageUrl && p.mediaItems && p.mediaItems.length > 0) {
+    imageUrl = p.mediaItems[0].url;
+  }
+
   return {
     id:            p.id,
-    author:        { id: p.author.id, name: p.author.name, avatarUrl: p.author.avatarUrl },
-    content:       p.content,
-    imageUrl:      p.imageUrl,
-    likes:         p.likes,
-    shares:        p.shares,
-    commentsCount: p.commentsCount,
-    createdAt:     new Date(p.createdAt).toLocaleString("vi-VN"),
-    isLiked:       p.isLiked,
-    isSaved:       p.isSaved,
+    author:        { 
+      id: p.author?.id ?? p.userId ?? "", 
+      name: p.author?.name ?? p.authorName ?? "Unknown User", 
+      avatarUrl: p.author?.avatarUrl ?? p.authorAvatarUrl 
+    },
+    content:       p.content ?? "",
+    imageUrl:      imageUrl,
+    likes:         likes,
+    shares:        shares,
+    commentsCount: commentsCount,
+    createdAt:     p.createdAt ? new Date(p.createdAt).toLocaleString("vi-VN") : "Just now",
+    isLiked:       p.isLiked ?? false,
+    isSaved:       p.isSaved ?? p.isSavedByCurrentUser ?? false,
+    status:        p.status,
+    originalPost:  p.originalPost ? toUiPost(p.originalPost) : undefined,
     _topComments:  (p.topComments ?? []).map(mapDetailToItem),
   }
 }
@@ -41,9 +58,9 @@ function Home() {
   const [error, setError]     = useState<string | null>(null);
 
   // Story state
-  const [stories, setStories]         = useState<Story[]>([]);
+  const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [storyViewerOpen,  setStoryViewerOpen]  = useState(false);
-  const [storyStartIndex,  setStoryStartIndex]  = useState(0);
+  const [activeStoryGroup, setActiveStoryGroup] = useState<StoryGroup | null>(null);
   const [createStoryOpen, setCreateStoryOpen]   = useState(false);
 
   // Fetch stories từ API
@@ -51,36 +68,56 @@ function Home() {
     try {
       const raw: StoryResponseDTO[] = await storyService.getActiveStories();
       if (!raw || raw.length === 0) {
-        setStories([]);
+        setStoryGroups([]);
         return;
       }
-      // Map StoryResponseDTO → Story (UI type), cần lấy thêm thông tin user
-      const mapped: Story[] = await Promise.all(
-        raw.map(async (s): Promise<Story> => {
-          let username = s.userId;
-          let avatarUrl: string | undefined;
-          try {
-            const profile = await userService.getProfile(s.userId);
-            username = profile.name;
-            avatarUrl = profile.avatarUrl;
-          } catch { /* dùng userId làm username nếu không lấy được */ }
-          return {
-            id: s.id,
+
+      // Lấy danh sách userId duy nhất để fetch profile 1 lần mỗi người
+      const uniqueUserIds = Array.from(new Set(raw.map(s => s.userId)));
+      const profilesMap = new Map<string, { name: string, avatarUrl?: string }>();
+
+      await Promise.all(uniqueUserIds.map(async (uid) => {
+        try {
+          const profile = await userService.getProfile(uid);
+          profilesMap.set(uid, { name: profile.name, avatarUrl: profile.avatarUrl });
+        } catch {
+          profilesMap.set(uid, { name: uid });
+        }
+      }));
+
+      const flatStories: Story[] = raw.map(s => {
+        const profile = profilesMap.get(s.userId);
+        return {
+          id:        s.id,
+          userId:    s.userId,
+          username:  profile?.name || s.userId,
+          avatarUrl: profile?.avatarUrl,
+          imageUrl:  s.mediaUrl,
+          viewed:    false,
+          active:    true,
+          expiresAt: s.expireAt,
+          createdAt: s.createdAt,
+        };
+      });
+
+      // Group stories theo userId
+      const groupsMap = new Map<string, StoryGroup>();
+      flatStories.forEach(s => {
+        if (!groupsMap.has(s.userId)) {
+          groupsMap.set(s.userId, {
             userId: s.userId,
-            username,
-            avatarUrl,
-            imageUrl: s.mediaUrl,
-            viewed: false,
-            active: true,
-            expiresAt: s.expireAt,
-          };
-        })
-      );
-      setStories(mapped);
+            username: s.username,
+            avatarUrl: s.avatarUrl,
+            stories: []
+          });
+        }
+        groupsMap.get(s.userId)!.stories.push(s);
+      });
+
+      setStoryGroups(Array.from(groupsMap.values()));
     } catch (err: any) {
-      // Chỉ log lỗi, không dùng mock data — stories sẽ trống
       console.warn("[HomePage] fetchStories failed:", err?.message ?? err);
-      setStories([]);
+      setStoryGroups([]);
     }
   }, []);
 
@@ -168,34 +205,73 @@ function Home() {
     setPosts(prev => prev.filter(p => p.id !== postId));
   }, []);
 
-  // Refresh when a new post is created
+  // Refresh when a new post or story is created
   useEffect(() => {
-    const handler = () => { if (!authLoading) fetchPosts(); };
-    window.addEventListener("post-created", handler);
-    return () => window.removeEventListener("post-created", handler);
-  }, [authLoading, fetchPosts]);
+    const postHandler = (e: any) => { 
+      if (authLoading) return;
+      const newPostDto = e.detail;
+      if (newPostDto) {
+        setPosts(prev => {
+          if (prev.some(p => p.id === newPostDto.id)) return prev;
+          return [toUiPost(newPostDto), ...prev];
+        });
+      } else {
+        fetchPosts(); 
+      }
+    };
+    
+    const storyHandler = (e: any) => { 
+      if (authLoading) return;
+      if (e.detail) {
+        // For simplicity, re-fetch stories to handle grouping logic
+        fetchStories();
+      } else {
+        fetchStories();
+      }
+    };
+
+    const userUpdateHandler = (e: any) => {
+      const updatedUser = e.detail;
+      if (!updatedUser) return;
+      setPosts(prev => prev.map(p => 
+        p.author.id === updatedUser.id 
+          ? { ...p, author: { ...p.author, name: updatedUser.fullName, avatarUrl: updatedUser.avatarUrl } } 
+          : p
+      ));
+    };
+
+    window.addEventListener("post-created", postHandler);
+    window.addEventListener("story-created", storyHandler);
+    window.addEventListener("user-updated", userUpdateHandler);
+    return () => {
+      window.removeEventListener("post-created", postHandler);
+      window.removeEventListener("story-created", storyHandler);
+      window.removeEventListener("user-updated", userUpdateHandler);
+    };
+  }, [authLoading, fetchPosts, fetchStories]);
 
   const isActuallyLoading = authLoading || loading;
 
   return (
     <div>
       <StoryBar
-        stories={stories}
+        groups={storyGroups}
         currentUserAvatarUrl={user?.avatarUrl}
         onAddStory={() => setCreateStoryOpen(true)}
-        onViewStory={(s) => {
-          const idx = stories.findIndex(st => st.id === s.id);
-          setStoryStartIndex(idx >= 0 ? idx : 0);
+        onViewStory={(group) => {
+          setActiveStoryGroup(group);
           setStoryViewerOpen(true);
         }}
         emptyMessage="Hiện chưa có dữ liệu story."
       />
 
-      {storyViewerOpen && stories.length > 0 && (
+      {storyViewerOpen && activeStoryGroup && activeStoryGroup.stories.length > 0 && (
         <StoryViewer
-          stories={stories}
-          startIndex={storyStartIndex}
-          onClose={() => setStoryViewerOpen(false)}
+          stories={activeStoryGroup.stories}
+          onClose={() => {
+            setStoryViewerOpen(false);
+            setActiveStoryGroup(null);
+          }}
         />
       )}
 
@@ -205,7 +281,7 @@ function Home() {
         userAvatarUrl={undefined}
         userName="You"
         onCreated={() => {
-          // Có thể refresh story bar ở đây nếu cần
+          fetchStories();
           console.log("Story created!");
         }}
       />

@@ -37,8 +37,8 @@ public class AdminPostDetailDTO
 {
     public Guid Id { get; set; }
     public string? Content { get; set; }
-    public Visibility Visibility { get; set; }
-    public Status Status { get; set; }
+    public string Visibility { get; set; } = null!;
+    public string Status { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     
@@ -46,6 +46,7 @@ public class AdminPostDetailDTO
     public Guid AuthorId { get; set; }
     public string? AuthorName { get; set; }
     public string? AuthorEmail { get; set; }
+    public string? AuthorAvatarUrl { get; set; }
     
     // Stats
     public int CommentCount { get; set; }

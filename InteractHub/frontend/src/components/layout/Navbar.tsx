@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import UserMenu from "./userMenu";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -198,19 +198,33 @@ export const NotificationBell = ({ count = 0, onClick }: NotificationBellProps) 
   >
     <BellIcon />
     {count > 0 && (
-      <span
-        className="absolute flex items-center justify-center font-bold"
-        style={{
-          top: "2px", right: "2px",
-          minWidth: "18px", height: "18px",
-          padding: "0 4px", borderRadius: "999px",
-          background: "#ef4444", color: "#fff",
-          fontSize: "10px", fontFamily: "'DM Sans', sans-serif",
-          fontWeight: 700, border: "2px solid #fff", lineHeight: 1,
-        }}
-      >
-        {count > 99 ? "99+" : count}
-      </span>
+      <>
+        <span
+          className="absolute"
+          style={{
+            top: "4px", right: "4px",
+            width: "12px", height: "12px",
+            borderRadius: "50%",
+            background: "#ef4444",
+            animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            zIndex: 0,
+          }}
+        />
+        <span
+          className="absolute flex items-center justify-center font-bold"
+          style={{
+            top: "2px", right: "2px",
+            minWidth: "18px", height: "18px",
+            padding: "0 4px", borderRadius: "999px",
+            background: "#ef4444", color: "#fff",
+            fontSize: "10px", fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 700, border: "2px solid #fff", lineHeight: 1,
+            zIndex: 1,
+          }}
+        >
+          {count > 99 ? "99+" : count}
+        </span>
+      </>
     )}
   </button>
 );
@@ -237,6 +251,8 @@ export const Avatar = ({
   className = "",
   onClick,
 }: AvatarProps) => {
+  const [imgErr, setImgErr] = React.useState(false);
+  const showImg = !!avatarUrl && !imgErr;
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -250,7 +266,7 @@ export const Avatar = ({
     cursor: Tag === "button" ? "pointer" : "default",
     overflow: "hidden", display: "flex",
     alignItems: "center", justifyContent: "center",
-    background: avatarUrl
+    background: showImg
       ? "transparent"
       : "linear-gradient(135deg, #818cf8, #6366f1)",
     flexShrink: 0,
@@ -263,11 +279,12 @@ export const Avatar = ({
       style={sharedStyle}
       aria-label={Tag === "button" ? "Profile menu" : undefined}
     >
-      {avatarUrl ? (
+      {showImg ? (
         <img
           src={avatarUrl}
           alt={name}
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          onError={() => setImgErr(true)}
         />
       ) : (
         <span style={{
@@ -295,7 +312,14 @@ const Navbar = ({
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+        @keyframes pulse {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); opacity: 1; }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); opacity: 0.5; }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); opacity: 1; }
+        }
+      `}</style>
 
       <header
         className="w-full sticky top-0 z-50"

@@ -17,10 +17,14 @@ const PREF_ITEMS = [
 ];
 
 export default function SettingsPage() {
-  const { user: currentUser, } = useAuth();
+  const { user: currentUser } = useAuth();
   const [tab, setTab] = useState<SettingsTab>("profile");
 
-  // Profile — seeded from current user
+  // Loading & Message states
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Profile
   const [profile, setProfile] = useState({
     name: currentUser?.name ?? "",
     username: currentUser?.username ?? "",
@@ -29,64 +33,6 @@ export default function SettingsPage() {
     location: "",
     avatarUrl: currentUser?.avatarUrl ?? "",
   });
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  // Load full profile from backend on mount
-  useEffect(() => {
-    if (!currentUser?.id) return;
-    userService.getMyProfile().then(prof => {
-      setProfile({
-        name: prof.name ?? "",
-        username: prof.username ?? "",
-        bio: prof.bio ?? "",
-        website: "",
-        location: prof.location ?? "",
-        avatarUrl: prof.avatarUrl ?? "",
-      });
-    }).catch(() => { /* keep defaults */ });
-  }, [currentUser?.id]);
-
-  const handleAvatarUpload = async (file: File) => {
-    try {
-      const { avatarUrl } = await userService.uploadAvatar(file);
-      setProfile(p => ({ ...p, avatarUrl }));
-    } catch {
-      setProfileMsg({ type: "error", text: "Tải ảnh lên thất bại. Vui lòng thử lại." });
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    if (!currentUser?.id) return;
-    setProfileLoading(true);
-    setProfileMsg(null);
-    try {
-      await userService.updateProfile(currentUser.id, {
-        fullName:  profile.name,
-        location:  profile.location,
-        bio:       profile.bio,
-        avatarUrl: profile.avatarUrl,
-      });
-      // Refresh AuthContext so Navbar/avatar updates immediately
-      try {
-        const updated = await authService.getMe();
-        const cached = localStorage.getItem("user");
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          localStorage.setItem("user", JSON.stringify({ ...parsed, ...updated }));
-        }
-        // Trigger re-render by dispatching event
-        window.dispatchEvent(new CustomEvent("profile-updated", { detail: updated }));
-      } catch { /* ignore */ }
-      setProfileMsg({ type: "success", text: "✅ Thông tin cá nhân đã được cập nhật!" });
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? "Có lỗi xảy ra";
-      setProfileMsg({ type: "error", text: "❌ " + msg });
-    } finally {
-      setProfileLoading(false);
-      setTimeout(() => setProfileMsg(null), 3000);
-    }
-  };
 
   // Account
   const [email, setEmail] = useState(currentUser?.email ?? "");
@@ -107,13 +53,117 @@ export default function SettingsPage() {
   const [whoFriendList, setWhoFriendList] = useState("Everyone");
   const whoOptions = ["Everyone", "Friends only", "Friends of friends", "No one"];
 
-  const savBtn = (label: string, onClick?: () => void, loading?: boolean) => (
+  // Load data on mount
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    userService.getMyProfile().then(prof => {
+      setProfile({
+        name: prof.name ?? "",
+        username: prof.username ?? "",
+        bio: prof.bio ?? "",
+        website: "",
+        location: prof.location ?? "",
+        avatarUrl: prof.avatarUrl ?? "",
+      });
+      setEmail(prof.email ?? "");
+      
+      if (prof.settings) {
+        setEmailNotif(prof.settings.emailNotifications);
+        setPushNotif(prof.settings.pushNotifications);
+        setPrivateAcc(prof.settings.privateAccount);
+        setOnlineStatus(prof.settings.showOnlineStatus);
+        setWhoComment(prof.settings.whoCanComment);
+        setWhoFriend(prof.settings.whoCanSendFriendRequest);
+        setWhoFriendList(prof.settings.whoCanSeeFriendsList);
+      }
+    }).catch(() => { /* keep defaults */ });
+  }, [currentUser?.id]);
+
+  const showMsg = (type: "success" | "error", text: string) => {
+    setMsg({ type, text });
+    setTimeout(() => setMsg(null), 4000);
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      const { avatarUrl } = await userService.uploadAvatar(file);
+      setProfile(p => ({ ...p, avatarUrl }));
+    } catch {
+      showMsg("error", "Tải ảnh lên thất bại.");
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!currentUser?.id) return;
+    setLoading(true);
+    try {
+      await userService.updateProfile(currentUser.id, {
+        fullName:  profile.name,
+        location:  profile.location,
+        bio:       profile.bio,
+        avatarUrl: profile.avatarUrl,
+      });
+      // Refresh Auth
+      const updated = await authService.getMe();
+      localStorage.setItem("user", JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent("profile-updated", { detail: updated }));
+      
+      showMsg("success", "✅ Hồ sơ đã được cập nhật!");
+    } catch (err: any) {
+      showMsg("error", "❌ " + (err?.message ?? "Cập nhật hồ sơ thất bại."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwords.current || !passwords.next) {
+      return showMsg("error", "Vui lòng nhập đầy đủ mật khẩu.");
+    }
+    if (passwords.next !== passwords.confirm) {
+      return showMsg("error", "Mật khẩu xác nhận không khớp.");
+    }
+    
+    setLoading(true);
+    try {
+      await authService.changePassword(passwords.current, passwords.next);
+      setPasswords({ current: "", next: "", confirm: "" });
+      showMsg("success", "✅ Mật khẩu đã được thay đổi!");
+    } catch (err: any) {
+      showMsg("error", "❌ " + (err?.message ?? "Đổi mật khẩu thất bại."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!currentUser?.id) return;
+    setLoading(true);
+    try {
+      await userService.updateSettings(currentUser.id, {
+        emailNotifications: emailNotif,
+        pushNotifications: pushNotif,
+        privateAccount: privateAcc,
+        showOnlineStatus: onlineStatus,
+        whoCanComment: whoComment,
+        whoCanSendFriendRequest: whoFriend,
+        whoCanSeeFriendsList: whoFriendList
+      });
+      showMsg("success", "✅ Cài đặt đã được lưu!");
+    } catch (err: any) {
+      showMsg("error", "❌ " + (err?.message ?? "Lưu cài đặt thất bại."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const savBtn = (label: string, onClick?: () => void, isLoading?: boolean) => (
     <button
       onClick={onClick}
-      disabled={loading}
+      disabled={isLoading || loading}
       className="mt-2 h-[38px] px-5 bg-gray-900 hover:bg-gray-700 disabled:bg-gray-400 text-white text-[14px] font-medium rounded-lg transition-colors"
     >
-      {loading ? "Đang lưu..." : label}
+      {isLoading || (loading && onClick) ? "Đang xử lý..." : label}
     </button>
   );
 
@@ -122,8 +172,14 @@ export default function SettingsPage() {
       <h1 className="text-[22px] font-semibold text-gray-900 mb-5">Settings</h1>
       <SettingsTabs active={tab} onChange={setTab} />
 
+      {msg && (
+        <div className={`mb-4 p-3 rounded-lg text-sm ${msg.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+          {msg.text}
+        </div>
+      )}
+
       {tab === "profile" && (
-        <div>
+        <div className="animate-in fade-in duration-300">
           <AvatarUpload name={profile.name} avatarUrl={profile.avatarUrl} onUpload={handleAvatarUpload} />
           <SettingsField label="Full Name">
             <input className={inputCls} value={profile.name}
@@ -142,20 +198,15 @@ export default function SettingsPage() {
               value={profile.location} onChange={e => setProfile(p => ({ ...p, location: e.target.value }))} />
           </SettingsField>
 
-          {profileMsg && (
-            <p className={`text-sm mt-2 ${profileMsg.type === "success" ? "text-green-600" : "text-red-600"}`}>
-              {profileMsg.text}
-            </p>
-          )}
-
-          {savBtn("Save Changes", handleSaveProfile, profileLoading)}
+          {savBtn("Save Changes", handleSaveProfile)}
         </div>
       )}
 
       {tab === "account" && (
-        <div>
+        <div className="animate-in fade-in duration-300">
           <SettingsField label="Email">
-            <input className={inputCls} type="email" value={email} onChange={e => setEmail(e.target.value)} />
+            <input type="email" value={email} readOnly disabled className={inputCls + " bg-gray-50 text-gray-500"} />
+            <p className="text-[11px] text-gray-400 mt-1">Email cannot be changed currently.</p>
           </SettingsField>
           <hr className="border-gray-100 my-5" />
           <SettingsField label="Current Password">
@@ -167,28 +218,28 @@ export default function SettingsPage() {
           <SettingsField label="Confirm New Password">
             <input className={inputCls} type="password" value={passwords.confirm} onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} />
           </SettingsField>
-          {savBtn("Change Password")}
+          {savBtn("Change Password", handleChangePassword)}
           <hr className="border-gray-100 my-6" />
           <DangerZone onDelete={() => console.log("delete")} />
         </div>
       )}
 
       {tab === "notifications" && (
-        <div>
+        <div className="animate-in fade-in duration-300">
           <ToggleRow label="Email Notifications" description="Receive email notifications about your activity" checked={emailNotif} onChange={setEmailNotif} />
           <ToggleRow label="Push Notifications" description="Receive push notifications on your devices" checked={pushNotif} onChange={setPushNotif} />
-          <div className="mt-5">
-            <h3 className="text-[16px] font-medium text-gray-900 mb-2">Notification Preferences</h3>
+          <div className="mt-5 opacity-50 pointer-events-none">
+            <h3 className="text-[16px] font-medium text-gray-900 mb-2">Notification Preferences (Coming Soon)</h3>
             {PREF_ITEMS.map(p => (
               <ToggleRow key={p.key} label={p.label} description={p.desc} checked={prefs[p.key]} onChange={v => setPrefs(prev => ({ ...prev, [p.key]: v }))} />
             ))}
           </div>
-          {savBtn("Save Preferences")}
+          {savBtn("Save Preferences", handleSaveSettings)}
         </div>
       )}
 
       {tab === "privacy" && (
-        <div>
+        <div className="animate-in fade-in duration-300">
           <ToggleRow label="Private Account" description="Only approved followers can see your posts" checked={privateAcc} onChange={setPrivateAcc} />
           <ToggleRow label="Show Online Status" description="Let others see when you're active" checked={onlineStatus} onChange={setOnlineStatus} />
           <hr className="border-gray-100 my-5" />
@@ -207,7 +258,7 @@ export default function SettingsPage() {
           <hr className="border-gray-100 my-5" />
           <h3 className="text-[16px] font-medium text-gray-900 mb-2">Blocked Users</h3>
           <p className="text-[13px] text-gray-500 mb-4">You haven't blocked anyone yet</p>
-          {savBtn("Save Settings")}
+          {savBtn("Save Settings", handleSaveSettings)}
         </div>
       )}
     </div>

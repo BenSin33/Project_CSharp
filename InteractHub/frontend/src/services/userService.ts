@@ -14,6 +14,13 @@ export interface UserResponseDTO {
   gender?: string
   roles?: string[]
   isLockedOut?: boolean
+  emailNotifications?: boolean
+  pushNotifications?: boolean
+  privateAccount?: boolean
+  showOnlineStatus?: boolean
+  whoCanComment?: string
+  whoCanSendFriendRequest?: string
+  whoCanSeeFriendsList?: string
 }
 
 /** PaginatedResponse generic */
@@ -41,6 +48,17 @@ export interface UserProfileDto {
   followersCount: number
   postsCount: number
   isOwner?: boolean
+  settings?: UserSettingsDto
+}
+
+export interface UserSettingsDto {
+  emailNotifications: boolean
+  pushNotifications: boolean
+  privateAccount: boolean
+  showOnlineStatus: boolean
+  whoCanComment: string
+  whoCanSendFriendRequest: string
+  whoCanSeeFriendsList: string
 }
 
 function mapFromBackend(d: UserResponseDTO): UserProfileDto {
@@ -57,6 +75,15 @@ function mapFromBackend(d: UserResponseDTO): UserProfileDto {
     followingCount: 0,
     followersCount: 0,
     postsCount:     0,
+    settings: {
+      emailNotifications: d.emailNotifications ?? true,
+      pushNotifications: d.pushNotifications ?? true,
+      privateAccount: d.privateAccount ?? false,
+      showOnlineStatus: d.showOnlineStatus ?? true,
+      whoCanComment: d.whoCanComment ?? "Everyone",
+      whoCanSendFriendRequest: d.whoCanSendFriendRequest ?? "Everyone",
+      whoCanSeeFriendsList: d.whoCanSeeFriendsList ?? "Everyone",
+    }
   }
 }
 
@@ -113,6 +140,15 @@ async function getMyProfile(): Promise<UserProfileDto> {
       followersCount: 0,
       postsCount:     0,
       isOwner:        true,
+      settings: {
+        emailNotifications: d?.emailNotifications ?? true,
+        pushNotifications: d?.pushNotifications ?? true,
+        privateAccount: d?.privateAccount ?? false,
+        showOnlineStatus: d?.showOnlineStatus ?? true,
+        whoCanComment: d?.whoCanComment ?? "Everyone",
+        whoCanSendFriendRequest: d?.whoCanSendFriendRequest ?? "Everyone",
+        whoCanSeeFriendsList: d?.whoCanSeeFriendsList ?? "Everyone",
+      }
     }
   } catch (err: any) {
     if (err?.code === "ERR_NETWORK" || err?.response?.status >= 500) {
@@ -171,10 +207,18 @@ async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
   return { avatarUrl: url }
 }
 
+async function updateSettings(userId: string, payload: Partial<UserSettingsDto>): Promise<void> {
+  const resp = await api.put(`/api/user/${userId}/settings`, payload)
+  if (!resp.data?.success) {
+    throw new Error(resp.data?.message ?? "Update settings failed")
+  }
+}
+
 export const userService = {
   getProfile,
   getMyProfile,
   searchUsers,
   updateProfile,
   uploadAvatar,
+  updateSettings,
 }

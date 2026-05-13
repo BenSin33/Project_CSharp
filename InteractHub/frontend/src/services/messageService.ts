@@ -135,7 +135,8 @@ export async function deleteMessage(messageId: string): Promise<boolean> {
 export async function getUnreadCount(): Promise<number> {
   try {
     const resp = await api.get("/api/message/unread-count")
-    return resp.data?.unreadCount ?? 0
+    const data = unwrap<any>(resp)
+    return data?.unreadCount ?? data?.UnreadCount ?? 0
   } catch {
     return 0
   }

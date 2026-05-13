@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react"
-import { Flag, Eye, CheckCircle2, AlertCircle, XCircle, Trash2 } from "lucide-react"
+import { Flag, Eye, CheckCircle2, AlertCircle, XCircle, Trash2, X } from "lucide-react"
 import { adminService, type AdminReportItem } from "../../services/adminService"
 
 function formatDate(value?: string) {
@@ -13,12 +13,21 @@ function formatDate(value?: string) {
   return `${Math.floor(diffInMinutes / 1440)} days ago`
 }
 
+interface DeleteModalState {
+  open: boolean
+  reportId: string
+  postId?: string
+  postContent?: string
+}
+
 export default function ReportManagementPage() {
   const [reports, setReports] = useState<AdminReportItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"Pending" | "Reviewed" | "Resolved" | "All">("All")
   const [globalStats, setGlobalStats] = useState({ pending: 0, reviewed: 0, resolved: 0, total: 0 })
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null)
+  const [deleteModal, setDeleteModal] = useState<DeleteModalState>({ open: false, reportId: "", postId: undefined })
 
   const loadData = async () => {
     setLoading(true)
@@ -48,7 +57,6 @@ export default function ReportManagementPage() {
   }, [reports, filter])
 
   const stats = useMemo(() => {
-    // High Priority as a percentage or specific type since backend doesn't have it explicitly
     const highPriority = reports.filter(r => (r.reportType || "").toLowerCase().includes("spam") || (r.reason || "").toLowerCase().includes("harassment")).length
     
     return { 
@@ -71,11 +79,14 @@ export default function ReportManagementPage() {
         }
       }
       await adminService.updateReportStatus(reportId, { status: "Resolved", adminNotes: "Đã ẩn bài viết" })
+      setMessage({ text: "Đã duyệt và ẩn bài viết thành công", type: "success" })
       await loadData()
     } catch (e) {
       console.error(e)
+      setMessage({ text: "Lỗi khi xử lý báo cáo", type: "error" })
     } finally {
       setActionLoading(null)
+      setTimeout(() => setMessage(null), 4000)
     }
   }
 
@@ -83,16 +94,28 @@ export default function ReportManagementPage() {
     setActionLoading(reportId)
     try {
       await adminService.updateReportStatus(reportId, { status: "Resolved", adminNotes: "Báo cáo không hợp lệ/Đã bỏ qua" })
+      setMessage({ text: "Đã bỏ qua báo cáo", type: "success" })
       await loadData()
     } catch (e) {
       console.error(e)
+      setMessage({ text: "Lỗi khi bỏ qua báo cáo", type: "error" })
     } finally {
       setActionLoading(null)
+      setTimeout(() => setMessage(null), 4000)
     }
   }
 
-  const handleDeletePermanently = async (reportId: string, postId?: string) => {
-    if (!window.confirm("Delete this post permanently?")) return
+  const openDeleteModal = (reportId: string, postId?: string, postContent?: string) => {
+    setDeleteModal({ open: true, reportId, postId, postContent })
+  }
+
+  const closeDeleteModal = () => {
+    setDeleteModal({ open: false, reportId: "", postId: undefined })
+  }
+
+  const executeDeletePermanently = async () => {
+    const { reportId, postId } = deleteModal
+    closeDeleteModal()
     setActionLoading(reportId)
     try {
       if (postId) {
@@ -103,23 +126,35 @@ export default function ReportManagementPage() {
         }
       }
       await adminService.updateReportStatus(reportId, { status: "Resolved", adminNotes: "Đã xóa vĩnh viễn bài viết" })
+      setMessage({ text: "Đã xóa vĩnh viễn bài viết vi phạm", type: "success" })
       await loadData()
     } catch (e) {
       console.error(e)
+      setMessage({ text: "Lỗi khi xóa bài viết", type: "error" })
     } finally {
       setActionLoading(null)
+      setTimeout(() => setMessage(null), 4000)
     }
   }
 
   return (
     <div className="p-8">
+      {/* Success/Error Message */}
+      {message && (
+        <div className={`mb-6 rounded-xl p-4 text-sm font-medium flex items-center gap-2 ${
+          message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"
+        }`}>
+          {message.type === "success" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          {message.text}
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-[28px] font-bold text-slate-900">Report Management</h1>
         <p className="mt-1 text-[15px] text-slate-500">Review and manage user reports and flagged content</p>
       </div>
 
       <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Pending Card */}
         <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
             <Flag size={24} />
@@ -130,7 +165,6 @@ export default function ReportManagementPage() {
           </div>
         </div>
 
-        {/* Reviewed Card */}
         <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
             <Eye size={24} />
@@ -141,7 +175,6 @@ export default function ReportManagementPage() {
           </div>
         </div>
 
-        {/* Resolved Card */}
         <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-500">
             <CheckCircle2 size={24} />
@@ -152,7 +185,6 @@ export default function ReportManagementPage() {
           </div>
         </div>
 
-        {/* High Priority Card */}
         <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-500">
             <AlertCircle size={24} />
@@ -225,20 +257,20 @@ export default function ReportManagementPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleApproveRemove(report.id, report.postId)}
-                    disabled={actionLoading === report.id || report.status === "Resolved"}
+                    disabled={actionLoading === report.id}
                     className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-green-700 disabled:opacity-50"
                   >
                     <CheckCircle2 size={16} /> Approve & Remove
                   </button>
                   <button
                     onClick={() => handleDismiss(report.id)}
-                    disabled={actionLoading === report.id || report.status === "Resolved"}
+                    disabled={actionLoading === report.id}
                     className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                   >
                     <XCircle size={16} /> Dismiss
                   </button>
                   <button
-                    onClick={() => handleDeletePermanently(report.id, report.postId)}
+                    onClick={() => openDeleteModal(report.id, report.postId, report.post?.content)}
                     disabled={actionLoading === report.id}
                     className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                   >
@@ -253,6 +285,42 @@ export default function ReportManagementPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900">Xóa bài viết vĩnh viễn</h3>
+              <button onClick={closeDeleteModal} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="mb-2 text-[14px] text-slate-600">
+              CẢNH BÁO: Hành động này sẽ xóa vĩnh viễn bài viết vi phạm và không thể hoàn tác.
+            </p>
+            {deleteModal.postContent && (
+              <div className="mb-4 rounded-lg bg-slate-50 border border-slate-200 p-3 text-[13px] italic text-slate-600">
+                "{deleteModal.postContent.slice(0, 100)}..."
+              </div>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeDeleteModal}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-[13px] font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={executeDeletePermanently}
+                className="rounded-xl bg-red-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-red-700"
+              >
+                Xóa vĩnh viễn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

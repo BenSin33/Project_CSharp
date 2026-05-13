@@ -30,10 +30,12 @@ export interface Post {
   isLiked?: boolean;
   isSaved?: boolean;
   likeSummary?: LikeSummaryDto;
+  originalPost?: Post;
+  status?: string;
 }
 
 // ─── Notification ─────────────────────────────────────────────────────────────
-export type NotifType = "like" | "comment" | "friend_request" | "share" | "mention";
+export type NotifType = "like" | "comment" | "friend_request" | "friend_accept" | "share" | "mention" | "message";
 
 export interface Notification {
   id: string;
@@ -54,6 +56,14 @@ export interface Story {
   viewed: boolean;
   active: boolean;
   expiresAt?: string;
+  createdAt?: string;
+}
+
+export interface StoryGroup {
+  userId: string;
+  username: string;
+  avatarUrl?: string;
+  stories: Story[];
 }
 
 // ─── Message ──────────────────────────────────────────────────────────────────
