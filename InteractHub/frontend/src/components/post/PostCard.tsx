@@ -329,7 +329,7 @@ export default function PostCard({ post, initialComments = [], onLike, onAddComm
   const goToAuthorProfile = () => { if (post.author?.id) navigate(`/users/${post.author.id}`); };
 
   return (
-    <article className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+    <article className="bg-white border border-gray-100 rounded-xl shadow-sm">
       {/* Header */}
       <div className="flex justify-between items-center p-4">
         <div className="flex gap-3 items-center">

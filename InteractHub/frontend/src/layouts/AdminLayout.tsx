@@ -11,10 +11,8 @@ export default function AdminLayout() {
   const { logout, user } = useAuth()
 
   const handleLogout = () => {
-    if (window.confirm("Bạn chắc chắn muốn đăng xuất?")) {
-      logout()
-      navigate("/login")
-    }
+    logout()
+    navigate("/login", { replace: true })
   }
 
   const menuItems: Array<{ id: AdminMenuTab; label: string; icon: React.ReactNode; path: string }> = [
@@ -101,10 +99,11 @@ export default function AdminLayout() {
         </nav>
 
         {/* Logout Button */}
-        <div className="mt-auto px-3 pb-6">
+        <div className="mt-auto px-3 pb-6 relative z-50">
           <button
+            type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white"
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white cursor-pointer"
           >
             <LogOut size={18} />
             Logout

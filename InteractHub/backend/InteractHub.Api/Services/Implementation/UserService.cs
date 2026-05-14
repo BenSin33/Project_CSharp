@@ -196,6 +196,10 @@ public class UserService : IUserService
         user.BanReason = reason;
         user.BannedAt = DateTime.UtcNow;
 
+        // Khóa tài khoản vĩnh viễn (99 năm) trong ASP.NET Identity
+        await _userManager.SetLockoutEnabledAsync(user, true);
+        await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(99));
+
         var result = await _userManager.UpdateAsync(user);
         return result.Succeeded;
     }
@@ -208,6 +212,9 @@ public class UserService : IUserService
         user.Status = UserStatus.Active;
         user.BanReason = null;
         user.BannedAt = null;
+
+        // Mở khóa tài khoản
+        await _userManager.SetLockoutEndDateAsync(user, null);
 
         var result = await _userManager.UpdateAsync(user);
         return result.Succeeded;
@@ -222,6 +229,10 @@ public class UserService : IUserService
         user.SuspendedUntil = DateTime.UtcNow.AddDays(daysUntilExpiry);
         user.SuspensionReason = reason;
 
+        // Khóa tài khoản theo số ngày quy định
+        await _userManager.SetLockoutEnabledAsync(user, true);
+        await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddDays(daysUntilExpiry));
+
         var result = await _userManager.UpdateAsync(user);
         return result.Succeeded;
     }
@@ -234,6 +245,9 @@ public class UserService : IUserService
         user.Status = UserStatus.Active;
         user.SuspendedUntil = null;
         user.SuspensionReason = null;
+
+        // Mở khóa tài khoản
+        await _userManager.SetLockoutEndDateAsync(user, null);
 
         var result = await _userManager.UpdateAsync(user);
         return result.Succeeded;

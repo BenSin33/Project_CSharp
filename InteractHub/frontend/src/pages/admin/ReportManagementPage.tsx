@@ -113,6 +113,21 @@ export default function ReportManagementPage() {
     setDeleteModal({ open: false, reportId: "", postId: undefined })
   }
 
+  const handleMarkAsReviewed = async (reportId: string) => {
+    setActionLoading(reportId)
+    try {
+      await adminService.updateReportStatus(reportId, { status: "Reviewed", adminNotes: "Đang xem xét / Đã kiểm tra sơ bộ" })
+      setMessage({ text: "Đã chuyển báo cáo sang trạng thái Reviewed", type: "success" })
+      await loadData()
+    } catch (e) {
+      console.error(e)
+      setMessage({ text: "Lỗi khi cập nhật trạng thái", type: "error" })
+    } finally {
+      setActionLoading(null)
+      setTimeout(() => setMessage(null), 4000)
+    }
+  }
+
   const executeDeletePermanently = async () => {
     const { reportId, postId } = deleteModal
     closeDeleteModal()
@@ -256,22 +271,29 @@ export default function ReportManagementPage() {
 
                 <div className="flex items-center gap-3">
                   <button
+                    onClick={() => handleMarkAsReviewed(report.id)}
+                    disabled={actionLoading === report.id || report.status === "Reviewed" || report.status === "Resolved"}
+                    className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-[13px] font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    <Eye size={16} /> Mark as Reviewed
+                  </button>
+                  <button
                     onClick={() => handleApproveRemove(report.id, report.postId)}
-                    disabled={actionLoading === report.id}
+                    disabled={actionLoading === report.id || report.status === "Resolved"}
                     className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-green-700 disabled:opacity-50"
                   >
                     <CheckCircle2 size={16} /> Approve & Remove
                   </button>
                   <button
                     onClick={() => handleDismiss(report.id)}
-                    disabled={actionLoading === report.id}
+                    disabled={actionLoading === report.id || report.status === "Resolved"}
                     className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                   >
                     <XCircle size={16} /> Dismiss
                   </button>
                   <button
                     onClick={() => openDeleteModal(report.id, report.postId, report.post?.content)}
-                    disabled={actionLoading === report.id}
+                    disabled={actionLoading === report.id || report.status === "Resolved"}
                     className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                   >
                     <Trash2 size={16} /> Delete Permanently

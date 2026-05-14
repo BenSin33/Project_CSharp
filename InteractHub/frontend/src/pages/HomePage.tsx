@@ -93,6 +93,7 @@ function Home() {
           username:  profile?.name || s.userId,
           avatarUrl: profile?.avatarUrl,
           imageUrl:  s.mediaUrl,
+          storyContent: s.storyContent ?? (s as any).StoryContent,
           viewed:    false,
           active:    true,
           expiresAt: s.expireAt,

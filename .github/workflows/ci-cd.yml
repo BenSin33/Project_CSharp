@@ -134,21 +134,3 @@ jobs:
           tags: |
             ghcr.io/${{ steps.owner.outputs.value }}/interacthub-web:latest
             ghcr.io/${{ steps.owner.outputs.value }}/interacthub-web:${{ github.sha }}
-
-      # --- PHẦN DEPLOY LÊN AZURE (DÀNH CHO BÁO CÁO) ---
-      # Bạn có thể bỏ comment đoạn này nếu sau này muốn deploy thật.
-      # Hiện tại để đây để "show" trong báo cáo là hệ thống đã sẵn sàng CD.
-      
-      # - name: Deploy API to Azure App Service
-      #   uses: azure/webapps-deploy@v3
-      #   with:
-      #     app-name: 'interacthub-api' # Tên App Service trên Azure
-      #     publish-profile: ${{ secrets.AZURE_API_PUBLISH_PROFILE }}
-      #     images: 'ghcr.io/${{ steps.owner.outputs.value }}/interacthub-api:latest'
-
-      # - name: Deploy Frontend to Azure App Service
-      #   uses: azure/webapps-deploy@v3
-      #   with:
-      #     app-name: 'interacthub-web' # Tên App Service trên Azure
-      #     publish-profile: ${{ secrets.AZURE_WEB_PUBLISH_PROFILE }}
-      #     images: 'ghcr.io/${{ steps.owner.outputs.value }}/interacthub-web:latest'
