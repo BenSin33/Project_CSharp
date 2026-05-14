@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.DTOs.User_Handle;
@@ -15,10 +16,12 @@ namespace InteractHub.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IActivityLogService _activityLogService;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IActivityLogService activityLogService)
     {
         _userService = userService;
+        _activityLogService = activityLogService;
     }
 
     [HttpGet("search")]
@@ -110,6 +113,10 @@ public class UserController : ControllerBase
         var result = await _userService.LockUserAsync(id, days);
         if(!result) return NotFound(ApiResponse<bool>.Fail("User not found or operation failed."));
 
+        // LOGGING
+        var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        await _activityLogService.LogActivityAsync(adminId, "Lock", "User", $"Locked for {days} days", id, severity: "Warning");
+
         return Ok(ApiResponse<bool>.Ok(true, $"User locked for {days} days"));
     }
 
@@ -119,6 +126,10 @@ public class UserController : ControllerBase
     {
         var result = await _userService.UnLockUserAsync(id);
         if(!result) return NotFound(ApiResponse<bool>.Fail("User not found or operation failed."));
+
+        // LOGGING
+        var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        await _activityLogService.LogActivityAsync(adminId, "Unlock", "User", "Account unlocked", id);
 
         return Ok(ApiResponse<bool>.Ok(true,"User unlocked successfully"));
 
@@ -136,6 +147,10 @@ public class UserController : ControllerBase
             var result = await _userService.AssignRoleAsync(id, request.RoleName);
             if(!result) 
                 return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            // LOGGING
+            var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _activityLogService.LogActivityAsync(adminId, "AssignRole", "User", $"Role {request.RoleName} assigned", id, newValue: request.RoleName);
 
             return Ok(ApiResponse<bool>.Ok(true, $"Role '{request.RoleName}' assigned successfully. "));
 
@@ -156,6 +171,10 @@ public class UserController : ControllerBase
             var result = await _userService.RemoveRoleAsync(id, request.RoleName);
             if (!result)
                 return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            // LOGGING
+            var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _activityLogService.LogActivityAsync(adminId, "RemoveRole", "User", $"Role {request.RoleName} removed", id, oldValue: request.RoleName);
 
             return Ok(ApiResponse<bool>.Ok(true, $"Role '{request.RoleName}' removed successfully. "));
         }
@@ -181,6 +200,10 @@ public class UserController : ControllerBase
             if (!result)
                 return NotFound(ApiResponse<bool>.Fail("User not found"));
 
+            // LOGGING
+            var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _activityLogService.LogActivityAsync(adminId, "Ban", "User", request.Reason, id, severity: "Critical");
+
             return Ok(ApiResponse<bool>.Ok(true, "User banned successfully"));
         }
         catch (Exception ex)
@@ -198,6 +221,10 @@ public class UserController : ControllerBase
             var result = await _userService.UnbanUserAsync(id);
             if (!result)
                 return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            // LOGGING
+            var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _activityLogService.LogActivityAsync(adminId, "Unban", "User", "Ban lifted", id);
 
             return Ok(ApiResponse<bool>.Ok(true, "User unbanned successfully"));
         }
@@ -223,6 +250,10 @@ public class UserController : ControllerBase
             if (!result)
                 return NotFound(ApiResponse<bool>.Fail("User not found"));
 
+            // LOGGING
+            var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _activityLogService.LogActivityAsync(adminId, "Suspend", "User", request.Reason, id, severity: "Warning");
+
             return Ok(ApiResponse<bool>.Ok(true, $"User suspended for {request.DaysUntilExpiry} days"));
         }
         catch (Exception ex)
@@ -241,6 +272,10 @@ public class UserController : ControllerBase
             if (!result)
                 return NotFound(ApiResponse<bool>.Fail("User not found"));
 
+            // LOGGING
+            var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _activityLogService.LogActivityAsync(adminId, "Unsuspend", "User", "Suspension lifted", id);
+
             return Ok(ApiResponse<bool>.Ok(true, "User unsuspended successfully"));
         }
         catch (Exception ex)
@@ -258,6 +293,10 @@ public class UserController : ControllerBase
             var result = await _userService.PermanentDeleteUserAsync(id);
             if (!result)
                 return NotFound(ApiResponse<bool>.Fail("User not found"));
+
+            // LOGGING
+            var adminId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            await _activityLogService.LogActivityAsync(adminId, "Delete", "User", "Permanent deletion", id, severity: "Critical");
 
             return Ok(ApiResponse<bool>.Ok(true, "User permanently deleted"));
         }

@@ -1248,8 +1248,14 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
 
     Frontend được build với Node.js + Vite, sau đó được serve bằng nginx container để tối ưu kích thước image.
 
-    \subsubsection{CI/CD Pipeline Automation}
-    Pipeline tự động được kích hoạt trên mỗi commit push lên main branch với các bước:
+    \subsubsection{Quy trình Tự động hóa CI/CD (GitHub Actions)}
+    Việc áp dụng quy trình CI/CD (Continuous Integration/Continuous Deployment) giúp hệ thống InteractHub duy trì tính ổn định và rút ngắn thời gian triển khai. Mỗi khi có sự thay đổi về mã nguồn (Push/Pull Request) lên các nhánh chính như \textit{main} hay \textit{Thien-Quy}, một quy trình tự động được kích hoạt để thực hiện:
+    \begin{itemize}
+        \item \textbf{Continuous Integration (CI)}: Hệ thống tự động kiểm tra cú pháp, thực hiện build dự án và chạy các bộ Unit Test cho cả Backend (.NET) và Frontend (Vite). Điều này giúp phát hiện sớm các lỗi logic hoặc xung đột mã nguồn trước khi tích hợp vào dự án chính.
+        \item \textbf{Continuous Deployment (CD)}: Sau khi các bài kiểm tra vượt qua, mã nguồn được đóng gói thành các Docker Image và đẩy lên GitHub Container Registry (GHCR). Quy trình này đảm bảo phiên bản mới nhất luôn sẵn sàng để triển khai lên môi trường sản xuất (Azure/Cloud) một cách nhất quán mà không cần thao tác thủ công.
+    \end{itemize}
+
+    Dưới đây là minh chứng quy trình chạy thành công trên GitHub Actions:
     \begin{figure}[H]
     \begin{center}
     \includegraphics[width=14cm]{DevOps_CICD.png}
@@ -1257,16 +1263,26 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \end{center}
     \end{figure}
 
-    Các job chính trong pipeline:
-    \begin{enumerate}
-        \item \textbf{Checkout}: Pull source code từ repository
-        \item \textbf{Restore}: Restore NuGet dependencies
-        \item \textbf{Build}: Build solution
-        \item \textbf{Test}: Chạy unit tests và kiểm tra coverage
-        \item \textbf{Publish}: Package artifacts
-        \item \textbf{Deploy}: Push to Azure App Service
-        \item \textbf{Health Check}: Verify API endpoints hoạt động
-    \end{enumerate}
+    Các Job và Step chính được thiết lập trong Pipeline:
+    \begin{itemize}
+        \item \textbf{Job 1: Backend CI (.NET 10)}:
+        \begin{itemize}
+            \item \textit{Setup .NET}: Khởi tạo môi trường .NET 10 SDK trên runner.
+            \item \textit{Restore \& Build}: Khôi phục các gói NuGet và biên dịch toàn bộ Solution.
+            \item \textit{Unit Test}: Chạy bộ kiểm thử tự động bằng xUnit và xuất báo cáo kết quả (.trx).
+        \end{itemize}
+        \item \textbf{Job 2: Frontend CI (React/Vite)}:
+        \begin{itemize}
+            \item \textit{Install dependencies}: Cài đặt các thư viện Node.js với \texttt{npm ci}.
+            \item \textit{Type Check \& Lint}: Kiểm tra lỗi cú pháp TypeScript và quy chuẩn code (ESLint).
+            \item \textit{Build}: Biên dịch mã nguồn React thành các file tĩnh (Production build).
+        \end{itemize}
+        \item \textbf{Job 3: Docker CD (Multi-image)}:
+        \begin{itemize}
+            \item \textit{Login to GHCR}: Đăng nhập vào GitHub Container Registry bằng token bảo mật.
+            \item \textit{Build \& Push}: Sử dụng Docker Buildx để xây dựng đồng thời 2 Image (API và Web), sau đó đẩy lên Registry với tag theo phiên bản (Commit SHA).
+        \end{itemize}
+    \end{itemize}
 
     \subsubsection{Verification và Health Checks}
     Sau mỗi deployment, hệ thống thực hiện health checks để xác nhận:

@@ -13,10 +13,12 @@ namespace InteractHub.Api.Controllers;
 public class ReportController : ControllerBase
 {
     private readonly IReportService _reportService;
+    private readonly IActivityLogService _activityLogService;
 
-    public ReportController(IReportService reportService)
+    public ReportController(IReportService reportService, IActivityLogService activityLogService)
     {
         _reportService = reportService;
+        _activityLogService = activityLogService;
     }
 
     /// <summary>
@@ -112,6 +114,9 @@ public class ReportController : ControllerBase
             if (!result)
                 return NotFound(ApiResponse<bool>.Fail("Report not found"));
 
+            // LOGGING
+            await _activityLogService.LogActivityAsync(adminId, "UpdateStatus", "Report", $"Report status changed to {request.Status}", targetReportId: id);
+
             return Ok(ApiResponse<bool>.Ok(true, "Report status updated successfully"));
         }
         catch (Exception ex)
@@ -129,6 +134,13 @@ public class ReportController : ControllerBase
         var result = await _reportService.DeleteReportAsync(id);
         if (!result)
             return NotFound(ApiResponse<bool>.Fail("Report not found"));
+
+        // LOGGING
+        var adminIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (Guid.TryParse(adminIdClaim, out var adminId))
+        {
+            await _activityLogService.LogActivityAsync(adminId, "Delete", "Report", "Report deleted permanently", targetReportId: id, severity: "Warning");
+        }
 
         return Ok(ApiResponse<bool>.Ok(true, "Report deleted successfully"));
     }

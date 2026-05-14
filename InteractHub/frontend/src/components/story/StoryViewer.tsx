@@ -223,7 +223,7 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
         </div>
 
         {/* Story image */}
-        <div style={{ position: "relative", width: "100%", height: "100%", flex: 1 }}>
+        <div style={{ position: "relative", width: "100%", height: "100%", flex: 1, background: "#000", display: "flex", alignItems: "center" }}>
           {story.imageUrl ? (
             <img
               src={story.imageUrl}
@@ -233,8 +233,9 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
               }}
               style={{
                 width: "100%",
-                height: "100%",
-                objectFit: "cover",
+                height: "auto",
+                maxHeight: "100%",
+                objectFit: "contain",
                 display: "block",
                 userSelect: "none",
               }}
@@ -250,6 +251,34 @@ export default function StoryViewer({ stories, startIndex = 0, onClose }: StoryV
               justifyContent: "center",
             }}>
               <span style={{ fontSize: "80px", opacity: 0.3 }}>📷</span>
+            </div>
+          )}
+
+          {/* Caption Overlay */}
+          {(story.storyContent || (story as any).StoryContent) && (
+            <div style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: "60px 20px 40px",
+              background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%)",
+              color: "#fff",
+              textAlign: "center",
+              zIndex: 100,
+              pointerEvents: "none",
+            }}>
+              <p style={{
+                fontSize: "16px",
+                lineHeight: "1.5",
+                margin: 0,
+                textShadow: "0 2px 4px rgba(0,0,0,0.9)",
+                wordBreak: "break-word",
+                fontWeight: 500,
+                letterSpacing: "0.2px",
+              }}>
+                {story.storyContent || (story as any).StoryContent}
+              </p>
             </div>
           )}
         </div>
