@@ -818,6 +818,7 @@ Tổng hợp: giải thích dòng‑một‑dòng (//) cho mọi đoạn code m�
 Dưới đây là bản tóm tắt các giải thích ngắn (mỗi dòng bắt đầu bằng //) cho tất cả các đoạn code mẫu đã xuất hiện trong báo cáo. Bạn có thể copy/paste các dòng này vào README hoặc trực tiếp vào code nếu muốn.
 
 // src/services/friendService.ts — mapFriendshipToRequest: chọn "other" user trong friendship và trả về FriendRequestDto dùng cho UI
+
 // src/services/friendService.ts — mapUserFriendToFriend: chuyển UserFriendDTO sang FriendDto cho hiển thị
 // src/services/friendService.ts — getPendingRequests: GET pending requests, unwrap response, map sang UI
 // src/services/friendService.ts — getFriendList: GET friend list và map sang FriendDto
