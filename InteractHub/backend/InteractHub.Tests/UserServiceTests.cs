@@ -8,6 +8,9 @@ using InteractHub.Api.Models;
 using InteractHub.Api.Services.Implementation;
 using InteractHub.Api.DTOs.User_Handle;
 
+using Microsoft.AspNetCore.SignalR;
+using InteractHub.Api.Hubs;
+
 namespace InteractHub.Tests;
 
 public class UserServiceTests
@@ -103,6 +106,18 @@ public class UserServiceTests
             store.Object, null!, null!, null!, null!);
     }
 
+    private static Mock<IHubContext<NotificationHub>> CreateHubContextMock()
+    {
+        var hubContext = new Mock<IHubContext<NotificationHub>>();
+        var clients = new Mock<IHubClients>();
+        var clientProxy = new Mock<IClientProxy>();
+        
+        hubContext.Setup(x => x.Clients).Returns(clients.Object);
+        clients.Setup(x => x.All).Returns(clientProxy.Object);
+        
+        return hubContext;
+    }
+
     [Fact]
     public async Task GetAllUsersAsync_ReturnsMappedDtos()
     {
@@ -120,7 +135,8 @@ public class UserServiceTests
         userManager.Setup(x => x.GetRolesAsync(It.IsAny<User>())).ReturnsAsync(new List<string> { "User" });
         userManager.Setup(x => x.IsLockedOutAsync(It.IsAny<User>())).ReturnsAsync(false);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = (await service.GetAllUsersAsync()).ToList();
 
@@ -136,7 +152,8 @@ public class UserServiceTests
 
         userManager.Setup(x => x.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.GetUserByIdAsync(Guid.NewGuid());
 
@@ -150,7 +167,8 @@ public class UserServiceTests
         var roleManager = CreateRoleManagerMock();
 
         userManager.Setup(x => x.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.UpdateUserAsync(Guid.NewGuid(), new UpdateUserDTO
         {
@@ -172,7 +190,8 @@ public class UserServiceTests
         userManager.Setup(x => x.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
         userManager.Setup(x => x.UpdateAsync(user)).ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Update failed" }));
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         await Assert.ThrowsAsync<Exception>(() => service.UpdateUserAsync(user.Id, new UpdateUserDTO
         {
@@ -190,7 +209,8 @@ public class UserServiceTests
 
         userManager.Setup(x => x.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.DeleteUserAsync(Guid.NewGuid());
 
@@ -205,7 +225,8 @@ public class UserServiceTests
 
         userManager.Setup(x => x.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.LockUserAsync(Guid.NewGuid(), 3);
 
@@ -223,7 +244,8 @@ public class UserServiceTests
         userManager.Setup(x => x.SetLockoutEndDateAsync(user, It.IsAny<DateTimeOffset?>()))
             .ReturnsAsync(IdentityResult.Success);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.LockUserAsync(user.Id, 2);
 
@@ -238,7 +260,8 @@ public class UserServiceTests
 
         userManager.Setup(x => x.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.UnLockUserAsync(Guid.NewGuid());
 
@@ -255,7 +278,8 @@ public class UserServiceTests
         userManager.Setup(x => x.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
         userManager.Setup(x => x.SetLockoutEndDateAsync(user, null)).ReturnsAsync(IdentityResult.Success);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.UnLockUserAsync(user.Id);
 
@@ -272,7 +296,8 @@ public class UserServiceTests
         userManager.Setup(x => x.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
         roleManager.Setup(x => x.RoleExistsAsync("Admin")).ReturnsAsync(false);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         await Assert.ThrowsAsync<Exception>(() => service.AssignRoleAsync(user.Id, "Admin"));
     }
@@ -285,7 +310,8 @@ public class UserServiceTests
 
         userManager.Setup(x => x.FindByIdAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.AssignRoleAsync(Guid.NewGuid(), "User");
 
@@ -304,7 +330,8 @@ public class UserServiceTests
         userManager.Setup(x => x.IsInRoleAsync(user, "User")).ReturnsAsync(false);
         userManager.Setup(x => x.AddToRoleAsync(user, "User")).ReturnsAsync(IdentityResult.Success);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var hubContext = CreateHubContextMock();
+        var service = new UserService(userManager.Object, roleManager.Object, hubContext.Object);
 
         var result = await service.AssignRoleAsync(user.Id, "User");
 
@@ -322,7 +349,7 @@ public class UserServiceTests
         roleManager.Setup(x => x.RoleExistsAsync("User")).ReturnsAsync(true);
         userManager.Setup(x => x.IsInRoleAsync(user, "User")).ReturnsAsync(true);
 
-        var service = new UserService(userManager.Object, roleManager.Object);
+        var service = new UserService(userManager.Object, roleManager.Object, CreateHubContextMock().Object);
 
         var result = await service.AssignRoleAsync(user.Id, "User");
 

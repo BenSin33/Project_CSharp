@@ -336,6 +336,122 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \end{center}
     \end{figure}
 
+    \subsection{Sơ đồ Use Case}
+    Sơ đồ Use Case mô tả các tác vụ mà người dùng (User) và quản trị viên (Admin) có thể thực hiện trên hệ thống:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=15cm]{Use_Case_Diagram.png}
+    \caption{Sơ đồ Use Case tổng quan}
+    \label{fig:usecase}
+    \end{center}
+    \end{figure}
+
+    \subsection{Sơ đồ Luồng dữ liệu (Data Flow Diagram - DFD)}
+    Sơ đồ mô tả cách dữ liệu di chuyển giữa các tiến trình và thực thể trong hệ thống InteractHub:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=15cm]{Data_Flow_Diagram.png}
+    \caption{Sơ đồ Luồng dữ liệu cấp 1}
+    \end{center}
+    \end{figure}
+
+    \subsection{Sơ đồ tuần tự các chức năng chính (Sequence Diagrams)}
+    Phần này mô tả chi tiết quy trình trao đổi thông điệp giữa các thành phần (User, Frontend, API, Database, Cloud) cho từng nghiệp vụ cụ thể.
+
+    \subsubsection{Quy trình Xác thực (Authentication Flow)}
+    Mô tả luồng đăng nhập và cấp phát JWT Token:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Auth.png}
+    \caption{Sơ đồ tuần tự chức năng Đăng nhập}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Đăng bài viết (Post Creation Flow)}
+    Luồng xử lý khi người dùng đăng bài kèm hình ảnh lên Azure Blob Storage:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Post.png}
+    \caption{Sơ đồ tuần tự chức năng Đăng bài viết}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Tương tác và Thông báo (Like & Notification Flow)}
+    Mô tả cách hệ thống đẩy thông báo thời gian thực qua SignalR khi có tương tác:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Like_Noti.png}
+    \caption{Sơ đồ tuần tự tương tác Like và Thông báo}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Kết bạn (Friendship Flow)}
+    Luồng xử lý gửi và chấp nhận lời mời kết bạn:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Friendship.png}
+    \caption{Sơ đồ tuần tự chức năng Kết bạn}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Tin tạm thời (Story Flow)}
+    Mô tả cơ chế đăng tin và tự động hết hạn sau 24 giờ:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Story.png}
+    \caption{Sơ đồ tuần tự chức năng Story}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Quản trị và Thống kê (Admin Dashboard \& Moderation)}
+    Luồng xử lý dành cho quản trị viên khi xem thống kê hệ thống và chủ động kiểm duyệt nội dung:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Admin.png}
+    \caption{Sơ đồ tuần tự chức năng Quản trị và Thống kê}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Nhắn tin thời gian thực (Real-time Messaging Flow)}
+    Mô tả luồng trao đổi tin nhắn tức thời giữa các người dùng thông qua SignalR:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Messaging.png}
+    \caption{Sơ đồ tuần tự chức năng Nhắn tin}
+    \label{fig:seq_messaging}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Xử lý Báo cáo vi phạm (Report Management Lifecycle)}
+    Mô tả chi tiết vòng đời của một báo cáo vi phạm từ lúc người dùng gửi cho đến khi quản trị viên phê duyệt xử lý:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Report_Management.png}
+    \caption{Sơ đồ tuần tự quy trình Xử lý Báo cáo}
+    \label{fig:seq_report}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Quản lý Người dùng (Admin User Management Flow)}
+    Luồng xử lý dành cho quản trị viên khi quản lý trạng thái tài khoản người dùng (Khóa/Ban):
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_User_Management.png}
+    \caption{Sơ đồ tuần tự chức năng Quản lý Người dùng}
+    \label{fig:seq_user_mgmt}
+    \end{center}
+    \end{figure}
+
+    \subsubsection{Quy trình Tìm kiếm và Khám phá (Search \& Discovery Flow)}
+    Luồng xử lý khi người dùng tìm kiếm bạn bè hoặc khám phá bài viết qua hashtag:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=12cm]{Sequence_Search.png}
+    \caption{Sơ đồ tuần tự chức năng Tìm kiếm}
+    \label{fig:seq_search}
+    \end{center}
+    \end{figure}
+
     \subsection{Đặc tả API}
     Hệ thống cung cấp hơn 20 endpoints RESTful để giao tiếp với Frontend React. Các API được chuẩn hóa theo định dạng JSON và sử dụng các mã trạng thái HTTP tiêu chuẩn (200, 201, 400, 401, 500). Các nhóm API chính bao gồm:
     \begin{itemize}
@@ -701,57 +817,16 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
         \item \textbf{MessageController} (2 endpoints): SendMessage, GetMessages
         \item \textbf{MediaController} (2 endpoints): UploadImage, DeleteImage
     \end{itemize}
-    \subsection{Cấu hình CORS và Dependency Injection}
-    Cấu hình CORS trong \texttt{Program.cs} cho phép Frontend React giao tiếp an toàn với Backend API, đảm bảo tính bảo mật và khả năng mở rộng khi triển khai trên các môi trường khác nhau:
-    \begin{lstlisting}[caption={Cấu hình CORS và Dependency Injection trong Program.cs}]
-// Configure CORS
-var MyAllowedOrigins = "_myAllowedOrigins";
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: MyAllowedOrigins, policy =>
-    {
-        policy
-            .WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "https://interacthub-frontend.azurewebsites.net")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
-
-// Registering Business Logic Services (Dependency Injection)
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<ICommentService, CommentService>();
-builder.Services.AddScoped<ILikeService, LikeService>();
-builder.Services.AddScoped<IFriendshipService, FriendshipService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IStoryService, StoryService>();
-builder.Services.AddScoped<IShareService, ShareService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IMessageService, MessageService>();
-builder.Services.AddScoped<IFileUploadService, FileUploadService>();
-builder.Services.AddScoped<ISavedPostService, SavedPostService>();
-
-// Add generic repository
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
-var app = builder.Build();
-app.UseCors(MyAllowedOrigins);
-app.MapControllers();
-app.Run();
-    \end{lstlisting}
-
-    Cấu hình này đảm bảo:
+    \subsection{Cấu hình Hệ thống và Tiêm phụ thuộc (Dependency Injection)}
+    Hệ thống được cấu hình tập trung tại tệp \texttt{Program.cs}, đảm bảo tính nhất quán và khả năng mở rộng. Các cấu hình quan trọng bao gồm:
     \begin{itemize}
-        \item \textbf{CORS Policy}: Cho phép các request từ Frontend (localhost:3000, localhost:5173, Azure domain)
-        \item \textbf{Credentials}: Hỗ trợ gửi JWT token trong Cookie/Header
-        \item \textbf{Dependency Injection}: Tất cả services được đăng ký với Scoped lifetime cho tính consistency trong mỗi HTTP request
-        \item \textbf{Generic Repository}: Hỗ trợ các entity models thông qua generic repository pattern
+        \item \textbf{Cấu hình CORS}: Cho phép các yêu cầu từ các nguồn được chỉ định (như localhost:3000, localhost:5173 và tên miền triển khai trên Azure). Điều này đảm bảo tính bảo mật khi Frontend giao tiếp với Backend.
+        \item \textbf{Cấu hình Xác thực (Authentication)}: Sử dụng JWT Bearer để xác thực các yêu cầu API, đi kèm với cấu hình TokenValidationParameters để kiểm tra tính hợp lệ của Issuer, Audience và Signing Key.
+        \item \textbf{Đăng ký Dịch vụ (Dependency Injection)}: Toàn bộ các Service nghiệp vụ (như IAuthService, IPostService, ILikeService,...) được đăng ký với vòng đời Scoped. Việc này giúp giảm sự phụ thuộc trực tiếp giữa các thành phần và hỗ trợ tốt cho việc viết Unit Test.
+        \item \textbf{Generic Repository}: Đăng ký Repository mẫu (Generic Repository) giúp tối ưu hóa việc tái sử dụng mã nguồn cho các thao tác CRUD cơ bản trên tất cả các thực thể dữ liệu.
     \end{itemize}
+
+    Việc tách lớp và sử dụng Interface giúp hệ thống dễ dàng bảo trì, nâng cấp các thành phần riêng lẻ mà không ảnh hưởng đến logic toàn cục của ứng dụng.
 
     \subsection{Business Logic và Services Layer}
     Triển khai \textbf{12 service interfaces} với implementation pattern:
@@ -811,49 +886,49 @@ app.Run();
     \subsubsection{Nhóm xác thực và hồ sơ người dùng}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Trangdangnhap.png}
+    \includegraphics[width=14cm]{Auth_Login.png}
     \caption{Trang đăng nhập hệ thống}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienDangKiTaiKhoan.jpg}
+    \includegraphics[width=14cm]{Auth_Register.png}
     \caption{Giao diện đăng ký tài khoản người dùng}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienProfile.png}
+    \includegraphics[width=14cm]{Profile_Main.png}
     \caption{Trang hồ sơ người dùng (Profile)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienCaiDat_ProfileNguoiDung.png}
+    \includegraphics[width=14cm]{Settings_Profile.png}
     \caption{Cài đặt hồ sơ (Settings - Profile)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienCaiDat_Account.jpg}
+    \includegraphics[width=14cm]{Settings_Account.png}
     \caption{Cài đặt tài khoản (Settings - Account)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienCaiDat_ThongBao.jpg}
+    \includegraphics[width=14cm]{Settings_Notifications.png}
     \caption{Cài đặt thông báo (Settings - Notifications)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienCaiDat_Privacy.jpg}
+    \includegraphics[width=14cm]{Settings_Privacy.png}
     \caption{Cài đặt quyền riêng tư (Settings - Privacy)}
     \end{center}
     \end{figure}
@@ -861,35 +936,35 @@ app.Run();
     \subsubsection{Nhóm feed, bài viết và story}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienTongQuanInteractHub.png}
+    \includegraphics[width=14cm]{Feed_Main.png}
     \caption{Trang chủ Feed - tổng quan hệ thống sau khi đăng nhập}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{TaoBaiViet.jpg}
+    \includegraphics[width=14cm]{Post_Create.png}
     \caption{Tạo bài viết mới (Create Post Modal)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{TaoStory.jpg}
+    \includegraphics[width=14cm]{Story_Create.png}
     \caption{Tạo story mới (Create Story Modal)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{StoryCuaMotUser.jpg}
+    \includegraphics[width=14cm]{Story_View.png}
     \caption{Xem story toàn màn hình}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienBookMarks.jpg}
+    \includegraphics[width=14cm]{Profile_Bookmarks.png}
     \caption{Trang bookmark - các bài viết đã lưu}
     \end{center}
     \end{figure}
@@ -897,70 +972,70 @@ app.Run();
     \subsubsection{Nhóm khám phá, tìm kiếm, bạn bè và tương tác}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienExplore_TrendingPosts.png}
+    \includegraphics[width=14cm]{Explore_Trending.png}
     \caption{Trang Explore - tab Trending Posts}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienExplore_HashTags.png}
+    \includegraphics[width=14cm]{Explore_Hashtags.png}
     \caption{Trang Explore - tab Hashtags}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienExplore_Reels.png}
+    \includegraphics[width=14cm]{Explore_Reels.png}
     \caption{Trang Explore - tab Reels}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{TimKiemBaiVietQuaTenNguoiDung.jpg}
+    \includegraphics[width=14cm]{Search_Posts.png}
     \caption{Tìm kiếm bài viết theo từ khóa}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{TimKiemNguoiDung.png}
+    \includegraphics[width=14cm]{Search_Users.png}
     \caption{Tìm kiếm người dùng theo từ khóa}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienBanBe_LoiMoiKetBan.jpg}
+    \includegraphics[width=14cm]{Friends_Requests.png}
     \caption{Danh sách lời mời kết bạn (Friend Requests)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienBanBe_TatCaBanBe.jpg}
+    \includegraphics[width=14cm]{Friends_List.png}
     \caption{Danh sách bạn bè (All Friends)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienBanBe_GoiYBanBe.png}
+    \includegraphics[width=14cm]{Friends_Suggestions.png}
     \caption{Gợi ý kết bạn (Friend Suggestions)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{ThanhThongBao.jpg}
+    \includegraphics[width=14cm]{Notifications_Panel.png}
     \caption{Bảng thông báo hoạt động người dùng}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienNhanTin.png}
+    \includegraphics[width=14cm]{Chat_Realtime.png}
     \caption{Giao diện nhắn tin thời gian thực}
     \end{center}
     \end{figure}
@@ -968,14 +1043,14 @@ app.Run();
     \subsubsection{Nhóm chức năng quản trị (Admin)}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienAdminDashboard(Admin).png}
+    \includegraphics[width=14cm]{Admin_Dashboard.png}
     \caption{Admin Dashboard - tổng quan hệ thống}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{GiaoDienQuanLyReport(Admin).png}
+    \includegraphics[width=14cm]{Admin_Moderation.png}
     \caption{Admin Report Management - xử lý báo cáo nội dung vi phạm}
     \end{center}
     \end{figure}
@@ -1053,6 +1128,15 @@ app.Run();
 
     \textit{Gợi ý hình cần chèn: hinh9.png - kết quả và tài liệu unit testing.}
     % Hình (hinh9.png) removed from inline; keep the text reference for insertion later.
+
+    \subsection{Kiểm thử End-to-End (E2E)}
+    Nhóm thực hiện kiểm thử toàn trình từ phía người dùng đến hệ thống quản trị để đảm bảo các tính năng hoạt động trơn tru:
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=14cm]{E2E_Test_Results.png}
+    \caption{Kết quả kiểm thử End-to-End (Admin và User flows)}
+    \end{center}
+    \end{figure}
 
     \subsection{Kết quả kiểm thử và phân tích độ tin cậy}
     Ngoài việc liệt kê các test case, nhóm tiến hành phân tích kết quả theo ba góc nhìn: độ phủ nghiệp vụ, độ ổn định khi chạy lặp, và khả năng phát hiện lỗi biên.
@@ -1168,7 +1252,7 @@ app.Run();
     Pipeline tự động được kích hoạt trên mỗi commit push lên main branch với các bước:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{KetQuaCICD.png}
+    \includegraphics[width=14cm]{DevOps_CICD.png}
     \caption{GitHub Actions workflow - CI/CD pipeline chạy thành công tất cả các jobs}
     \end{center}
     \end{figure}

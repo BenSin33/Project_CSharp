@@ -6,7 +6,7 @@ using InteractHub.Api.DTOs.Post_Interactions;
 
 namespace InteractHub.Tests;
 
-public class ShareServiceTests
+public class ShareServiceTests : TestBase
 {
     private readonly Mock<IGenericRepository<Share>> _mockShareRepo;
     private readonly Mock<IGenericRepository<Post>> _mockPostRepo;
@@ -16,7 +16,7 @@ public class ShareServiceTests
     {
         _mockShareRepo = new Mock<IGenericRepository<Share>>();
         _mockPostRepo = new Mock<IGenericRepository<Post>>();
-        _shareService = new ShareService(_mockShareRepo.Object, _mockPostRepo.Object);
+        _shareService = new ShareService(_mockShareRepo.Object, _mockPostRepo.Object, CreateDbContext(), CreateNotificationServiceMock().Object);
     }
 
     #region GetShareCountAsync Tests

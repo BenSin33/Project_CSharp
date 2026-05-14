@@ -6,9 +6,12 @@ using InteractHub.Api.Services.Implementation;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Repositories;
 
+using Microsoft.AspNetCore.SignalR;
+using InteractHub.Api.Hubs;
+
 namespace InteractHub.Tests;
 
-public class NotificationServiceTests
+public class NotificationServiceTests : TestBase
 {
     private readonly Mock<IGenericRepository<Notification>> _notificationRepositoryMock;
     private readonly Mock<IGenericRepository<User>> _userRepositoryMock;
@@ -18,7 +21,7 @@ public class NotificationServiceTests
     {
         _notificationRepositoryMock = new Mock<IGenericRepository<Notification>>();
         _userRepositoryMock = new Mock<IGenericRepository<User>>();
-        _notificationService = new NotificationService(_notificationRepositoryMock.Object, _userRepositoryMock.Object);
+        _notificationService = new NotificationService(_notificationRepositoryMock.Object, _userRepositoryMock.Object, CreateDbContext(), CreateHubContextMock().Object);
     }
 
     [Fact]

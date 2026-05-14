@@ -7,16 +7,8 @@ using InteractHub.Api.Services.Implementation;
 
 namespace InteractHub.Tests;
 
-public class MessageServiceTests
+public class MessageServiceTests : TestBase
 {
-    private static ApplicationDbContext CreateDbContext(string dbName)
-    {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
-            .Options;
-
-        return new ApplicationDbContext(options);
-    }
 
     private static User CreateUser(Guid id, string name)
     {
@@ -32,9 +24,8 @@ public class MessageServiceTests
     [Fact]
     public async Task SendMessageAsync_ReceiverMissing_ThrowsArgumentException()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var senderId = Guid.NewGuid();
         var dto = new CreateMessageDTO("Hi", Guid.NewGuid());
@@ -45,9 +36,8 @@ public class MessageServiceTests
     [Fact]
     public async Task SendMessageAsync_SenderMissing_ThrowsArgumentException()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var receiver = CreateUser(Guid.NewGuid(), "receiver");
         context.Users.Add(receiver);
@@ -61,9 +51,8 @@ public class MessageServiceTests
     [Fact]
     public async Task SendMessageAsync_ValidRequest_PersistsAndReturnsResponse()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var sender = CreateUser(Guid.NewGuid(), "sender");
         var receiver = CreateUser(Guid.NewGuid(), "receiver");
@@ -84,9 +73,8 @@ public class MessageServiceTests
     [Fact]
     public async Task GetConversationAsync_ReturnsOrderedMessages()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var userA = CreateUser(Guid.NewGuid(), "userA");
         var userB = CreateUser(Guid.NewGuid(), "userB");
@@ -107,9 +95,8 @@ public class MessageServiceTests
     [Fact]
     public async Task GetConversationsAsync_ReturnsLatestPerUserWithUnreadCount()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var userA = CreateUser(Guid.NewGuid(), "userA");
         var userB = CreateUser(Guid.NewGuid(), "userB");
@@ -136,9 +123,8 @@ public class MessageServiceTests
     [Fact]
     public async Task GetMessageByIdAsync_NotFound_ReturnsNull()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var result = await service.GetMessageByIdAsync(Guid.NewGuid());
 
@@ -148,9 +134,8 @@ public class MessageServiceTests
     [Fact]
     public async Task GetMessageByIdAsync_Found_ReturnsDto()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var userA = CreateUser(Guid.NewGuid(), "userA");
         var userB = CreateUser(Guid.NewGuid(), "userB");
@@ -169,9 +154,8 @@ public class MessageServiceTests
     [Fact]
     public async Task MarkAsReadAsync_MessageMissing_ReturnsFalse()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var result = await service.MarkAsReadAsync(Guid.NewGuid());
 
@@ -181,9 +165,8 @@ public class MessageServiceTests
     [Fact]
     public async Task MarkAsReadAsync_ValidMessage_SetsIsRead()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var userA = CreateUser(Guid.NewGuid(), "userA");
         var userB = CreateUser(Guid.NewGuid(), "userB");
@@ -203,9 +186,8 @@ public class MessageServiceTests
     [Fact]
     public async Task DeleteMessageAsync_NotSender_ReturnsFalse()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var userA = CreateUser(Guid.NewGuid(), "userA");
         var userB = CreateUser(Guid.NewGuid(), "userB");
@@ -224,9 +206,8 @@ public class MessageServiceTests
     [Fact]
     public async Task DeleteMessageAsync_SenderDeletes_RemovesMessage()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var userA = CreateUser(Guid.NewGuid(), "userA");
         var userB = CreateUser(Guid.NewGuid(), "userB");
@@ -245,9 +226,8 @@ public class MessageServiceTests
     [Fact]
     public async Task GetUnreadMessageCountAsync_ReturnsCount()
     {
-        var dbName = Guid.NewGuid().ToString();
-        await using var context = CreateDbContext(dbName);
-        var service = new MessageService(context);
+        await using var context = CreateDbContext();
+        var service = new MessageService(context, CreateNotificationServiceMock().Object);
 
         var userA = CreateUser(Guid.NewGuid(), "userA");
         var userB = CreateUser(Guid.NewGuid(), "userB");

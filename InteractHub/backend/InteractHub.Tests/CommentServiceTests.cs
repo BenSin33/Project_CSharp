@@ -6,7 +6,7 @@ using InteractHub.Api.DTOs.Post_Interactions;
 
 namespace InteractHub.Tests;
 
-public class CommentServiceTests
+public class CommentServiceTests : TestBase
 {
     private readonly Mock<IGenericRepository<Comment>> _mockCommentRepo;
     private readonly Mock<IGenericRepository<Post>> _mockPostRepo;
@@ -16,7 +16,7 @@ public class CommentServiceTests
     {
         _mockCommentRepo = new Mock<IGenericRepository<Comment>>();
         _mockPostRepo = new Mock<IGenericRepository<Post>>();
-        _commentService = new CommentService(_mockCommentRepo.Object, _mockPostRepo.Object);
+        _commentService = new CommentService(_mockCommentRepo.Object, _mockPostRepo.Object, CreateDbContext(), CreateNotificationServiceMock().Object);
     }
 
     #region GetCommentsByPostIdAsync Tests

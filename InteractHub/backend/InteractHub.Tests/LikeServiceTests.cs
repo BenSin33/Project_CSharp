@@ -6,7 +6,7 @@ using InteractHub.Api.DTOs.Post_Interactions;
 
 namespace InteractHub.Tests;
 
-public class LikeServiceTests
+public class LikeServiceTests : TestBase
 {
     private readonly Mock<IGenericRepository<Like>> _mockLikeRepo;
     private readonly Mock<IGenericRepository<Post>> _mockPostRepo;
@@ -16,7 +16,7 @@ public class LikeServiceTests
     {
         _mockLikeRepo = new Mock<IGenericRepository<Like>>();
         _mockPostRepo = new Mock<IGenericRepository<Post>>();
-        _likeService = new LikeService(_mockLikeRepo.Object, _mockPostRepo.Object);
+        _likeService = new LikeService(_mockLikeRepo.Object, _mockPostRepo.Object, CreateDbContext(), CreateNotificationServiceMock().Object);
     }
 
     #region GetLikeSummaryAsync Tests
