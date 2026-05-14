@@ -6,17 +6,22 @@ using InteractHub.Api.Services.Implementation;
 using InteractHub.Api.Services.Interface;
 using InteractHub.Api.Repositories;
 
+using Microsoft.AspNetCore.SignalR;
+using InteractHub.Api.Hubs;
+
 namespace InteractHub.Tests;
 
-public class StoryServiceTests
+public class StoryServiceTests : TestBase
 {
     private readonly Mock<IGenericRepository<Story>> _storyRepositoryMock;
+    private readonly Mock<IHubContext<NotificationHub>> _hubContextMock;
     private readonly StoryService _storyService;
 
     public StoryServiceTests()
     {
         _storyRepositoryMock = new Mock<IGenericRepository<Story>>();
-        _storyService = new StoryService(_storyRepositoryMock.Object);
+        _hubContextMock = CreateHubContextMock();
+        _storyService = new StoryService(_storyRepositoryMock.Object, _hubContextMock.Object);
     }
 
     [Fact]

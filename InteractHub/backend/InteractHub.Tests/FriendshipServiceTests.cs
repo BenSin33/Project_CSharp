@@ -7,7 +7,7 @@ using InteractHub.Api.DTOs.FriendshipDTO;
 
 namespace InteractHub.Tests;
 
-public class FriendshipServiceTests
+public class FriendshipServiceTests : TestBase
 {
     private readonly Mock<IGenericRepository<FriendShip>> _friendshipRepoMock;
     private readonly Mock<IGenericRepository<User>> _userRepoMock;
@@ -17,7 +17,7 @@ public class FriendshipServiceTests
     {
         _friendshipRepoMock = new Mock<IGenericRepository<FriendShip>>();
         _userRepoMock = new Mock<IGenericRepository<User>>();
-        _service = new FriendshipService(_friendshipRepoMock.Object, _userRepoMock.Object);
+        _service = new FriendshipService(_friendshipRepoMock.Object, _userRepoMock.Object, CreateNotificationServiceMock().Object);
     }
 
     [Fact]

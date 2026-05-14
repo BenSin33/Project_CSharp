@@ -6,17 +6,25 @@ using InteractHub.Api.Services.Interface;
 using InteractHub.Api.DTOs.Post;
 using InteractHub.Api.Repositories;
 
+using Microsoft.AspNetCore.SignalR;
+using InteractHub.Api.Hubs;
+using InteractHub.Api.Data;
+
 namespace InteractHub.Tests;
 
-public class PostServiceTests
+public class PostServiceTests : TestBase
 {
     private readonly Mock<IGenericRepository<Post>> _mockPostRepository;
+    private readonly Mock<IHubContext<NotificationHub>> _hubContextMock;
+    private readonly ApplicationDbContext _context;
     private readonly IPostService _postService;
 
     public PostServiceTests()
     {
         _mockPostRepository = new Mock<IGenericRepository<Post>>();
-        _postService = new PostService(_mockPostRepository.Object);
+        _hubContextMock = CreateHubContextMock();
+        _context = CreateDbContext();
+        _postService = new PostService(_mockPostRepository.Object, _context, _hubContextMock.Object);
     }
 
     #region GetAllActivePostsAsync Tests
@@ -183,6 +191,9 @@ public class PostServiceTests
             UpdatedAt = DateTime.UtcNow
         };
 
+        _context.Posts.Add(post);
+        await _context.SaveChangesAsync();
+
         _mockPostRepository
             .Setup(x => x.GetByIdAsync(postId))
             .ReturnsAsync(post);
@@ -195,7 +206,7 @@ public class PostServiceTests
         Assert.Equal(postId, result.Id);
         Assert.Equal("Test post", result.Content);
         Assert.Equal("Public", result.Visibility);
-        _mockPostRepository.Verify(x => x.GetByIdAsync(postId), Times.Once);
+        // _mockPostRepository.Verify(x => x.GetByIdAsync(postId), Times.Once); // Removed because it now uses _context
     }
 
     [Fact]
