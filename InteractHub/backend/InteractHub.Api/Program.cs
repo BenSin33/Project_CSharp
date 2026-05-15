@@ -60,10 +60,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 4. Đăng ký EF Core & Dapper
+// 4. Đăng ký EF Core
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<DataContextDapper>();
 
 // 5. Đăng ký Identity & CẤU HÌNH ĐỘ KHÓ MẬT KHẨU
 builder.Services.AddIdentity<User, IdentityRole<Guid>>(options => 

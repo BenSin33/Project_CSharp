@@ -44,6 +44,9 @@ Dưới đây là danh sách toàn bộ các file hình ảnh bạn cần có tr
 | `GiaoDienNhanTin.jpg` | Cửa sổ nhắn tin với một người dùng khác | .jpg |
 | `GiaoDienAdminDashboard(Admin).jpg` | Trang chủ Dashboard dành cho Admin | .jpg |
 | `GiaoDienQuanLyReport(Admin).jpg` | Trang Admin xem danh sách các báo cáo vi phạm | .jpg |
+| `GiaoDienQuanLyUser(Admin).jpg` | Trang Quản lý người dùng (Đình chỉ, Cấm, Phân quyền) | .jpg |
+| `GiaoDienKiemDuyetNoiDung(Admin).jpg` | Trang Kiểm duyệt bài viết và nội dung trên nền tảng | .jpg |
+| `GiaoDienNhatKyHeThong(Admin).jpg` | Trang Nhật ký hoạt động (Logs) của hệ thống và Admin | .jpg |
 
 ---
 

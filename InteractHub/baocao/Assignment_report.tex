@@ -298,13 +298,13 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \rowcolor{gray!10}
     \textbf{STT} & \textbf{Họ và tên} & \textbf{MSSV} & \textbf{\% Công việc} & \textbf{Nhiệm vụ chính} \\
     \hline
-    1 & Dương Thiện Quý & 3123410298 & 25\% & Trưởng nhóm, Thiết kế DB, Backend Core (Auth, Post, Notification), SignalR Hub. \\
+    1 & Dương Thiện Quý & 3123410298 & 27\% & Trưởng nhóm, Thiết kế DB, Xây dựng Backend cho các module: Xác thực (Auth), Bạn bè (Friend), Profile, Quản trị (Admin) và Hạ tầng (Docker/Azure). \\
     \hline
-    2 & Trương Phúc Hoàng Anh & 3123410011 & 25\% & Phát triển Frontend UI/UX, Quản lý State (React Context), Tích hợp API, Responsive Design. \\
+    2 & Trương Phúc Hoàng Anh & 3123410011 & 26\% & Xây dựng Backend cho các module: Bài viết (Post), Tin (Story), Thông báo (Notification), Nhắn tin (Message) và Khám phá (Explore). \\
     \hline
-    3 & Nguyễn Quang Minh & 3122410241 & 25\% & Xây dựng Business Logic, Repository Pattern, Unit Testing (xUnit), Tài liệu API. \\
+    3 & Nguyễn Quang Minh & 3122410241 & 27\% & Phát triển Frontend cho các module: Xác thực (Login/Register), Bài viết (Post), Tin (Story), Khám phá (Explore) và Thông báo (Notification). \\
     \hline
-    4 & Phan Trung Nghĩa & 3121410345 & 25\% & Phát triển tính năng Admin, Moderation, Dockerization \& CI/CD, Viết báo cáo. \\
+    4 & Phan Trung Nghĩa & 3121410345 & 20\% & Phát triển Frontend cho các module: Bạn bè (Friend), Nhắn tin (Message), Trang cá nhân (Profile), Tìm kiếm (Search) và Cài đặt (Settings). \\
     \hline
     \multicolumn{3}{|c|}{\textbf{Tổng cộng}} & \textbf{100\%} & \textbf{Tất cả thành viên hoàn thành tốt nhiệm vụ}\\
     \hline
@@ -312,6 +312,18 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \caption{Bảng phân công công việc và đánh giá thành viên}
     \label{table:task_assignment}
     \end{table}
+
+    \subsection{Cấu trúc thư mục dự án (Folder Structure)}
+    Dưới đây là cấu trúc tổ chức mã nguồn của toàn bộ dự án:
+    \begin{verbatim}
+    InteractHub/
+    |-- backend/                 # ASP.NET Core 8.0 Web API
+    |   |-- InteractHub.Api/     # Project chính
+    |   `-- InteractHub.Tests/   # Unit Testing project
+    |-- frontend/                # React + TypeScript App
+    |-- docker/                  # Docker configuration files
+    `-- baocao/                  # Tai lieu va bao cao LaTeX
+    \end{verbatim}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -331,7 +343,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \textit{Gợi ý hình cần chèn: hinh1.png - sơ đồ ERD tổng quan của hệ thống.}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=15cm]{hinh1.drawio.png}
+    \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{hinh1.drawio.png}
     \caption{Sơ đồ thực thể (ERD) của hệ thống InteractHub}
     \end{center}
     \end{figure}
@@ -340,7 +352,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Sơ đồ Use Case mô tả các tác vụ mà người dùng (User) và quản trị viên (Admin) có thể thực hiện trên hệ thống:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=15cm]{Use_Case_Diagram.png}
+    \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{Use_Case_Diagram.png}
     \caption{Sơ đồ Use Case tổng quan}
     \label{fig:usecase}
     \end{center}
@@ -350,7 +362,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Sơ đồ mô tả cách dữ liệu di chuyển giữa các tiến trình và thực thể trong hệ thống InteractHub:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=15cm]{Data_Flow_Diagram.png}
+    \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{Data_Flow_Diagram.png}
     \caption{Sơ đồ Luồng dữ liệu cấp 1}
     \end{center}
     \end{figure}
@@ -362,7 +374,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Mô tả luồng đăng nhập và cấp phát JWT Token:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=12cm]{Sequence_Auth.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Sequence_Auth.png}
     \caption{Sơ đồ tuần tự chức năng Đăng nhập}
     \end{center}
     \end{figure}
@@ -371,16 +383,16 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Luồng xử lý khi người dùng đăng bài kèm hình ảnh lên Azure Blob Storage:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=12cm]{Sequence_Post.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Sequence_Post.png}
     \caption{Sơ đồ tuần tự chức năng Đăng bài viết}
     \end{center}
     \end{figure}
 
-    \subsubsection{Quy trình Tương tác và Thông báo (Like & Notification Flow)}
+    \subsubsection{Quy trình Tương tác và Thông báo (Like \& Notification Flow)}
     Mô tả cách hệ thống đẩy thông báo thời gian thực qua SignalR khi có tương tác:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=12cm]{Sequence_Like_Noti.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Sequence_Like_Noti.png}
     \caption{Sơ đồ tuần tự tương tác Like và Thông báo}
     \end{center}
     \end{figure}
@@ -389,7 +401,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Luồng xử lý gửi và chấp nhận lời mời kết bạn:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=12cm]{Sequence_Friendship.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Sequence_Friendship.png}
     \caption{Sơ đồ tuần tự chức năng Kết bạn}
     \end{center}
     \end{figure}
@@ -398,7 +410,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Mô tả cơ chế đăng tin và tự động hết hạn sau 24 giờ:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=12cm]{Sequence_Story.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Sequence_Story.png}
     \caption{Sơ đồ tuần tự chức năng Story}
     \end{center}
     \end{figure}
@@ -407,7 +419,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Luồng xử lý dành cho quản trị viên khi xem thống kê hệ thống và chủ động kiểm duyệt nội dung:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=12cm]{Sequence_Admin.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Sequence_Admin.png}
     \caption{Sơ đồ tuần tự chức năng Quản trị và Thống kê}
     \end{center}
     \end{figure}
@@ -416,7 +428,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Mô tả luồng trao đổi tin nhắn tức thời giữa các người dùng thông qua SignalR:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=12cm]{Sequence_Messaging.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Sequence_Messaging.png}
     \caption{Sơ đồ tuần tự chức năng Nhắn tin}
     \label{fig:seq_messaging}
     \end{center}
@@ -426,207 +438,109 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Mô tả chi tiết vòng đời của một báo cáo vi phạm từ lúc người dùng gửi cho đến khi quản trị viên phê duyệt xử lý:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=12cm]{Sequence_Report_Management.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Sequence_Report_Management.png}
     \caption{Sơ đồ tuần tự quy trình Xử lý Báo cáo}
     \label{fig:seq_report}
     \end{center}
     \end{figure}
 
-    \subsubsection{Quy trình Quản lý Người dùng (Admin User Management Flow)}
-    Luồng xử lý dành cho quản trị viên khi quản lý trạng thái tài khoản người dùng (Khóa/Ban):
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=12cm]{Sequence_User_Management.png}
-    \caption{Sơ đồ tuần tự chức năng Quản lý Người dùng}
-    \label{fig:seq_user_mgmt}
-    \end{center}
-    \end{figure}
-
-    \subsubsection{Quy trình Tìm kiếm và Khám phá (Search \& Discovery Flow)}
-    Luồng xử lý khi người dùng tìm kiếm bạn bè hoặc khám phá bài viết qua hashtag:
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=12cm]{Sequence_Search.png}
-    \caption{Sơ đồ tuần tự chức năng Tìm kiếm}
-    \label{fig:seq_search}
-    \end{center}
-    \end{figure}
-
-    \subsection{Đặc tả API}
-    Hệ thống cung cấp hơn 20 endpoints RESTful để giao tiếp với Frontend React. Các API được chuẩn hóa theo định dạng JSON và sử dụng các mã trạng thái HTTP tiêu chuẩn (200, 201, 400, 401, 500). Các nhóm API chính bao gồm:
-    \begin{itemize}
-        \item \textbf{Auth API}: Đăng ký, đăng nhập và cấp phát JWT Token.
-        \item \textbf{Posts API}: Thực hiện các thao tác CRUD bài viết và upload hình ảnh.
-        \item \textbf{Users \& Friends API}: Quản lý hồ sơ cá nhân và các yêu cầu kết bạn.
-        \item \textbf{SignalR Hub}: Cung cấp các kết nối thời gian thực cho thông báo.
-    \end{itemize}
-    Dữ liệu truyền tải được đóng gói thông qua các lớp DTO (Data Transfer Objects) để tối ưu hóa hiệu suất và bảo mật.
-
-    \subsection{Kiến trúc Backend}
-    Phần Backend được xây dựng trên nền tảng ASP.NET Core 8.0, tuân thủ nghiêm ngặt các nguyên lý SOLID và mẫu thiết kế hiện đại:
-    \begin{itemize}
-        \item \textbf{Repository Pattern}: Tách biệt logic truy xuất dữ liệu khỏi logic nghiệp vụ, giúp dễ dàng bảo trì và kiểm thử.
-        \item \textbf{Service Layer}: Nơi tập trung xử lý các nghiệp vụ phức tạp của hệ thống.
-        \item \textbf{Dependency Injection}: Quản lý vòng đời của các đối tượng và giảm sự phụ thuộc giữa các thành phần.
-        \item \textbf{Entity Framework Core}: Sử dụng kiến trúc Code-First để quản lý migration và tương tác với SQL Server.
-    \end{itemize}
-
-    % Hình kiến trúc backend được gom vào phần ảnh giao diện (xem mục "Ảnh giao diện")
-
-    \subsection{Phân tích luồng nghiệp vụ chính (Use-case Flows)}
-    Để hệ thống vận hành ổn định, nhóm xác định và hiện thực các luồng nghiệp vụ cốt lõi theo thứ tự ưu tiên từ cao xuống thấp. Mỗi luồng đều được mô tả bằng các bước xử lý ở cả frontend và backend nhằm đảm bảo tính nhất quán dữ liệu.
-
-    \subsubsection{Luồng xác thực và khởi tạo phiên làm việc}
-    \begin{enumerate}
-        \item Người dùng nhập email và mật khẩu tại giao diện đăng nhập.
-        \item Frontend gửi yêu cầu \texttt{POST /api/auth/login}.
-        \item Backend kiểm tra thông tin người dùng qua Identity, phát hành JWT nếu hợp lệ.
-        \item Frontend lưu token, gọi \texttt{/api/auth/profile} để lấy đầy đủ roles và thông tin hồ sơ.
-        \item Router guard phân quyền điều hướng về trang tương ứng (User/Admin).
-    \end{enumerate}
-
-    \subsubsection{Luồng tạo bài viết có media}
-    \begin{enumerate}
-        \item Người dùng mở modal tạo bài viết và chọn nội dung media.
-        \item Frontend upload file qua \texttt{/api/media/upload}, nhận lại URL tài nguyên.
-        \item Frontend gửi dữ liệu bài viết gồm content, visibility và danh sách media URL.
-        \item Backend validate dữ liệu, ghi nhận vào Post và PostMedia, trả về object chuẩn hóa.
-        \item Feed được đồng bộ lại để hiển thị bài viết mới theo thời gian thực gần nhất.
-    \end{enumerate}
-
-    \subsubsection{Luồng tương tác xã hội (Like/Comment/Share)}
-    \begin{itemize}
-        \item Người dùng thao tác trên PostCard và nhận phản hồi tức thời (optimistic UI).
-        \item API cập nhật trạng thái tương tác, đồng thời tạo Notification cho chủ bài viết nếu cần.
-        \item Dữ liệu số lượng like/comment/share được cập nhật đồng bộ ở feed và trang chi tiết.
-    \end{itemize}
-
-    % Sequence diagrams moved to the unified "Ảnh giao diện" section as placeholders
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Hiện thực hóa và kết quả}
-
-    \subsection{Frontend - Kiến trúc thành phần và giao diện đáp ứng}
-    Phần Frontend được xây dựng với React 18 và TypeScript, tuân thủ nguyên tắc Component-Based Architecture:
-    \begin{itemize}
-        \item \textbf{Cấu trúc thành phần}: Dự án tổ chức 15+ thành phần React tái sử dụng được bao gồm:
-        \begin{enumerate}
-            \item Thành phần xác thực (auth): Login, Registration, Password recovery
-            \item Thành phần bài viết (post): PostCard, PostForm, PostDetail, PostComments
-            \item Thành phần bạn bè (friends): FriendList, FriendRequest, FriendSuggestion
-            \item Thành phần thông báo (notifications): NotificationBell, NotificationPanel
-            \item Thành phần khám phá (explore): UserSearch, TrendingHashtags
-            \item Thành phần cài đặt (settings): ProfileSettings, PrivacySettings
-            \item Thành phần tin tạm thời (story): StoryViewer, StoryUploader
-            \item Thành phần gợi ý (suggestion): UserSuggestions, TrendingPosts
-        \end{enumerate}
-        \item \textbf{Responsive Design}: Sử dụng Tailwind CSS để đảm bảo giao diện đáp ứng hoàn hảo trên các thiết bị di động, máy tính bảng và máy tính để bàn.
-        \item \textbf{React Hooks}: Sử dụng useState, useEffect, useContext, useCallback để quản lý trạng thái và hiệu ứng component.
-    \end{itemize}
-
     \subsubsection{Cấu trúc thư mục Frontend (Folder Structure)}
     Dự án Frontend được tổ chức theo cấu trúc logic sau:
     \begin{verbatim}
     frontend/
-    ├── src/
-    │   ├── components/          # Các component tái sử dụng
-    │   │   ├── auth/
-    │   │   │   ├── Login.tsx
-    │   │   │   ├── Register.tsx
-    │   │   │   └── PasswordRecovery.tsx
-    │   │   ├── post/
-    │   │   │   ├── PostCard.tsx
-    │   │   │   ├── PostForm.tsx
-    │   │   │   └── PostDetail.tsx
-    │   │   ├── friends/
-    │   │   ├── notifications/
-    │   │   ├── explore/
-    │   │   ├── settings/
-    │   │   ├── story/
-    │   │   └── common/          # Shared components (Header, Footer, etc)
-    │   ├── pages/               # Page-level components
-    │   │   ├── FeedPage.tsx
-    │   │   ├── ProfilePage.tsx
-    │   │   ├── ExplorePage.tsx
-    │   │   └── AdminPage.tsx
-    │   ├── layouts/             # Layout wrappers
-    │   │   ├── MainLayout.tsx
-    │   │   ├── AuthLayout.tsx
-    │   │   └── AdminLayout.tsx
-    │   ├── services/            # API service layer
-    │   │   ├── authService.ts
-    │   │   ├── postService.ts
-    │   │   ├── commentService.ts
-    │   │   └── ...
-    │   ├── contexts/            # React Context (AuthContext, etc)
-    │   │   └── AuthContext.tsx
-    │   ├── hooks/               # Custom React hooks
-    │   │   ├── useAuth.ts
-    │   │   ├── useProtectedRoute.ts
-    │   │   └── useApi.ts
-    │   ├── types/               # TypeScript type definitions
-    │   │   ├── user.ts
-    │   │   ├── post.ts
-    │   │   └── api.ts
-    │   ├── utils/               # Utility functions
-    │   │   ├── validators.ts
-    │   │   ├── formatters.ts
-    │   │   └── constants.ts
-    │   ├── App.tsx
-    │   ├── App.css
-    │   └── main.tsx
-    │   └── index.css
-    ├── public/
-    ├── package.json
-    └── tsconfig.json
+    |-- src/
+    |   |-- components/          # Cac component tai su dung
+    |   |   |-- auth/
+    |   |   |-- post/
+    |   |   |-- friends/
+    |   |   |-- notifications/
+    |   |   |-- explore/
+    |   |   |-- settings/
+    |   |   |-- story/
+    |   |   `-- common/          # Shared components (Header, Footer, etc)
+    |   |-- pages/               # Page-level components
+    |   |   |-- FeedPage.tsx
+    |   |   |-- ProfilePage.tsx
+    |   |   |-- ExplorePage.tsx
+    |   |   `-- AdminPage.tsx
+    |   |-- layouts/             # Layout wrappers
+    |   |   |-- MainLayout.tsx
+    |   |   |-- AuthLayout.tsx
+    |   |   `-- AdminLayout.tsx
+    |   |-- services/            # API service layer
+    |   |   |-- authService.ts
+    |   |   |-- postService.ts
+    |   |   |-- commentService.ts
+    |   |   `-- ...
+    |   |-- contexts/            # React Context (AuthContext, etc)
+    |   |   `-- AuthContext.tsx
+    |   |-- hooks/               # Custom React hooks
+    |   |   |-- useAuth.ts
+    |   |   |-- useProtectedRoute.ts
+    |   |   `-- useApi.ts
+    |   |-- types/               # TypeScript type definitions
+    |   |   |-- user.ts
+    |   |   |-- post.ts
+    |   |   `-- api.ts
+    |   |-- utils/               # Utility functions
+    |   |   |-- validators.ts
+    |   |   |-- formatters.ts
+    |   |   `-- constants.ts
+    |   |-- App.tsx
+    |   |-- App.css
+    |   |-- main.tsx
+    |   `-- index.css
+    |-- public/
+    |-- package.json
+    `-- tsconfig.json
     \end{verbatim}
+
 
     \subsubsection{Sơ đồ phân cấp Component (Component Hierarchy)}
     Quan hệ cha-con giữa các component chính trong ứng dụng:
     \begin{verbatim}
     App
-    ├── AuthContext (Provider)
-    ├── Router
-    │   ├── Public Routes
-    │   │   ├── LoginPage
-    │   │   │   └── Login
-    │   │   └── RegisterPage
-    │   │       └── Register
-    │   ├── Protected Routes (MainLayout)
-    │   │   ├── Navbar
-    │   │   │   ├── Logo
-    │   │   │   ├── SearchBar
-    │   │   │   └── UserMenu
-    │   │   ├── Feed
-    │   │   │   ├── PostForm
-    │   │   │   └── PostCard (có nhiều instances)
-    │   │   │       ├── PostHeader
-    │   │   │       ├── PostContent
-    │   │   │       ├── PostActions
-    │   │   │       │   ├── LikeButton
-    │   │   │       │   ├── CommentButton
-    │   │   │       │   └── ShareButton
-    │   │   │       └── Comments
-    │   │   │           └── CommentItem
-    │   │   ├── Sidebar
-    │   │   │   ├── FriendList
-    │   │   │   └── Suggestions
-    │   │   ├── Profile
-    │   │   │   ├── ProfileHeader
-    │   │   │   ├── ProfileStats
-    │   │   │   └── UserPosts
-    │   │   ├── Explore
-    │   │   │   ├── TrendingPosts
-    │   │   │   ├── Hashtags
-    │   │   │   └── Reels
-    │   │   └── NotificationBell
-    │   │       └── NotificationPanel
-    │   └── Admin Routes (AdminLayout)
-    │       ├── AdminDashboard
-    │       ├── ReportManagement
-    │       └── UserManagement
-    │   └── Footer
+    |-- AuthContext (Provider)
+    |-- Router
+    |   |-- Public Routes
+    |   |   |-- LoginPage
+    |   |   |   `-- Login
+    |   |   `-- RegisterPage
+    |   |       `-- Register
+    |   |-- Protected Routes (MainLayout)
+    |   |   |-- Navbar
+    |   |   |   |-- Logo
+    |   |   |   |-- SearchBar
+    |   |   |   `-- UserMenu
+    |   |   |-- Feed
+    |   |   |   |-- PostForm
+    |   |   |   `-- PostCard (co nhieu instances)
+    |   |   |       |-- PostHeader
+    |   |   |       |-- PostContent
+    |   |   |       |-- PostActions
+    |   |   |       |   |-- LikeButton
+    |   |   |       |   |-- CommentButton
+    |   |   |       |   `-- ShareButton
+    |   |   |       `-- Comments
+    |   |   |           `-- CommentItem
+    |   |   |-- Sidebar
+    |   |   |   |-- FriendList
+    |   |   |   `-- Suggestions
+    |   |   |-- Profile
+    |   |   |   |-- ProfileHeader
+    |   |   |   |-- ProfileStats
+    |   |   |   `-- UserPosts
+    |   |   |-- Explore
+    |   |   |   |-- TrendingPosts
+    |   |   |   |-- Hashtags
+    |   |   |   `-- Reels
+    |   |   `-- NotificationBell
+    |   |       `-- NotificationPanel
+    |   `-- Admin Routes (AdminLayout)
+    |       |-- AdminDashboard
+    |       |-- ReportManagement
+    |       `-- UserManagement
+    `-- Footer
     \end{verbatim}
     \begin{itemize}
         \item \textbf{AuthContext}: Triển khai React Context để quản lý trạng thái xác thực toàn cục, bao gồm thông tin người dùng, JWT token và trạng thái đăng nhập.
@@ -723,86 +637,86 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Dự án Backend được tổ chức theo kiến trúc phân lớp sau:
     \begin{verbatim}
     backend/
-    ├── InteractHub.Api/
-    │   ├── Controllers/         # API Controllers (11 controllers)
-    │   │   ├── AuthController.cs
-    │   │   ├── PostController.cs
-    │   │   ├── CommentController.cs
-    │   │   ├── LikeController.cs
-    │   │   ├── FriendshipController.cs
-    │   │   ├── NotificationController.cs
-    │   │   ├── StoryController.cs
-    │   │   ├── ShareController.cs
-    │   │   ├── UserController.cs
-    │   │   ├── MessageController.cs
-    │   │   └── MediaController.cs
-    │   ├── Services/            # Business Logic (12 services)
-    │   │   ├── Interfaces/
-    │   │   │   ├── IAuthService.cs
-    │   │   │   ├── IPostService.cs
-    │   │   │   ├── ICommentService.cs
-    │   │   │   ├── ILikeService.cs
-    │   │   │   ├── IFriendshipService.cs
-    │   │   │   ├── INotificationService.cs
-    │   │   │   ├── IStoryService.cs
-    │   │   │   ├── IShareService.cs
-    │   │   │   ├── IUserService.cs
-    │   │   │   ├── IMessageService.cs
-    │   │   │   ├── IFileUploadService.cs
-    │   │   │   └── ISavedPostService.cs
-    │   │   └── Implementations/
-    │   │       ├── AuthService.cs
-    │   │       ├── PostService.cs
-    │   │       └── ... (mỗi service implement tương ứng)
-    │   ├── Repositories/        # Data Access Layer
-    │   │   ├── Interfaces/
-    │   │   │   ├── IPostRepository.cs
-    │   │   │   ├── ICommentRepository.cs
-    │   │   │   └── ...
-    │   │   └── Implementations/
-    │   │       ├── PostRepository.cs
-    │   │       └── ...
-    │   ├── Data/                # Database Context
-    │   │   ├── ApplicationDbContext.cs
-    │   │   ├── DataContextDapper.cs
-    │   │   └── DataSeeder.cs
-    │   ├── Models/              # Entity Models (9 entities)
-    │   │   ├── User.cs
-    │   │   ├── Post.cs
-    │   │   ├── Comment.cs
-    │   │   ├── Like.cs
-    │   │   ├── Friendship.cs
-    │   │   ├── Story.cs
-    │   │   ├── Notification.cs
-    │   │   ├── Hashtag.cs
-    │   │   └── PostReport.cs
-    │   ├── DTOs/                # Data Transfer Objects
-    │   │   ├── Auth/
-    │   │   ├── Post/
-    │   │   ├── Comment/
-    │   │   └── ...
-    │   ├── Migrations/          # Entity Framework Migrations
-    │   ├── Program.cs           # Cấu hình DI, CORS, etc
-    │   ├── appsettings.json
-    │   ├── appsettings.Development.json
-    │   ├── Dockerfile
-    │   └── InteractHub.Api.csproj
-    │
-    └── InteractHub.Tests/       # Unit Testing Project
-        ├── AuthControllerTests.cs
-        ├── AuthServiceTests.cs
-        ├── PostServiceTests.cs
-        ├── CommentServiceTests.cs
-        ├── LikeServiceTests.cs
-        ├── FriendshipServiceTests.cs
-        ├── ShareServiceTests.cs
-        ├── StoryServiceTests.cs
-        ├── MessageServiceTests.cs
-        ├── NotificationServiceTests.cs
-        ├── NotificationsControllerTests.cs
-        ├── UserServiceTests.cs
-        ├── FileUploadServiceTests.cs
-        └── InteractHub.Tests.csproj
+    |-- InteractHub.Api/
+    |   |-- Controllers/         # API Controllers (11 controllers)
+    |   |   |-- AuthController.cs
+    |   |   |-- PostController.cs
+    |   |   |-- CommentController.cs
+    |   |   |-- LikeController.cs
+    |   |   |-- FriendshipController.cs
+    |   |   |-- NotificationController.cs
+    |   |   |-- StoryController.cs
+    |   |   |-- ShareController.cs
+    |   |   |-- UserController.cs
+    |   |   |-- MessageController.cs
+    |   |   `-- MediaController.cs
+    |   |-- Services/            # Business Logic (12 services)
+    |   |   |-- Interfaces/
+    |   |   |   |-- IAuthService.cs
+    |   |   |   |-- IPostService.cs
+    |   |   |   |-- ICommentService.cs
+    |   |   |   |-- ILikeService.cs
+    |   |   |   |-- IFriendshipService.cs
+    |   |   |   |-- INotificationService.cs
+    |   |   |   |-- IStoryService.cs
+    |   |   |   |-- IShareService.cs
+    |   |   |   |-- IUserService.cs
+    |   |   |   |-- IMessageService.cs
+    |   |   |   |-- IFileUploadService.cs
+    |   |   |   `-- ISavedPostService.cs
+    |   |   `-- Implementations/
+    |   |       |-- AuthService.cs
+    |   |       |-- PostService.cs
+    |   |       `-- ... (mỗi service implement tương ứng)
+    |   |-- Repositories/        # Data Access Layer
+    |   |   |-- Interfaces/
+    |   |   |   |-- IPostRepository.cs
+    |   |   |   |-- ICommentRepository.cs
+    |   |   |   `-- ...
+    |   |   `-- Implementations/
+    |   |       |-- PostRepository.cs
+    |   |       `-- ...
+    |   |-- Data/                # Database Context
+    |   |   |-- ApplicationDbContext.cs
+    |   |   |-- DataContextDapper.cs
+    |   |   `-- DataSeeder.cs
+    |   |-- Models/              # Entity Models (9 entities)
+    |   |   |-- User.cs
+    |   |   |-- Post.cs
+    |   |   |-- Comment.cs
+    |   |   |-- Like.cs
+    |   |   |-- Friendship.cs
+    |   |   |-- Story.cs
+    |   |   |-- Notification.cs
+    |   |   |-- Hashtag.cs
+    |   |   `-- PostReport.cs
+    |   |-- DTOs/                # Data Transfer Objects
+    |   |   |-- Auth/
+    |   |   |-- Post/
+    |   |   |-- Comment/
+    |   |   `-- ...
+    |   |-- Migrations/          # Entity Framework Migrations
+    |   |-- Program.cs           # Cấu hình DI, CORS, etc
+    |   |-- appsettings.json
+    |   |-- appsettings.Development.json
+    |   |-- Dockerfile
+    |   `-- InteractHub.Api.csproj
+    |
+    `-- InteractHub.Tests/       # Unit Testing Project
+        |-- AuthControllerTests.cs
+        |-- AuthServiceTests.cs
+        |-- PostServiceTests.cs
+        |-- CommentServiceTests.cs
+        |-- LikeServiceTests.cs
+        |-- FriendshipServiceTests.cs
+        |-- ShareServiceTests.cs
+        |-- StoryServiceTests.cs
+        |-- MessageServiceTests.cs
+        |-- NotificationServiceTests.cs
+        |-- NotificationsControllerTests.cs
+        |-- UserServiceTests.cs
+        |-- FileUploadServiceTests.cs
+        `-- InteractHub.Tests.csproj
     \end{verbatim}
     \begin{itemize}
         \item \textbf{AuthController} (2 endpoints): Register, Login
@@ -886,85 +800,64 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \subsubsection{Nhóm xác thực và hồ sơ người dùng}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Auth_Login.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{Trangdangnhap.png}
     \caption{Trang đăng nhập hệ thống}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Auth_Register.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienDangKiTaiKhoan.png}
     \caption{Giao diện đăng ký tài khoản người dùng}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Profile_Main.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienProfile.png}
     \caption{Trang hồ sơ người dùng (Profile)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Settings_Profile.png}
-    \caption{Cài đặt hồ sơ (Settings - Profile)}
-    \end{center}
-    \end{figure}
-
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{Settings_Account.png}
-    \caption{Cài đặt tài khoản (Settings - Account)}
-    \end{center}
-    \end{figure}
-
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{Settings_Notifications.png}
-    \caption{Cài đặt thông báo (Settings - Notifications)}
-    \end{center}
-    \end{figure}
-
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{Settings_Privacy.png}
-    \caption{Cài đặt quyền riêng tư (Settings - Privacy)}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienCaiDat_1.png}
+    \caption{Cài đặt hồ sơ và tài khoản (Settings)}
     \end{center}
     \end{figure}
 
     \subsubsection{Nhóm feed, bài viết và story}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Feed_Main.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienTongQuanInteractHub.png}
     \caption{Trang chủ Feed - tổng quan hệ thống sau khi đăng nhập}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Post_Create.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{TaoBaiViet.png}
     \caption{Tạo bài viết mới (Create Post Modal)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Story_Create.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{TaoStory.png}
     \caption{Tạo story mới (Create Story Modal)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Story_View.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{StoryCuaMotUser.png}
     \caption{Xem story toàn màn hình}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Profile_Bookmarks.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienBookMarks.png}
     \caption{Trang bookmark - các bài viết đã lưu}
     \end{center}
     \end{figure}
@@ -972,70 +865,35 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \subsubsection{Nhóm khám phá, tìm kiếm, bạn bè và tương tác}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Explore_Trending.png}
-    \caption{Trang Explore - tab Trending Posts}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienExplore_1.png}
+    \caption{Trang Khám phá (Explore)}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Explore_Hashtags.png}
-    \caption{Trang Explore - tab Hashtags}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{TimKiem_1.png}
+    \caption{Tìm kiếm bài viết và người dùng}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Explore_Reels.png}
-    \caption{Trang Explore - tab Reels}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienBanBe_1.png}
+    \caption{Quản lý danh sách bạn bè}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Search_Posts.png}
-    \caption{Tìm kiếm bài viết theo từ khóa}
-    \end{center}
-    \end{figure}
-
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{Search_Users.png}
-    \caption{Tìm kiếm người dùng theo từ khóa}
-    \end{center}
-    \end{figure}
-
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{Friends_Requests.png}
-    \caption{Danh sách lời mời kết bạn (Friend Requests)}
-    \end{center}
-    \end{figure}
-
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{Friends_List.png}
-    \caption{Danh sách bạn bè (All Friends)}
-    \end{center}
-    \end{figure}
-
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{Friends_Suggestions.png}
-    \caption{Gợi ý kết bạn (Friend Suggestions)}
-    \end{center}
-    \end{figure}
-
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{Notifications_Panel.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{ThanhThongBao.png}
     \caption{Bảng thông báo hoạt động người dùng}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Chat_Realtime.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienNhanTin.png}
     \caption{Giao diện nhắn tin thời gian thực}
     \end{center}
     \end{figure}
@@ -1043,15 +901,36 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \subsubsection{Nhóm chức năng quản trị (Admin)}
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Admin_Dashboard.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienAdminDashboard(Admin).png}
     \caption{Admin Dashboard - tổng quan hệ thống}
     \end{center}
     \end{figure}
 
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{Admin_Moderation.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienQuanLyReport(Admin).png}
     \caption{Admin Report Management - xử lý báo cáo nội dung vi phạm}
+    \end{center}
+    \end{figure}
+
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienQuanLyUser(Admin).png}
+    \caption{Giao diện Quản lý người dùng - Đình chỉ và phân quyền}
+    \end{center}
+    \end{figure}
+
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienKiemDuyetNoiDung(Admin).png}
+    \caption{Giao diện Kiểm duyệt nội dung (Bài viết và Bình luận)}
+    \end{center}
+    \end{figure}
+
+    \begin{figure}[H]
+    \begin{center}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{GiaoDienNhatKyHeThong(Admin).png}
+    \caption{Giao diện Nhật ký hệ thống - Theo dõi hoạt động Admin}
     \end{center}
     \end{figure}
 
@@ -1129,14 +1008,6 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     \textit{Gợi ý hình cần chèn: hinh9.png - kết quả và tài liệu unit testing.}
     % Hình (hinh9.png) removed from inline; keep the text reference for insertion later.
 
-    \subsection{Kiểm thử End-to-End (E2E)}
-    Nhóm thực hiện kiểm thử toàn trình từ phía người dùng đến hệ thống quản trị để đảm bảo các tính năng hoạt động trơn tru:
-    \begin{figure}[H]
-    \begin{center}
-    \includegraphics[width=14cm]{E2E_Test_Results.png}
-    \caption{Kết quả kiểm thử End-to-End (Admin và User flows)}
-    \end{center}
-    \end{figure}
 
     \subsection{Kết quả kiểm thử và phân tích độ tin cậy}
     Ngoài việc liệt kê các test case, nhóm tiến hành phân tích kết quả theo ba góc nhìn: độ phủ nghiệp vụ, độ ổn định khi chạy lặp, và khả năng phát hiện lỗi biên.
@@ -1235,7 +1106,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Hệ thống được containerized hoàn toàn với Docker multi-stage build:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{KetQuaCICD.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{KetQuaCICD.png}
     \caption{Kết quả Docker build - quá trình biên dịch multi-stage backend và frontend}
     \end{center}
     \end{figure}
@@ -1258,7 +1129,7 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
     Dưới đây là minh chứng quy trình chạy thành công trên GitHub Actions:
     \begin{figure}[H]
     \begin{center}
-    \includegraphics[width=14cm]{DevOps_CICD.png}
+    \includegraphics[width=\textwidth,height=0.45\textheight,keepaspectratio]{DevOps_CICD.png}
     \caption{GitHub Actions workflow - CI/CD pipeline chạy thành công tất cả các jobs}
     \end{center}
     \end{figure}
@@ -1300,24 +1171,24 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
 
     \subsection{Hoàn thành}
     \begin{itemize}
-        \item ✅ Frontend: 15+ React components với TypeScript, Responsive UI
-        \item ✅ Backend: 11 API Controllers, 20+ endpoints
-        \item ✅ Database: 9 entities, Entity Framework migrations
-        \item ✅ Authentication: JWT + ASP.NET Core Identity
-        \item ✅ Services Layer: 12 service interfaces với full implementation
-        \item ✅ Unit Tests: 15+ test methods cho core services
-        \item ✅ API Documentation: Swagger/OpenAPI
-        \item ✅ CORS Configuration: Frontend-Backend integration
-        \item ✅ Docker Setup: Dockerfile cho backend và frontend
+        \item $\checkmark$ Frontend: 15+ React components với TypeScript, Responsive UI
+        \item $\checkmark$ Backend: 11 API Controllers, 20+ endpoints
+        \item $\checkmark$ Database: 9 entities, Entity Framework migrations
+        \item $\checkmark$ Authentication: JWT + ASP.NET Core Identity
+        \item $\checkmark$ Services Layer: 12 service interfaces với full implementation
+        \item $\checkmark$ Unit Tests: 15+ test methods cho core services
+        \item $\checkmark$ API Documentation: Swagger/OpenAPI
+        \item $\checkmark$ CORS Configuration: Frontend-Backend integration
+        \item $\checkmark$ Docker Setup: Dockerfile cho backend và frontend
+        \item $\checkmark$ CI/CD Pipeline: GitHub Actions configuration hoàn tất
+        \item $\checkmark$ Screenshots \& Demo: Bộ 15+ hình ảnh minh chứng giao diện
     \end{itemize}
 
-    \subsection{Cần hoàn thành}
+    \subsection{Hướng phát triển tiếp theo}
     \begin{itemize}
-        \item ⏳ Azure Deployment: Deploy lên App Service, SQL Database, Blob Storage
-        \item ⏳ CI/CD Pipeline: GitHub Actions / Azure DevOps configuration
-        \item ⏳ Screenshots & Demo: Tối thiểu 10 hình ảnh giao diện
-        \item ⏳ Performance Testing: Load testing và optimization
-        \item ⏳ Security Testing: Penetration testing, vulnerability scan
+        \item [..] Azure Deployment: Mở rộng quy mô triển khai trên Azure App Service
+        \item [..] Performance Testing: Kiểm thử tải và tối ưu hóa hệ thống
+        \item [..] Security Testing: Kiểm tra bảo mật và quét lỗ hổng
     \end{itemize}
 
     \subsection{Điểm mạnh của dự án}
@@ -1351,17 +1222,17 @@ Nhóm chúng em xin cam đoan đây là công trình nghiên cứu và phát tri
 \clearpage
 
     \subsection{Phụ lục danh mục hình ảnh minh chứng}
-    Danh mục hình ảnh minh chứng được sử dụng trong báo cáo, được lấy trực tiếp từ thư mục picture của dự án:
+    Danh mục hình ảnh minh chứng được sử dụng trong báo cáo, được lấy trực tiếp từ thư mục baocao của dự án:
     \begin{itemize}
         \item hinh1.drawio.png: Sơ đồ ERD tổng quan hệ thống.
         \item Trangdangnhap.png: Trang đăng nhập hệ thống.
-        \item GiaoDienDangKiTaiKhoan.jpg: Giao diện đăng ký tài khoản.
-        \item GiaoDienProfile.jpg, GiaoDienCaiDat\_*: Hồ sơ và nhóm cài đặt người dùng.
-        \item GiaoDienTongQuanInteractHub.jpg: Trang chủ Feed.
-        \item TaoBaiViet.jpg, TaoStory.jpg, StoryCuaMotUser.jpg, GiaoDienBookMarks.jpg: Feed, tạo bài viết, story và bookmark.
-        \item GiaoDienExplore\_*.jpg, TimKiem*.jpg: Explore và tìm kiếm.
-        \item GiaoDienBanBe\_*.jpg, ThanhThongBao.jpg, GiaoDienNhanTin.jpg: Bạn bè, thông báo và nhắn tin.
-        \item GiaoDienAdminDashboard(Admin).jpg, GiaoDienQuanLyReport(Admin).jpg: Chức năng quản trị Admin.
+        \item GiaoDienDangKiTaiKhoan.png: Giao diện đăng ký tài khoản.
+        \item GiaoDienProfile.png, GiaoDienCaiDat\_1.png: Hồ sơ và cài đặt người dùng.
+        \item GiaoDienTongQuanInteractHub.png: Trang chủ Feed.
+        \item TaoBaiViet.png, TaoStory.png, StoryCuaMotUser.png, GiaoDienBookMarks.png: Feed, tạo bài viết, story và bookmark.
+        \item GiaoDienExplore\_1.png, TimKiem\_1.png: Explore và tìm kiếm.
+        \item GiaoDienBanBe\_1.png, ThanhThongBao.png, GiaoDienNhanTin.png: Bạn bè, thông báo và nhắn tin.
+        \item GiaoDienAdminDashboard(Admin).png, GiaoDienQuanLyReport(Admin).png, GiaoDienQuanLyUser(Admin).png, GiaoDienKiemDuyetNoiDung(Admin).png, GiaoDienNhatKyHeThong(Admin).png: Nhóm chức năng quản trị Admin.
         \item KetQuaCICD.png: Minh chứng CI/CD.
     \end{itemize}
 
